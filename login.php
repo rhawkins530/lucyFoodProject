@@ -134,7 +134,7 @@
       </div>
 
       <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">
-	<span class="wave">👋</span> Nice to see you again.
+	<span class="wave">👋</span> Welcome to the St. Lucy Food Project!
       </h2>
 
       <form class="w-full" method="post">
