@@ -477,7 +477,7 @@
             <?php endif ?> -->
 
 <div style="margin-top: 50px; padding: 0px 80px;">
-    <h2><b>Admin Dashboard</b></h2>
+    <h2><b>Admin Control Panel</b></h2>
 </div>
 <div class="full-width-bar-sub">
  <div class="content-box-test" onclick="window.location.href='viewAuditUsers.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
