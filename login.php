@@ -128,9 +128,9 @@
 
       <!-- Logo Placeholder (Now the same width as inputs and centered) -->
       <div class="w-full flex justify-center mb-6">
-        <img src="images/CCDA-Logo-scaled.jpg"
+        <img src="images/st-lucy-truck.jpg"
              alt="Logo"
-             class="w-full max-w-xs">
+             class="w-full max-w-md">
       </div>
 
       <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">
