@@ -11,20 +11,20 @@ but no code was taken from there. All of the code below is original code.
 
 /* Create variable fonts for standard and italics versions of the fontface used by the org (Montserrat by Google) */
 @font-face {
-    font-family: 'Arial';
+    font-family: 'Monteserrat';
     src: url('../fonts/Montserrat-VariableFont_wght.ttf') format("truetype-variations");
     font-weight: 100 900;
 }
 
 @font-face {
-    font-family: 'Arial';
+    font-family: 'Monteserrat';
     src: url('../fonts/Montserrat-Italic-VariableFont_wght.ttf') format("truetype-variations");
     font-weight: 100 900;
     font-style: italic;
 }
 
 @font-face {
-    font-family: 'Arail';
+    font-family: 'Monteserrat';
     src: url('../fonts/OpenDyslexic-Regular.otf') format("opentype");
     font-weight: 100 900;
 }
@@ -37,7 +37,7 @@ table, td, tr, th, form, fieldset, em, button, a {
     padding: 0;
     margin: 0;
     font-size: inherit;
-    font-family: inherit;
+    font-family: Georgia, serif;
     font-weight: inherit;
     text-decoration: none;
     font-style: normal;
@@ -85,7 +85,7 @@ table, td, tr, th, form, fieldset, em, button, a {
 --calendar-event-color-hover: #000000;
 --calendar-today-border: 2px solid #000000;
 
---button-font-color: #ffffff;
+--button-font-color: red;
 --button-padding: 0.5rem 1.5rem;
 --button-border-radius: 0.25rem;
 
@@ -99,25 +99,25 @@ table, td, tr, th, form, fieldset, em, button, a {
 
 /* Global rules */
 font-size: 18px;
-font-family: Arial;
+font-family: 'Monteserrat';
 font-weight: 300;
 
 
 /* Global rules */
 font-size: 18px;
-font-family: Arial;
+font-family: 'Monteserrat';
 font-weight: 300;
 
 
 /* Global rules */
 font-size: 18px;
-font-family: Arial;
+font-family: 'Monteserrat';
 font-weight: 300;
 
 
     /* Global rules */
     font-size: 18px;
-    font-family: Arial;
+    font-family: 'Monteserrat';
     font-weight: 300;
 }
 
@@ -159,9 +159,9 @@ header {
 }
 
 body {
-    background-color: grey;
+    background-color: blue;
     color: var(--page-font-color);
-    font-family: Arial;
+    font-family: 'Monteserrat';
 }
 
 header > img {
@@ -330,7 +330,7 @@ input[type=text]:focus, input[type=password]:active, input[type=email]:focus, in
 }
 
 input[type=submit], button, .button, a.button-signup {
-    color: red;
+    color: var(--button-font-color);
     background-color: var(--main-color);
     padding: var(--button-padding);
     border: 3px solid rgba(255, 255, 255, 0.295);
