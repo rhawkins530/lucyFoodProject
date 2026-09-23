@@ -457,7 +457,7 @@
 
     <!-- Dummy content to enable scrolling -->
     <div style="margin-top: 0px; padding: 30px 20px;">
-        <h2><b>Welcome <?php echo $person->get_first_name() ?>!</b> Let's get started.</h2>
+        <h2><b>Welcome back <?php echo $person->get_first_name() ?>!</b></h2>
     </div>
 
             <!-- <?php if (isset($_GET['pcSuccess'])): ?>
@@ -477,7 +477,7 @@
             <?php endif ?> -->
 
 <div style="margin-top: 50px; padding: 0px 80px;">
-    <h2><b>Admin Dashboard</b></h2>
+    <h2><b>Admin Control Panel</b></h2>
 </div>
 <div class="full-width-bar-sub">
  <div class="content-box-test" onclick="window.location.href='viewAuditUsers.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
@@ -737,6 +737,15 @@
         
         <div class="large-text-sub" style="color:white;">View Inventory</div>
         <div class="graph-text" style="color:white;">Track inventory changes.</div>
+    </div>
+
+    <!-- Create Food Order -->
+    <div class="content-box-test" onclick="window.location.href='index.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+        <div class="icon-overlay">
+            <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Report Icon">
+        </div>
+        <div class="large-text-sub" style="color:white;">Create Food Order</div>
+        <div class="graph-text" style="color:white;">Create a new food order.</div>
     </div>
 
     <!-- Weekly Inventory Report -->
