@@ -457,7 +457,7 @@
 
     <!-- Dummy content to enable scrolling -->
     <div style="margin-top: 0px; padding: 30px 20px;">
-        <h2><b>Welcome <?php echo $person->get_first_name() ?>!</b> Let's get started.</h2>
+        <h2><b>Welcome back <?php echo $person->get_first_name() ?>!</b></h2>
     </div>
 
             <!-- <?php if (isset($_GET['pcSuccess'])): ?>
