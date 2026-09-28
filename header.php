@@ -877,22 +877,10 @@ if (date("H:i:s") > "18:19:59") {
                 </div>
                 </a>');
             }
-echo('<a href="viewUpdateInventory.php" style="text-decoration: none;">
-  <div class="in-nav">
-    <img src="images/clipboard-checklist.svg" alt="Inventory Icon">
-    <span>Update Inventory</span>
-  </div>
-</a>
-<a href="inventory.php" style="text-decoration: none;">
+echo('<a href="inventory.php" style="text-decoration: none;">
   <div class="in-nav">
     <img src="images/clipboard-list-alt.svg" alt="Inventory Icon">
     <span>View Inventory</span>
-  </div>
-</a>
-<a href="viewWeeklyReport.php" style="text-decoration: none;">
-  <div class="in-nav">
-    <img src="images/clipboard-arrow-down.svg" alt="Report Icon">
-    <span>Weekly Inventory Report</span>
   </div>
 </a>
 <a href="viewShoppingList.php" style="text-decoration: none;">
@@ -901,10 +889,28 @@ echo('<a href="viewUpdateInventory.php" style="text-decoration: none;">
     <span>Shopping List</span>
   </div>
 </a>
+<a href="viewWeeklyReport.php" style="text-decoration: none;">
+  <div class="in-nav">
+    <img src="images/clipboard-arrow-down.svg" alt="Report Icon">
+    <span>Weekly Inventory Report</span>
+  </div>
+</a>
+<a href="viewUpdateInventory.php" style="text-decoration: none;">
+  <div class="in-nav">
+    <img src="images/clipboard-checklist.svg" alt="Inventory Icon">
+    <span>Update Inventory</span>
+  </div>
+</a>
+<a href="login.php" style="text-decoration: none;">
+  <div class="in-nav">
+    <img src="images/clipboard-checklist.svg" alt="Inventory Icon">
+    <span>Login Page</span>
+  </div>
+</a>
 <a href="generateReport.php" style="text-decoration: none;">
   <div class="in-nav">
     <img src="images/document-report.svg" alt="Report Icon">
-    <span>Inventory Analytics</span>
+    <span>Generate a new report!!!!</span>
   </div>
 </a>
 
