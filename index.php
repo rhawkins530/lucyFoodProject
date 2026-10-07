@@ -719,13 +719,13 @@
     </div>
     <div class="full-width-bar-sub">
 
-    <!-- Update Inventory -->
+    <!-- Add to Inventory -->
     <div class="content-box-test" onclick="window.location.href='viewUpdateInventory.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/clipboard-checklist.svg" alt="Inventory Icon">
         </div>
 
-        <div class="large-text-sub" style="color:white;">Update Inventory</div>
+        <div class="large-text-sub" style="color:white;">Add to Inventory</div>
         <div class="graph-text" style="color:white;">Add inventory entry.</div>
     </div>
 
@@ -739,6 +739,7 @@
         <div class="graph-text" style="color:white;">Track inventory changes.</div>
     </div>
 
+
     <!-- Create Food Order -->
     <div class="content-box-test" onclick="window.location.href='index.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
@@ -747,8 +748,26 @@
         <div class="large-text-sub" style="color:white;">Create Food Order</div>
         <div class="graph-text" style="color:white;">Create a new food order.</div>
     </div>
+    
+    <!-- View Food Order -->
+    <div class="content-box-test" onclick="window.location.href='viewOrders.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+        <div class="icon-overlay">
+            <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Report Icon">
+        </div>
+        <div class="large-text-sub" style="color:white;">View Food Orders</div>
+        <div class="graph-text" style="color:white;">View all food order.</div>
+    </div>
 
-    <!-- Weekly Inventory Report -->
+    <!-- Approve/Reject Food Orders -->
+    <div class="content-box-test" onclick="window.location.href='finalizeOrder.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+        <div class="icon-overlay">
+            <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Report Icon">
+        </div>
+        <div class="large-text-sub" style="color:white;">Approve/Reject Food Orders</div>
+        <div class="graph-text" style="color:white;">View all food orders and approve or reject them.</div>
+    </div>
+
+    <!-- Weekly Inventory Report
     <div class="content-box-test" onclick="window.location.href='viewWeeklyReport.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/clipboard-arrow-down.svg" alt="Report Icon">
@@ -756,8 +775,10 @@
         <div class="large-text-sub" style="color:white;">Weekly Inventory Report</div>
         <div class="graph-text" style="color:white;">View updated weekly inventory.</div>
     </div>
+     -->
     
-    <!-- Shopping List -->
+    
+    <!-- Shopping List
     <div class="content-box-test" onclick="window.location.href='viewShoppingList.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Shopping List Icon">
@@ -765,8 +786,9 @@
         <div class="large-text-sub" style="color:white;">Shopping List</div>
         <div class="graph-text" style="color:white;">View and manage recommended baskets by family size.</div>
     </div>
+    -->
 
-    <!-- Inventory Analytics -->
+    <!-- Inventory Analytics 
     <div class="content-box-test" onclick="window.location.href='generateReport.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/document-report.svg" alt="Report Icon">
@@ -776,6 +798,7 @@
         <div class="graph-text"style="color:white;">Explore visual reports and analytics for inventory data.</div>
     </div>
     </div>
+    -->
 
 <div style="width: 90%; /* Stops before page ends */
             height: 100%;
