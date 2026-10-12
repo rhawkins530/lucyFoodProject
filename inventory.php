@@ -132,8 +132,20 @@ foreach($eventPairs as $index => $pair) {
     }
 }
 
-// Fetch inventory items with box information for the selected pair
+//Build the items array for the selected inventory
+//Currently this will not include snapshots of previous inventories
 $items = [];
+if (($file = fopen("MOCK_INVENTORY_DATA.csv", "r")) !== FALSE) {
+    $headers = fgetcsv($file);
+
+    while (($row = fgetcsv($file)) !== FALSE) {
+        $items[] = array_combine($headers, $row);
+    }
+
+    fclose($file);
+}
+/*
+Previous Inventory Code
 if ($selectedPairIndex !== null) {
     $selectedPair = $eventPairs[$selectedPairIndex];
     $sameDateEvents = [];
@@ -215,7 +227,7 @@ if ($selectedPairIndex !== null) {
         return strcmp($a['item_name'], $b['item_name']);
     });
 }
-
+*/
 ?>
 
 <!DOCTYPE html>
@@ -548,6 +560,7 @@ if ($selectedPairIndex !== null) {
         <div class="report-container">
             <div class="report-section">
                 <h2>Food Items</h2>
+                <!-- Old Inventory Snapshot Filter
                 <div class="week-and-filter-section">
                     <div class="form-section">
                         <label for="weekSelect">Select Inventory to View:</label>
@@ -580,8 +593,10 @@ if ($selectedPairIndex !== null) {
                         </select>
                     </div>
                 </div>
+                -->
                 <hr>
                 <br>
+                <!-- Old Inventory Sorter
                 <div class="table-toolbar">
                     <div class="toolbar-left">
                         <label for="sortSelect" style="color: var(--page-font-color); margin-right: 0.5rem;">Sort by:</label>
@@ -595,41 +610,23 @@ if ($selectedPairIndex !== null) {
                         <button type="button" id="clearSearch" class="toolbar-btn-clear">Clear</button>
                     </div>
                 </div>
-
+                -->
                 <div class="table-wrapper">
                     <table class="report-table" id="inventoryTable">
                         <thead>
                                 <tr>
                                     <th>Item Name</th>
                                     <th>
-                                        <span class="desktop-text">Warehouse</span>
-                                        <span class="mobile-text">WH</span>
-                                    </th>
-                                    <th>
-                                        <span class="desktop-text">Pantry</span>
-                                        <span class="mobile-text">PT</span>
-                                    </th>
-                                    <th>
-                                        <div class="pallet-column" style="display: block;">
-                                            <span class="desktop-text">Pallet Boxes</span>
-                                            <span class="mobile-text">Pallets</span>
-                                        </div>
-                                    </th>
-                                    <th>
                                         <span class="desktop-text">Total Boxes</span>
                                         <span class="mobile-text">Total Boxes</span>
                                     </th>
                                     <th>
-                                        <span class="desktop-text">Banana Box</span>
-                                        <span class="mobile-text">Ban. Box</span>
+                                        <span class="desktop-text">Allocated Items</span>
+                                        <span class="mobile-text">Allocated Items</span>
                                     </th>
                                     <th>
-                                        <span class="desktop-text">Items Per Box</span>
-                                        <span class="mobile-text">Items/Box</span>
-                                    </th>
-                                    <th>
-                                        <span class="desktop-text">Total Items</span>
-                                        <span class="mobile-text">Total Items</span>
+                                        <span class="desktop-text">Over Allocated</span>
+                                        <span class="mobile-text">Over Allocated</span>
                                     </th>
                                 </tr>
                             </thead>
@@ -637,14 +634,10 @@ if ($selectedPairIndex !== null) {
                             <?php if (count($items) > 0): ?>
                                 <?php foreach ($items as $item): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($item['item_name']) ?></td>
-                                        <td><?= $item['warehouse_boxes'] > 0 ? htmlspecialchars($item['warehouse_boxes']) : '-' ?></td>
-                                        <td><?= $item['pantry_boxes'] > 0 ? htmlspecialchars($item['pantry_boxes']) : '-' ?></td>
-                                        <td><?= $item['pallet_boxes'] > 0 ? htmlspecialchars($item['pallet_boxes']) : '-' ?></td>
+                                        <td><?= htmlspecialchars($item['name']) ?></td>
                                         <td><?= htmlspecialchars($item['total_boxes']) ?></td>
-                                        <td><?= $item['bananaBox'] == 1 ? '✓' : '' ?></td>
-                                        <td><?= htmlspecialchars($item['itemsPerBox']) ?></td>
-                                        <td><?= htmlspecialchars($item['total_boxes'] * $item['itemsPerBox']) ?></td>
+                                        <td><?= htmlspecialchars($item['allocated_boxes']) ?></td>
+                                        <td><?= $item['allocated_boxes'] > $item['total_boxes'] ? '✓' : '' ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -656,15 +649,6 @@ if ($selectedPairIndex !== null) {
                     </table>
                 </div>
             </div>
-            <?php if($accessLevel >= 1): ?>
-                <div style="margin-bottom: 1.5rem;">
-                    <a href="editInventoryEvent.php?warehouseId=<?= htmlspecialchars($selectedWeek) ?>" style="text-decoration: none; display: flex; justify-content: center;">
-                        <button class="modify-button">
-                            Modify
-                        </button>
-                    </a>
-                </div>
-            <?php endif; ?>
         </div>
     </main>
 
