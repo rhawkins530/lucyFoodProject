@@ -742,10 +742,19 @@
     <!-- Create Food Order -->
     <div class="content-box-test" onclick="window.location.href='createOrder.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
-            <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Report Icon">
+            <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Order Icon">
         </div>
         <div class="large-text-sub" style="color:white;">Create Food Order</div>
-        <div class="graph-text" style="color:white;">Create a new food order.</div>
+        <div class="graph-text" style="color:white;">Create a new individual or multiple food order.</div>
+    </div>
+
+    <!-- View Food Orders -->
+     <div class="content-box-test" onclick="window.location.href='viewOrders.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+        <div class="icon-overlay">
+            <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Report Icon">
+        </div>
+        <div class="large-text-sub" style="color:white;">View Food Orders</div>
+        <div class="graph-text" style="color:white;">View current individual and multiple food orders.</div>
     </div>
 
     <!-- Weekly Inventory Report -->
