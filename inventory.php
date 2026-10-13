@@ -132,18 +132,47 @@ foreach($eventPairs as $index => $pair) {
     }
 }
 
+//Get sort parameters
+$sortCol = isset($_GET['sortCol']) ? (int)$_GET['sortCol'] : -1; // Default to -1 (no sorting)
+$sortDir = isset($_GET['sortDir']) && $_GET['sortDir'] === 'desc' ? 'desc' : 'asc';
+
 //Build the items array for the selected inventory
 //Currently this will not include snapshots of previous inventories
 $items = [];
+$headers = [];
 if (($file = fopen("MOCK_INVENTORY_DATA.csv", "r")) !== FALSE) {
     $headers = fgetcsv($file);
+    $headers[] = 'over_allocated'; // Add a new header for over_allocated column
 
     while (($row = fgetcsv($file)) !== FALSE) {
+        $row[] = $row[3] > $row[2] ? 1 : 0; // Add over_allocated value based on allocated_boxes and total_boxes
         $items[] = array_combine($headers, $row);
     }
 
     fclose($file);
 }
+
+//Sort the items array based on the sort parameters
+if ($sortCol >= 0 && $sortCol < count($headers)) {
+    usort($items, function($a, $b) use ($headers, $sortCol, $sortDir) {
+        $colName = $headers[$sortCol];
+        if ($colName === 'name') { // Sort by name (string comparison)
+            if ($sortDir === 'asc') {
+                return strcasecmp($a[$colName], $b[$colName]);
+            } else {
+                return strcasecmp($b[$colName], $a[$colName]);
+            }
+        }
+        else {
+            if ($sortDir === 'asc') {
+                return $a[$colName] <=> $b[$colName];
+            } else {
+                return $b[$colName] <=> $a[$colName];
+            }
+        }
+    });
+}
+
 /*
 Previous Inventory Code
 if ($selectedPairIndex !== null) {
@@ -615,18 +644,53 @@ if ($selectedPairIndex !== null) {
                     <table class="report-table" id="inventoryTable">
                         <thead>
                                 <tr>
-                                    <th>Item Name</th>
                                     <th>
-                                        <span class="desktop-text">Total Boxes</span>
-                                        <span class="mobile-text">Total Boxes</span>
+                                        <?php if ($sortCol === 1 && $sortDir === 'asc'): ?>
+                                            <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↑</span></a>
+                                            <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↑</span></a>
+                                        <?php elseif ($sortCol === 1 && $sortDir === 'desc'): ?>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↓</span></a>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↓</span></a>
+                                        <?php else: ?>
+                                            <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="desktop-text">Item Name ⇅</span></a>
+                                            <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="mobile-text">Item Name ⇅</span></a>
+                                        <?php endif; ?>
                                     </th>
                                     <th>
-                                        <span class="desktop-text">Allocated Items</span>
-                                        <span class="mobile-text">Allocated Items</span>
+                                        <?php if ($sortCol === 2 && $sortDir === 'asc'): ?>
+                                            <a href='?sortCol=2&sortDir=desc' style="font-weight: bold;color: white;"><span class="desktop-text">Total Boxes ↑</span></a>
+                                            <a href='?sortCol=2&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↑</span></a>
+                                        <?php elseif ($sortCol === 2 && $sortDir === 'desc'): ?>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Total Boxes ↓</span></a>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↓</span></a>
+                                        <?php else: ?>
+                                            <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="desktop-text">Total Boxes ⇅</span></a>
+                                            <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="mobile-text">Total Boxes ⇅</span></a>
+                                        <?php endif; ?>
                                     </th>
                                     <th>
-                                        <span class="desktop-text">Over Allocated</span>
-                                        <span class="mobile-text">Over Allocated</span>
+                                        <?php if ($sortCol === 3 && $sortDir === 'asc'): ?>
+                                            <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↑</span></a>
+                                            <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↑</span></a>
+                                        <?php elseif ($sortCol === 3 && $sortDir === 'desc'): ?>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↓</span></a>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↓</span></a>
+                                        <?php else: ?>
+                                            <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="desktop-text">Allocated Items ⇅</span></a>
+                                            <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="mobile-text">Allocated Items ⇅</span></a>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th>
+                                        <?php if ($sortCol === 4 && $sortDir === 'asc'): ?>
+                                            <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↑</span></a>
+                                            <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↑</span></a>
+                                        <?php elseif ($sortCol === 4 && $sortDir === 'desc'): ?>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↓</span></a>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↓</span></a>
+                                        <?php else: ?>
+                                            <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="desktop-text">Over Allocated ⇅</span></a>
+                                            <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="mobile-text">Over Allocated ⇅</span></a>
+                                        <?php endif; ?>
                                     </th>
                                 </tr>
                             </thead>
@@ -637,7 +701,7 @@ if ($selectedPairIndex !== null) {
                                         <td><?= htmlspecialchars($item['name']) ?></td>
                                         <td><?= htmlspecialchars($item['total_boxes']) ?></td>
                                         <td><?= htmlspecialchars($item['allocated_boxes']) ?></td>
-                                        <td><?= $item['allocated_boxes'] > $item['total_boxes'] ? '✓' : '' ?></td>
+                                        <td><?= $item['over_allocated'] ? '✓' : '' ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
