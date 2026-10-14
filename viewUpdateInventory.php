@@ -261,7 +261,7 @@
 <html>
 <head>
     <?php require_once('universal.inc') ?>
-    <title>Update Inventory | CCDA</title>
+    <title>Add Inventory | CCDA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         pageheader {
@@ -545,7 +545,7 @@
     </style>
 </head>
 <pageheader>
-    <h1 class="title">Update Inventory</h1>
+    <h1 class="title">Add Inventory</h1>
 </pageheader>
 <body>
     <?php require_once('header.php') ?>
