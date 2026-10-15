@@ -362,7 +362,7 @@
     <?php require_once('header.php') ?>
     <div class="order-type-options">
         <button onclick="window.location.href='createIndivOrder.php'">Create Individual Food Order</button>
-        <button>Create Multiple Food Order</button>
+        <button onclick="window.location.href='createMultOrder.php'">Create Multiple Food Order</button>
     </div>
 
 </body>
