@@ -118,9 +118,20 @@ function getAllInventoryItems() {
  * get all inventory items from the database and return them as an array of InventoryItem objects sorted by user-defined order
  */
 
-function getAllInventoryItemsSorted($sqlOrder) {
+function getAllInventoryItemsSorted($sqlOrder, $sqlDirection = 'ASC') {
+
+    $allowed_orders = array('id', 'item_category_id', 'category_name', 'current_quantity', 'minimum_quantity', 'allocated_quantity');
+    if (!in_array($sqlOrder, $allowed_orders)) {
+        throw new Exception("Invalid order parameter");
+    }
+
+    $sqlDirection = strtoupper($sqlDirection);
+    if ($sqlDirection !== 'ASC' && $sqlDirection !== 'DESC') {
+        throw new Exception("Invalid direction parameter");
+    }
+
     $con = connect();
-    $query = "SELECT * FROM dbinventory ORDER BY $sqlOrder";
+    $query = "SELECT * FROM dbinventory ORDER BY $sqlOrder $sqlDirection";
     $result = mysqli_query($con, $query);
     $inventoryItems = array();
     while ($row = mysqli_fetch_assoc($result)) {
