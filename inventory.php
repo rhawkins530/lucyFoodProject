@@ -269,9 +269,6 @@ if ($selectedPairIndex !== null) {
         pageheader {
             margin-top: 3rem;
             display: flex; justify-content: center; align-items: center;
-            position: sticky;
-            top: 1rem;
-            z-index: 6;
         }
         .title {
             text-align: center;
