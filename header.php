@@ -945,7 +945,7 @@ if (date("H:i:s") > "18:19:59") {
             </div>
                 <!--<a href="viewCheckInOut.php" style="color: white; text-decoration: none;"><div class="date-box">Check In/Out</div></a>-->
             <div class="nav-links">
-                <div class="nav-item">▼ Food Pantry Navigation
+                <div class="nav-item">☰ Food Pantry Navigation
                     <div class="dropdown">');
             if ($_SESSION['access_level'] >= 2) {
                 echo ('<a href="viewAuditUsers.php" style="text-decoration: none;">
@@ -964,12 +964,6 @@ if (date("H:i:s") > "18:19:59") {
                 <div class="in-nav">
                     <img src="images/list-solid.svg" alt="User Icon">
                     <span>Manage Item Categories</span>
-                </div>
-                </a>');
-                echo ('<a href="viewConsumptionRates.php" style="text-decoration: none;">
-                <div class="in-nav">
-                    <img src="images/clipboard-list-alt.svg" alt="Report Icon">
-                    <span>Consumption Rates</span>
                 </div>
                 </a>');
             }
