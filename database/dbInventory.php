@@ -120,7 +120,7 @@ function getAllInventoryItems() {
 
 function getAllInventoryItemsSorted($sqlOrder, $sqlDirection = 'ASC') {
 
-    $allowed_orders = array('id', 'item_category_id', 'category_name', 'current_quantity', 'minimum_quantity', 'allocated_quantity');
+    $allowed_orders = array('id', 'item_category_id', 'category_name', 'current_quantity', 'minimum_quantity', 'allocated_quantity', "current_quantity - allocated_quantity");
     if (!in_array($sqlOrder, $allowed_orders)) {
         throw new Exception("Invalid order parameter");
     }
