@@ -991,7 +991,7 @@ if (date("H:i:s") > "18:19:59") {
                         <span>Create Food Order</span>
                       </div>
                     </a>
-                    <a href="viewUpdateInventory.php" style="text-decoration: none;">
+                    <a href="viewOrders.php" style="text-decoration: none;">
                       <div class="in-nav">
                         <img src="images/clipboard-list-alt.svg" alt="Order Icon">
                         <span>View Food Orders</span>
