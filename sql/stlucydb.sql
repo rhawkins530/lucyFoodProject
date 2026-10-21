@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 16, 2026 at 08:54 PM
+-- Generation Time: Oct 21, 2026 at 08:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1692,6 +1692,41 @@ CREATE TABLE `dbinventory` (
   `minimum_quantity` int(11) NOT NULL,
   `allocated_quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `dbinventory`
+--
+
+INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_quantity`, `minimum_quantity`, `allocated_quantity`) VALUES
+(1, 1, 'Cereal/Oatmeal', 3, 4, 20),
+(2, 2, 'Cooking Oil', 5, 9, 4),
+(3, 3, 'Peanut Butter', 16, 1, 23),
+(4, 4, 'Jelly', 15, 4, 24),
+(5, 5, 'Dried Pasta', 35, 4, 35),
+(6, 6, 'Pasta Sauce', 39, 10, 10),
+(7, 7, 'Canned Chicken', 3, 10, 30),
+(8, 8, 'Canned Tuna', 4, 9, 16),
+(9, 9, 'Condiments', 9, 10, 32),
+(10, 10, 'Green Beans', 28, 2, 38),
+(11, 11, 'Corn', 15, 10, 39),
+(12, 12, 'Mixed Vegetables', 27, 1, 32),
+(13, 13, 'Baked Beans', 2, 10, 27),
+(14, 14, 'Canned/Dried Beans', 17, 10, 38),
+(15, 15, 'Canned Fruit Mixed', 18, 7, 15),
+(16, 16, 'Canned Peaches', 27, 6, 2),
+(17, 17, 'Canned Pasta', 36, 3, 1),
+(18, 18, 'Carrots', 36, 6, 15),
+(19, 19, 'Peas', 34, 1, 24),
+(20, 20, 'Ramen', 29, 6, 22),
+(21, 21, 'Milk (Shelf-Stable)', 28, 10, 22),
+(22, 22, 'Diced Tomatoes', 17, 2, 35),
+(23, 23, 'Rice (Bags)', 18, 5, 37),
+(24, 24, 'Masa Flour', 32, 10, 28),
+(25, 25, 'White Flour', 37, 6, 23),
+(26, 26, 'Soup', 23, 2, 0),
+(27, 27, 'Juice', 37, 9, 26),
+(28, 28, 'Baking Goods', 32, 8, 9),
+(29, 29, 'Macaroni and Cheese', 28, 8, 26);
 
 -- --------------------------------------------------------
 
@@ -4976,7 +5011,7 @@ ALTER TABLE `dbevents`
 -- AUTO_INCREMENT for table `dbinventory`
 --
 ALTER TABLE `dbinventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `dbinventoryevent`
