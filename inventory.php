@@ -270,7 +270,7 @@ if ($selectedPairIndex !== null) {
             padding: 1rem;
         }
         .report-section {
-            background-color: white;
+            background-color: #D4E7F6;
             /* border: 1px solid var(--shadow-and-border-color); */
             border-radius: 15px;
             padding: 1.5rem;
@@ -555,6 +555,7 @@ if ($selectedPairIndex !== null) {
                 padding: 4px;
             }
             .report-section{
+                background-color: #D4E7F6;
                 padding: 0;
             }
         }

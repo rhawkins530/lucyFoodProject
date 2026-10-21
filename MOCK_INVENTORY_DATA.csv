@@ -1,30 +1,30 @@
-id,name,total_boxes,allocated_boxes
-1,Cereal/Oatmeal,3,20
-2,Cooking Oil,5,4
-3,Peanut Butter,16,23
-4,Jelly,15,24
-5,Dried Pasta,35,35
-6,Pasta Sauce,39,10
-7,Canned Chicken,3,30
-8,Canned Tuna,4,16
-9,Condiments,9,32
-10,Green Beans,28,38
-11,Corn,15,39
-12,Mixed Vegetables,27,32
-13,Baked Beans,2,27
-14,Canned/Dried Beans,17,38
-15,Canned Fruit Mixed,18,15
-16,Canned Peaches,27,2
-17,Canned Pasta,36,1
-18,Carrots,36,15
-19,Peas,34,24
-20,Ramen,29,22
-21,Milk (Shelf-Stable),28,22
-22,Diced Tomatoes,17,35
-23,Rice (Bags),18,37
-24,Masa Flour,32,28
-25,White Flour,37,23
-26,Soup,23,0
-27,Juice,37,26
-28,Baking Goods,32,9
-29,Macaroni and Cheese,28,26
+id,item_category_id,category_name,current_quantity,minimum_quantity,allocated_quantity
+1,1,Cereal/Oatmeal,3,4,20
+2,2,Cooking Oil,5,9,4
+3,3,Peanut Butter,16,1,23
+4,4,Jelly,15,4,24
+5,5,Dried Pasta,35,4,35
+6,6,Pasta Sauce,39,10,10
+7,7,Canned Chicken,3,10,30
+8,8,Canned Tuna,4,9,16
+9,9,Condiments,9,10,32
+10,10,Green Beans,28,2,38
+11,11,Corn,15,10,39
+12,12,Mixed Vegetables,27,1,32
+13,13,Baked Beans,2,10,27
+14,14,Canned/Dried Beans,17,10,38
+15,15,Canned Fruit Mixed,18,7,15
+16,16,Canned Peaches,27,6,2
+17,17,Canned Pasta,36,3,1
+18,18,Carrots,36,6,15
+19,19,Peas,34,1,24
+20,20,Ramen,29,6,22
+21,21,Milk (Shelf-Stable),28,10,22
+22,22,Diced Tomatoes,17,2,35
+23,23,Rice (Bags),18,5,37
+24,24,Masa Flour,32,10,28
+25,25,White Flour,37,6,23
+26,26,Soup,23,2,0
+27,27,Juice,37,9,26
+28,28,Baking Goods,32,8,9
+29,29,Macaroni and Cheese,28,8,26
