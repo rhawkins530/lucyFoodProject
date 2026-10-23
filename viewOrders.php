@@ -222,7 +222,7 @@ if ($selectedPairIndex !== null) {
 <html>
 <head>
     <?php require_once('universal.inc'); ?>
-    <title>Inventory Log | CCDA</title>
+    <title>View Food Orders | CCDA</title>
     <link rel="stylesheet" href="css/base.css">
     <style>
         pageheader {
@@ -580,7 +580,7 @@ if ($selectedPairIndex !== null) {
                             <option value="Multiple">Multiple Orders</option>
                         </select>
                     </div>
-                    <button class="button" onclick="" >Approve/Reject Orders</button> <!-- Will link to a page that displays only pending orders and has approve/reject options -->
+                    <a class="button" href="reviewOrders.php" >Approve/Reject Orders</a> <!-- Will link to a page that displays only pending orders and has approve/reject options -->
                 </div>
                 <hr>
                 <br>   
