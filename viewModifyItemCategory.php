@@ -15,7 +15,7 @@
 
     // Was an ID supplied?
     if ($_SERVER["REQUEST_METHOD"] == "GET" && !isset($_GET['id'])) {
-        header('Location: index.php');
+        header('Location: viewItemCategories.php');
         die();
     } 
 
@@ -26,26 +26,13 @@
     }
     
     require_once('include/input-validation.php');
-    require_once('database/dbItemCategory.php');
+    require_once('database/dbinventory.php');
     require_once('database/dbPalletCounts.php');
     require_once('database/dbShoppingCount.php');
 
-    // AJAX endpoint to check if category is on a pallet or in a shopping list
-    if (isset($_GET['action']) && $_GET['action'] === 'checkInUse' && isset($_GET['id'])) {
-        header('Content-Type: application/json');
-        $palletNames = get_pallet_names_with_category($_GET['id']);
-        $familyNames = get_shoppingList_families_with_category($_GET['id']);
-        echo json_encode([
-            'inUse' => !empty($palletNames) || !empty($familyNames),
-            'pallets' => $palletNames,
-            'families' => $familyNames
-        ]);
-        exit;
-    }
-
     // Does the category exist?
-    $theCategory = retrieve_ItemCategory($_GET['id']);
-    if (!$theCategory) {
+    $item = getItem($_GET['id']);
+    if (!$item) {
         echo "That Category does not exist";
         die();
     }
@@ -62,109 +49,43 @@
             header('Location: viewItemCategories.php');
             die();
         }
-        else if(isset($_POST["deactivate_button"])){
-            $palletNames = get_pallet_names_with_category($theCategory->getId());
-            $familyNames = get_shoppingList_families_with_category($theCategory->getId());
-            if (!empty($palletNames) || !empty($familyNames)) {
-                $msg = "Cannot deactivate - this item is currently in use:";
-                if (!empty($palletNames)) {
-                    $msg .= "<br>Pallet(s): " . implode(', ', $palletNames) . ".";
-                }
-                if (!empty($familyNames)) {
-                    $msg .= "<br>Shopping list(s): " . implode(', ', $familyNames) . ".";
-                }
-                $errors[] = $msg;
-            } else {
-                deactivate_itemCategory($theCategory->getId());
-                header('Location: viewItemCategories.php');
-                die();
-            }
-        }
-        else if(isset($_POST["activate_button"])){
-            activate_itemCategory($theCategory->getId());
-            header('Location: viewItemCategories.php');
-            die();
-        }
-        else if(isset($_POST["delete_button"])){
-            $palletNames = get_pallet_names_with_category($theCategory->getId());
-            $familyNames = get_shoppingList_families_with_category($theCategory->getId());
-            if (!empty($palletNames) || !empty($familyNames)) {
-                $msg = "Cannot delete - this item is currently in use:";
-                if (!empty($palletNames)) {
-                    $msg .= " Pallet(s): " . implode(', ', $palletNames) . ".";
-                }
-                if (!empty($familyNames)) {
-                    $msg .= " Shopping list(s): " . implode(', ', $familyNames) . ".";
-                }
-                $errors[] = $msg;
-            } else {
-                delete_itemCategory($theCategory->getId());
-                header('Location: viewItemCategories.php');
-                die();
-            }
-        }
         else if(isset($_POST["save_button"])){
             /* check that Name is set */
             if(isset($_POST["name"])){
                 $name = $_POST["name"];
-                if($theCategory->getName() != $name && retrieve_ItemCategory_by_name($name)){
+                if($item->getCategoryName() != $name && getItemByName($name)){
                     $errors[] = "Category name already exists";
                 }
             }
             else{
                 $errors[] = 'Name is required';
             }
-            if(isset($_POST["bananaBox"]))
-                $bananaBox = 1;
-            else
-                $bananaBox = 0;
-
-            if(isset($_POST["shopOnly"])){
-                $palletNames = get_pallet_names_with_category($theCategory->getId());
-                if (!empty($palletNames)) {
-                    $msg = "Cannot set to Shopping List Only - this item is currently in use:";
-                    $msg .= "<br>Pallet: " . implode(', ', $palletNames) . ".";
-                    $errors[] = $msg;
-                }
-                else
-                    $shopOnly = 1;
-            }
-            else
-                $shopOnly = 0;
-
-            /* check that Items Per Box is set */
-            if(isset($_POST["itemsPerBox"])){
-
-                /* try to convert items per box to a number. If it cannot convert, leave it as a string */
-                try{
-                    $itemsPerBox = +$_POST["itemsPerBox"];
-                }
-                catch(TypeError  $e){ 
-                    $itemsPerBox = " ";
-                }
-
-                /* check for errors */
-                if(!is_int($itemsPerBox)){
-                    $errors[] = 'Items Per Box must be in whole numbers';
-                }
-                else if($itemsPerBox < 0){
-                    $errors[] = 'Items Per Box cannot be negative';
-                }
+            if(isset($_POST["minimum"])){
+                $minimum = $_POST["minimum"];
             }
             else{
-                $errors[] = 'Items Per Box must be a whole number';
+                $errors[] = 'Minimum boxes is required';
             }
+            if($_POST["minimum"] < 0){
+                    $errors[] = 'Minimum boxes cannot be negative';
+                }
+            if(isset($_POST["allocated"])){
+                $allocated = $_POST["allocated"];
+            }
+            else{
+                $errors[] = 'Allocated boxes is required';
+            }
+            if($_POST["allocated"] < 0){
+                    $errors[] = 'Allocated boxes cannot be negative';
+                }
+            
             
             if(empty($errors)){
-                if(update_itemCategory($theCategory->getId(), $name, $bananaBox, $itemsPerBox, $shopOnly)){
-                    header('Location: viewItemCategories.php');
-                    die();
-                }
-                else{
-                    $errors[] = "Unable to update information";
-                }
+                setCategoryName($item->getId(), $name);
+                setMinimumQuantity($item->getId(), $minimum);
+                setAllocatedQuantity($item->getId(), $allocated);
+                header('Location: viewItemCategories.php');
             }
-            
         }
     }
 ?>
@@ -178,10 +99,9 @@
     <style>
         pageheader {
             margin-top: 3rem;
-            display: flex; justify-content: center; align-items: center;
-            position: sticky;
-            top: 1rem;
-            z-index: 6;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
         }
         .title {
             text-align: center;
@@ -193,6 +113,8 @@
             padding-top: .4rem;
             border-radius: 10px;
             background-color: #ffffffee;
+            white-space: nowrap;
+            overflow: hidden;
         }
         .report-container {
             max-width: 1100px;
@@ -471,75 +393,40 @@
     <?php require_once('header.php') ?>
     <main>
         <div class="report-container">
-            <?php 
-                /* Display success message after submitting inventory */
-                if($submit_success == true){
-                    echo("<h4 style=\"color:black;\"><i>Inventory Submitted: ".date("F jS, Y", strtotime($date))."  -  ".$location."</i></h4>");
-                }
-                /* Display errors from submitting inventory */
-                if (!empty($errors)): ?>
-                <ul id="errorList">
-                    <?php foreach($errors AS $error): ?>
-                        <li><?php echo("<h4 style=\"color:red;\"><i>Error: ".$error."</i></h4>"); ?></li>
-                    <?php endforeach; ?>
-                </ul>
+            <?php if (!empty($errors)): ?>
+                <?php foreach ($errors as $error): ?>
+                    <?php echo "<p style='color: red;'>$error</p>" ?>
+                <?php endforeach; ?>
             <?php endif; ?>
-
             <!-- Update Inventory -->
             <div class="report-section">
-                <h2>Category: <?php echo $theCategory->getName();?></h2>              
-                <form name="invForm" onsubmit="return validateFormDate()" method="POST" action="viewModifyItemCategory.php?id=<?php echo $theCategory->getId();?>">
+                <h2>Category: <?php echo(getCategoryName($item->getId()))?></h2>              
+                <form name="invForm" onsubmit="return validateFormDate()" method="POST" action="viewModifyItemCategory.php?id=<?php echo $item->getId();?>">
                     <div class="updateInv-row">
                             <table class="modify-table">
                                 <tbody>
                                     <tr>
                                         <td class="modify-table-label"><label class="updateInv-label" for="name">Name: </label></td>
                                         <td class="modify-table-input"><input type="text" class="updateInv-qty" 
-                                                value="<?php echo($theCategory->getName())?>"
-                                                name="name" 
-                                                id="name"
+                                                value="<?php echo(getCategoryName($item->getId()))?>"
+                                                name="name"
                                                 required>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="modify-table-label"><label class="updateInv-label" for="bananaBox">Banana Box: </label></td>
-                                        <td class="modify-table-input"><input type="checkbox" id="bananaBox" name="bananaBox" value="1" 
-                                                    <?php if($theCategory->getBananaBox() == 1) echo("checked")?>>
-                                        </td>
-                                    </tr>                                    <tr>
-                                        <td class="modify-table-label"><label class="updateInv-label" for="shopOnly">Shopping List Only: </label></td>
-                                        <td class="modify-table-input"><input type="checkbox" id="shopOnly" name="shopOnly" value="1" 
-                                                    <?php if($theCategory->getShopOnly() == 1) echo("checked")?>
-                                        </td>
-                                    </tr>                                    <tr>
-                                        <td class="modify-table-label"> <label class="updateInv-label" for="itemsPerBox">Items Per Box: </label></td>
+                                        <td class="modify-table-label"><label class="updateInv-label" for="minimum">Minimum boxes: </label></td>
                                         <td class="modify-table-input"><input type="number" class="updateInv-qty" 
-                                                value="<?php echo($theCategory->getItemsPerBox())?>"
-                                                name="itemsPerBox" 
-                                                id="itemsPerBox"
+                                                value="<?php echo(getMinimumQuantity($item->getId()))?>"
+                                                name="minimum"
                                                 required>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="modify-table-label"><label class="updateInv-label">Status: </label></td>
-                                        <td class="modify-table-input">
-                                            <?php
-                                                if($theCategory->getStatus() == "Active"){
-                                                    echo '
-                                                        <label name="status_label" class="modify-status-label" style="color: green;font-weight: 500;">Active</label>
-                                                    ';
-                                                }
-                                                else if($theCategory->getStatus() == "Inactive"){
-                                                    echo '
-                                                        <label name="status_label" class="modify-status-label" style="color: red;font-weight: 500;">Inactive</label>
-                                                    ';
-                                                }
-                                                else if($theCategory->getStatus() == "Deleted"){
-                                                    echo '
-                                                        <label name="status_label" class="modify-status-label" style="color: black;font-weight: 500;">Deleted</label>
-                                                    ';
-                                                }
-                                            ?>
+                                        <td class="modify-table-label"><label class="updateInv-label" for="allocated">Allocated boxes: </label></td>
+                                        <td class="modify-table-input"><input type="number" class="updateInv-qty" 
+                                                value="<?php echo(getAllocatedQuantity($item->getId()))?>"
+                                                name="allocated"
+                                                required>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -549,26 +436,6 @@
                     <div class="modifyUsers-formBtns">
                         <button name="save_button" class="modify-save-btn">Save Changes</button>
                         <button name="cancel_button" class="modify-cancel-btn" formnovalidate>Cancel</button>
-                        <hr>
-                        <?php
-                            if($theCategory->getStatus() == "Active"){
-                                echo '
-                                    <button name="deactivate_button" class="modify-deactivate-btn" formnovalidate>Deactivate</button>
-                                ';
-                            }
-                            else {
-                                echo '
-                                    <button name="activate_button" class="modify-activate-btn" formnovalidate>Activate</button>
-                                ';
-                            }
-                        ?>
-                        <?php if($theCategory->getStatus() != "Deleted"): ?>
-                        <hr>
-                        <button type="button" class="modify-delete-btn"
-                            onclick="confirmDelete(<?php echo $theCategory->getId(); ?>, '<?php echo addslashes($theCategory->getName()); ?>')">
-                            Delete Category
-                        </button>
-                        <?php endif; ?>
                     </div>
                 </form>
             </div>
