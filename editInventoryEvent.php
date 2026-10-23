@@ -21,6 +21,7 @@
     require_once('database/dbInventoryEvent.php');
     require_once('database/dbItemCounts.php');
     require_once('database/dbItemCategory.php');
+    require_once('database/dbInventory.php');
 
     /* Get event ID parameter (either warehouseId or pantryId) */
     $warehouseId = $_GET['warehouseId'] ?? null;
@@ -53,50 +54,8 @@
         die();
     }
 
-    /* Get item counts for warehouse (if exists) */
-    $warehouseCountsMap = array();
-    if($warehouseEvent) {
-        $warehouseItemCounts = get_itemCounts_by_inventoryEvent($warehouseEvent->getId());
-        foreach($warehouseItemCounts as $count) {
-            $categoryId = $count->getItemCategory();
-            $warehouseCountsMap[$categoryId] = $count;
-        }
-    }
-
-    /* Get item counts for pantry (if exists) */
-    $pantryCountsMap = array();
-    if($pantryEvent) {
-        $pantryItemCounts = get_itemCounts_by_inventoryEvent($pantryEvent->getId());
-        foreach($pantryItemCounts as $count) {
-            $categoryId = $count->getItemCategory();
-            $pantryCountsMap[$categoryId] = $count;
-        }
-    }
-
-    /* Get item counts for pallet (if exists) */
-    $palletCountsMap = array();
-    if($palletEvent) {
-        $palletItemCounts = get_itemCounts_by_inventoryEvent($palletEvent->getId());
-        foreach($palletItemCounts as $count) {
-            $categoryId = $count->getItemCategory();
-            $palletCountsMap[$categoryId] = $count;
-        }
-    }
-
-    /* Get all item categories */
-    $allCategories = get_all_ItemCategory();
-
-    /* Build set of categories with data in this inventory (for showing inactive categories with historical data) */
-    $categoriesWithData = [];
-    foreach ($warehouseCountsMap as $categoryId => $count) {
-        $categoriesWithData[$categoryId] = true;
-    }
-    foreach ($pantryCountsMap as $categoryId => $count) {
-        $categoriesWithData[$categoryId] = true;
-    }
-    foreach ($palletCountsMap as $categoryId => $count) {
-        $categoriesWithData[$categoryId] = true;
-    }
+    /* Get all inventory items (same rows as the inventory.php table) */
+    $items = getAllInventoryItems();
 
     /* Handle form submission */
     $errors = [];
@@ -122,107 +81,29 @@
             die();
         }
         else if(isset($_POST['save_button'])) {
-            /* Update quantities for warehouse (if exists) */
-            if($warehouseEvent) {
-                foreach($allCategories as $category) {
-                    if(!isset($categoriesWithData[$category->getId()])) continue;
+            /* Update total boxes for each inventory item */
+            foreach($items as $item) {
+                $fieldName = 'total_boxes_' . $item->getId();
 
-                    $categoryId = $category->getId();
-                    $fieldName = 'warehouse_qty_' . $categoryId;
-
-                    if(isset($_POST[$fieldName]) && isset($warehouseCountsMap[$categoryId])) {
-                        try{
-                            $newQty = +$_POST[$fieldName];
-                        }
-                        catch(TypeError $e){
-                            $newQty = " ";
-                        }
-
-                        if(!is_int($newQty)){
-                            $errors[] = 'Warehouse - ' . $category->getName() . ' quantity must be in whole numbers';
-                            continue;
-                        }
-                        else if($newQty < 0){
-                            $errors[] = 'Warehouse - ' . $category->getName() . ' quantity cannot be negative';
-                            continue;
-                        }
-
-                        $itemCountId = $warehouseCountsMap[$categoryId]->getId();
-                        $oldQty = $warehouseCountsMap[$categoryId]->getQuantity();
-
-                        if($oldQty != $newQty) {
-                            update_quantity($itemCountId, $newQty);
-                        }
+                if(isset($_POST[$fieldName])) {
+                    try{
+                        $newQty = +$_POST[$fieldName];
                     }
-                }
-            }
-
-            /* Update quantities for pantry (if exists) */
-            if($pantryEvent) {
-                foreach($allCategories as $category) {
-                    if(!isset($categoriesWithData[$category->getId()])) continue;
-
-                    $categoryId = $category->getId();
-                    $fieldName = 'pantry_qty_' . $categoryId;
-
-                    if(isset($_POST[$fieldName]) && isset($pantryCountsMap[$categoryId])) {
-                        try{
-                            $newQty = +$_POST[$fieldName];
-                        }
-                        catch(TypeError $e){
-                            $newQty = " ";
-                        }
-
-                        if(!is_int($newQty)){
-                            $errors[] = 'Pantry - ' . $category->getName() . ' quantity must be in whole numbers';
-                            continue;
-                        }
-                        else if($newQty < 0){
-                            $errors[] = 'Pantry - ' . $category->getName() . ' quantity cannot be negative';
-                            continue;
-                        }
-
-                        $itemCountId = $pantryCountsMap[$categoryId]->getId();
-                        $oldQty = $pantryCountsMap[$categoryId]->getQuantity();
-
-                        if($oldQty != $newQty) {
-                            update_quantity($itemCountId, $newQty);
-                        }
+                    catch(TypeError $e){
+                        $newQty = " ";
                     }
-                }
-            }
 
-            /* Update quantities for pallet (if exists) */
-            if($palletEvent) {
-                foreach($allCategories as $category) {
-                    if(!isset($categoriesWithData[$category->getId()])) continue;
+                    if(!is_int($newQty)){
+                        $errors[] = $item->getCategoryName() . ' total boxes must be in whole numbers';
+                        continue;
+                    }
+                    else if($newQty < 0){
+                        $errors[] = $item->getCategoryName() . ' total boxes cannot be negative';
+                        continue;
+                    }
 
-                    $categoryId = $category->getId();
-                    $fieldName = 'pallet_qty_' . $categoryId;
-
-                    if(isset($_POST[$fieldName]) && isset($palletCountsMap[$categoryId])) {
-                        try{
-                            $newQty = +$_POST[$fieldName];
-                        }
-                        catch(TypeError $e){
-                            $newQty = " ";
-                        }
-
-                        if(!is_int($newQty)){
-                            $errors[] = 'Pallet - ' . $category->getName() . ' quantity must be in whole numbers';
-                            continue;
-                        }
-                        else if($newQty < 0){
-                            $errors[] = 'Pallet - ' . $category->getName() . ' quantity cannot be negative';
-                            continue;
-                        }
-
-                        $itemCountId = $palletCountsMap[$categoryId]->getId();
-                        $oldQty = $palletCountsMap[$categoryId]->getQuantity();
-
-                        if($oldQty != $newQty) {
-                            update_quantity($itemCountId, $newQty);
-                        }
+                    if($item->getCurrentQuantity() != $newQty) {
+                        setInventoryQuantity($item->getId(), $newQty);
                     }
                 }
             }
@@ -267,7 +148,7 @@
             max-width: 800px;
             margin: 2rem auto;
             padding: 1.5rem;
-            background-color: white;
+            background-color: #D4E7F6;
             border-radius: 15px;
         }
         .event-info {
@@ -387,19 +268,19 @@
     </style>
 </head>
 <pageheader>
-    <h1 class="title">Edit Inventory</h1>
+    <h1 class="title" style="margin-bottom: 0;">Edit Inventory</h1>
 </pageheader>
 <body>
     <?php require_once('header.php') ?>
     <main class="edit-container">
-        <a href="inventory.php" class="back-btn">← Back</a>
+        <a href="inventory.php" class="back-btn" style="margin-top: 0;">← Back</a>
         
-
-        <!-- Event Info (Read-Only) -->
+<!--
+         Event Info (Read-Only)
         <div class="event-info">
             <p><strong>Date:</strong> <?= date('M j, Y', strtotime($eventDate)) ?></p>
         </div>
-
+-->
         <!-- Success Message -->
         <?php if($success): ?>
             <h4 style="color:black;"><i>Inventory Updated: <?= date("F jS, Y", strtotime($eventDate)) ?></i></h4>
@@ -419,80 +300,22 @@
             <table class="modify-table">
                 <thead>
                     <tr>
-                        <th>#</th>
                         <th>Item Name</th>
-                        <th>Items Per Box</th>
-                        <th>Warehouse</th>
-                        <th>Pantry</th>
-                        <th>Pallet</th>
+                        <th>Total Boxes</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $rowNum = 0;
-                    foreach($allCategories as $category): ?>
-                        <?php if(!isset($categoriesWithData[$category->getId()])) continue; ?>
-                        <?php $rowNum++; ?>
-                        <?php
-                        $categoryId = $category->getId();
-
-                        // Warehouse quantity
-                        $warehouseQty = isset($warehouseCountsMap[$categoryId])
-                            ? $warehouseCountsMap[$categoryId]->getQuantity()
-                            : null;
-
-                        // Pantry quantity
-                        $pantryQty = isset($pantryCountsMap[$categoryId])
-                            ? $pantryCountsMap[$categoryId]->getQuantity()
-                            : null;
-
-                        // Pallet quantity
-                        $palletQty = isset($palletCountsMap[$categoryId])
-                            ? $palletCountsMap[$categoryId]->getQuantity()
-                            : null;
-                        ?>
+                    <?php foreach($items as $item): ?>
                         <tr>
-                            <td><?= $rowNum ?></td>
-                            <td><?= htmlspecialchars($category->getName()) ?></td>
-                            <td><?= htmlspecialchars($category->getItemsPerBox()) ?></td>
+                            <td><?= htmlspecialchars($item->getCategoryName()) ?></td>
 
-                            <!-- Warehouse Input -->
+                            <!-- Total Boxes Input -->
                             <td>
-                                <?php if($warehouseEvent && $warehouseQty !== null): ?>
-                                    <input type="number"
-                                           name="warehouse_qty_<?= $categoryId ?>"
-                                           value="<?= $warehouseQty ?>"
-                                           min="0"
-                                           class="updateInv-qty">
-                                <?php else: ?>
-                                    <span style="color: var(--inactive-font-color);">-</span>
-                                <?php endif; ?>
-                            </td>
-
-                            <!-- Pantry Input -->
-                            <td>
-                                <?php if($pantryEvent && $pantryQty !== null): ?>
-                                    <input type="number"
-                                           name="pantry_qty_<?= $categoryId ?>"
-                                           value="<?= $pantryQty ?>"
-                                           min="0"
-                                           class="updateInv-qty">
-                                <?php else: ?>
-                                    <span style="color: var(--inactive-font-color);">-</span>
-                                <?php endif; ?>
-                            </td>
-
-                            <!-- Pallet Input -->
-                            <td>
-                                <?php if($palletEvent && $palletQty !== null): ?>
-                                    <input type="number"
-                                           name="pallet_qty_<?= $categoryId ?>"
-                                           value="<?= $palletQty ?>"
-                                           min="0"
-                                           class="updateInv-qty">
-                                <?php else: ?>
-                                    <span style="color: var(--inactive-font-color);">-</span>
-                                <?php endif; ?>
+                                <input type="number"
+                                       name="total_boxes_<?= $item->getId() ?>"
+                                       value="<?= htmlspecialchars($item->getCurrentQuantity()) ?>"
+                                       min="0"
+                                       class="updateInv-qty">
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -502,8 +325,6 @@
             <div class="modifyUsers-formBtns">
                 <button type="submit" name="save_button" class="modify-save-btn">Save Changes</button>
                 <button type="submit" name="cancel_button" class="modify-cancel-btn" formnovalidate>Cancel</button>
-                <hr>
-                <button type="submit" name="delete_button" class="modify-delete-btn" onclick="return confirm('<?= date('m/d/Y', strtotime($eventDate)) ?>\nAre you sure you want to delete this inventory?\nThis action cannot be undone.')" formnovalidate>Delete Inventory</button>
             </div>
         </form>
     </main>

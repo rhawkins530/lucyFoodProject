@@ -33,7 +33,7 @@ function changeInventoryQuantity($id, $quantity) {
 
 function setInventoryQuantity($id, $quantity) {
     $con = connect();
-    mysqli_query($con, "UPDATE inventory SET current_quantity = $quantity WHERE id = $id");
+    mysqli_query($con, "UPDATE dbinventory SET current_quantity = $quantity WHERE id = $id");
     mysqli_close($con);
     return true;
 }

@@ -562,12 +562,23 @@ if ($selectedPairIndex !== null) {
     </style>
 </head>
 <pageheader>
-    <h1 class="title">Inventory Log</h1>
+		    <h1 class="title" style="margin-top: 0; margin-bottom: 0; padding-top: 0;">Inventory Log</h1>
 </pageheader>
 <body>
     <?php require_once('header.php'); ?>
     <main>
-        <div class="report-container">
+
+
+        <?php if($accessLevel >= 1): ?>
+            <div class="report-container" style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;">
+                <a href="editInventoryEvent.php?warehouseId=<?= htmlspecialchars($selectedWeek) ?>" style="text-decoration: none;">
+                    <button class="modify-button" style="width: 140px; height: 45px;">
+                        Modify
+                    </button>
+                </a>
+            </div>
+        <?php endif; ?>
+<div class="report-container">
             <div class="report-section">
                 <h2>Food Items</h2>
                 <!-- Old Inventory Snapshot Filter
@@ -707,7 +718,7 @@ if ($selectedPairIndex !== null) {
                     </table>
                 </div>
             </div>
-        </div>
+			        </div>
     </main>
 
     <script>
