@@ -3,6 +3,32 @@
 include_once('dbinfo.php');
 include_once(dirname(__FILE__).'/../domain/InventoryItem.php');
 
+function addInventoryItem($categoryId, $categoryName, $quantity, $minimum = 0, $allocated = 0) {
+    $con = connect();
+    $categoryId   = (int)$categoryId;
+    $quantity     = (int)$quantity;
+    $minimum      = (int)$minimum;
+    $allocated    = (int)$allocated;
+    $categoryName = mysqli_real_escape_string($con, $categoryName);
+
+    $query = "INSERT INTO dbinventory
+                (item_category_id, category_name, current_quantity, minimum_quantity, allocated_quantity)
+            VALUES ($categoryId, '$categoryName', $quantity, $minimum, $allocated)";
+    $ok = mysqli_query($con, $query);
+    mysqli_close($con);
+    return $ok;
+}
+
+function getInventoryIdByCategory($categoryId) {
+    $con = connect();
+    $categoryId = (int)$categoryId;
+    $query = "SELECT id FROM dbinventory WHERE item_category_id = $categoryId ORDER BY id LIMIT 1";
+    $result = mysqli_query($con, $query);
+    $row = mysqli_fetch_assoc($result);
+    mysqli_close($con);
+    return $row ? (int)$row['id'] : null;
+}
+
 /*
  * get quantity for the inventory item with the given id
  */
@@ -22,7 +48,7 @@ function getInventoryQuantity($id) {
 
 function changeInventoryQuantity($id, $quantity) {
     $con = connect();
-    mysqli_query($con, "UPDATE inventory SET current_quantity = current_quantity + $quantity WHERE id = $id");
+    mysqli_query($con, "UPDATE dbinventory SET current_quantity = current_quantity + $quantity WHERE id = $id");
     mysqli_close($con);
     return true;
 }
@@ -57,7 +83,7 @@ function getMinimumQuantity($id) {
 
 function setMinimumQuantity($id, $quantity) {
     $con = connect();
-    mysqli_query($con, "UPDATE inventory SET minimum_quantity = $quantity WHERE id = $id");
+    mysqli_query($con, "UPDATE dbinventory SET minimum_quantity = $quantity WHERE id = $id");
     mysqli_close($con);
     return true;
 }
@@ -81,7 +107,7 @@ function getAllocatedQuantity($id) {
 
 function changeAllocatedQuantity($id, $quantity) {
     $con = connect();
-    mysqli_query($con, "UPDATE inventory SET allocated_quantity = allocated_quantity + $quantity WHERE id = $id");
+    mysqli_query($con, "UPDATE dbinventory SET allocated_quantity = allocated_quantity + $quantity WHERE id = $id");
     mysqli_close($con);
     return true;
 }
@@ -92,7 +118,7 @@ function changeAllocatedQuantity($id, $quantity) {
 
 function setAllocatedQuantity($id, $quantity) {
     $con = connect();
-    mysqli_query($con, "UPDATE inventory SET allocated_quantity = $quantity WHERE id = $id");
+    mysqli_query($con, "UPDATE dbinventory SET allocated_quantity = $quantity WHERE id = $id");
     mysqli_close($con);
     return true;
 }

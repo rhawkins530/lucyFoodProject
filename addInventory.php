@@ -14,24 +14,27 @@
     // Add database includes here
 
     require_once('database/dbinfo.php');
+    require_once('database/dbInventory.php');
+
+    /*
     require_once('database/dbPersons.php');
     require_once('database/dbInventoryEvent.php');
     require_once('database/dbItemCategory.php');
     require_once('database/dbItemCounts.php');
     require_once('database/dbPalletEvent.php');
-
+   */
     // Check if inventory exists for a date
-    if (isset($_GET['action']) && $_GET['action'] === 'checkDate') {
+   /* if (isset($_GET['action']) && $_GET['action'] === 'checkDate') {
         $date = $_GET['date'] ?? '';
         $events = get_all_inventoryEvents_by_date($date);
         header('Content-Type: application/json');
         echo json_encode(['exists' => !empty($events)]);
         exit;
-    }
+    } */
 
     /* get the total pallet inventory for each category to show in the pallet column */
     /* Only include active categories - inactive/deleted items on pallets should not transfer to new inventories */
-    $pallet_totals = array();
+  /*  $pallet_totals = array();
     $pallets = get_all_palletEvents();
     $categories = get_all_active_ItemCategory();
     foreach($categories as $category){
@@ -47,8 +50,7 @@
                 $pallet_totals[$categoryId] += $count->getQuantity();
             }
         }
-    }
-
+    } */
 
     /* 
     * _POST is empty when the page is first loaded.
@@ -56,183 +58,257 @@
     *  if _POST is not empty, process data from form
     */
     $submit_success = false;
-    $include_pallets = false;
+    // $include_pallets = false; 
     $errors = [];
-    if (!empty($_POST)) {
-        $warehouseItems = array();
-        $pantryItems = array();
-        $date = null;
 
-        foreach($_POST as $name => $value){
-            if($name == "date"){
-                $date = $value;
-            }
-            else if($name == "checkIncludePallets"){
-                $include_pallets = true;
-            }
-            /* warehouse quantities have prefix "warehouse_" */
-            else if(strpos($name, 'warehouse_') === 0){
-                $categoryId = str_replace('warehouse_', '', $name);
+    // Categories with IDs
+    $CATEGORIES = [ 
+        1 => 'Cereal/Oatmeal', 2 => 'Cooking Oil', 3 => 'Peanut Butter',
+        4 => 'Jelly', 5 => 'Dry Pasta Box', 6 => 'Pasta Sauce',
+        7 => 'Canned Chicken', 8 => 'Canned Tuna', 9 => 'Condiments',
+        10 => 'Green Beans', 11 => 'Corn', 12 => 'Mixed Vegetables',
+        13 => 'Baked Beans', 14 => 'Canned/Dry Beans', 15 => 'Canned Fruit (Mixed)',
+        16 => 'Canned Peaches', 17 => 'Canned Pasta', 18 => 'Carrots',
+        19 => 'Peas', 20 => 'Ramen', 21 => 'Milk',
+        22 => 'Diced Tomatoes', 23 => 'Rice', 24 => 'Flour (Masa)',
+        25 => 'Flour (White)', 26 => 'Soup', 27 => 'Juice',
+        28 => 'Baking Goods', 29 => 'Mac & Cheese',
+    ];
+    
+    //$LOCATIONS = ['Main'];
 
-                /* only add items that have values to array */
-                if(!empty($value)){
+    //Crate types for unsorted inventory
+    $CRATE_TYPES = ['Gaylord (M)', 'Blue Boy (L)', 'X-Large'];
 
-                    /* try to convert value to a number. If it cannot convert, leave it as a string */
-                    try{
-                        $value = +$value;
-                    }
-                    catch(TypeError $e){
-                        $value = " ";
-                    }
 
-                    /* if error is found, empty the arrays and stop checking */
-                    if(!is_int($value)){
-                        $errors[] = 'Warehouse quantities must be in whole numbers';
-                        $warehouseItems = array();
-                        $pantryItems = array();
-                        break;
-                    }
-                    else if($value < 0){
-                        $errors[] = 'Warehouse quantities cannot be negative';
-                        $warehouseItems = array();
-                        $pantryItems = array();
-                        break;
-                    }
-                    /* accept items with 0 or greater quantity */
-                    else if($value >= 0){
-                        $warehouseItems[$categoryId] = $value;
+    if(isset($_POST['food-status'])) {
+        $foodStatus = $_POST['food-status'];
+        // $location = $_POST['location'] ?? '';
+
+        try {
+            /*if (!in_array($location, $LOCATIONS, true)) {
+                throw new InvalidArgumentException('Invalid location.');
+            }*/
+
+            if ($foodStatus === 'Sorted') {
+                $qty = filter_var($_POST['box-quantity'] ?? '', FILTER_VALIDATE_INT,
+                                  ['options' => ['min_range' => 1]]);
+                $sortedCategory = $_POST['category'] ?? '';
+                $catId = array_search($sortedCategory, $CATEGORIES, true);
+                if ($qty === false || $catId === false) {
+                    throw new InvalidArgumentException('Please choose a category and a box quantity of 1 or more.');
+                }
+
+                $existingId = getInventoryIdByCategory($catId);
+
+                if ($existingId !== null) {
+                    changeInventoryQuantity($existingId, $qty);
+                }
+                else{
+                    if (!addInventoryItem($catId, $sortedCategory, $qty)){
+                        throw new InvalidArgumentException('Could not save to the database.');
                     }
                 }
-            }
-            /* pantry quantities have prefix "pantry_" */
-            else if(strpos($name, 'pantry_') === 0){
-                $categoryId = str_replace('pantry_', '', $name);
 
-                /* only add items that have values to array */
-                if(!empty($value)){
-
-                    /* try to convert value to a number. If it cannot convert, leave it as a string */
-                    try{
-                        $value = +$value;
-                    }
-                    catch(TypeError $e){
-                        $value = " ";
-                    }
-
-                    /* if error is found, empty the arrays and stop checking */
-                    if(!is_int($value)){
-                        $errors[] = 'Pantry quantities must be in whole numbers';
-                        $warehouseItems = array();
-                        $pantryItems = array();
-                        break;
-                    }
-                    else if($value < 0){
-                        $errors[] = 'Pantry quantities cannot be negative';
-                        $warehouseItems = array();
-                        $pantryItems = array();
-                        break;
-                    }
-                    /* accept items with 0 or greater quantity */
-                    else if($value >= 0){
-                        $pantryItems[$categoryId] = $value;
-                    }
+            } elseif ($foodStatus === 'Unsorted') {
+                $weight = filter_var($_POST['unsorted-weight'] ?? '', FILTER_VALIDATE_FLOAT);
+                $crate  = $_POST['crate-type'] ?? '';
+                if ($weight === false || $weight < 0 || !in_array($crate, $CRATE_TYPES, true)) {
+                    throw new InvalidArgumentException('Please enter a weight and choose a crate type.');
                 }
-            }
-        }
 
-        /* build pallet items array (from pallet_totals if checkbox checked, zeros if not) */
-        $palletItems = array();
-        if($include_pallets){
-            foreach($pallet_totals as $categoryId => $quantity){
-                $palletItems[$categoryId] = $quantity;
-            }
-        }
+                $unsortedCats = array_values(array_unique(array_intersect($_POST['categories'] ?? [], $CATEGORIES)));
 
-        // OLD CODE - add pallet totals to Warehouse only
-        // if($include_pallets){
-        //     foreach($pallet_totals as $categoryId => $quantity){
-        //         if(isset($warehouseItems[$categoryId])){
-        //             $warehouseItems[$categoryId] += $quantity;
-        //         }
-        //         else{
-        //             $warehouseItems[$categoryId] = $quantity;
-        //         }
-        //     }
-        // }
-
-        /* if at least 1 item was entered, create inventory events and add items to database */
-        if(empty($errors) && (count($warehouseItems) > 0 || count($pantryItems) > 0 || count($palletItems) > 0)){
-
-            /* auto-fill missing items with 0 for complete analytics data */
-            $allCategories = get_all_active_ItemCategory();
-            foreach($allCategories as $category){
-                // Skip shopping list only items
-                if ($category->getShopOnly() == 1) {
-                    continue;
-                }
-                $categoryId = $category->getId();
-                if(!isset($warehouseItems[$categoryId])){
-                    $warehouseItems[$categoryId] = 0;
-                }
-                if(!isset($pantryItems[$categoryId])){
-                    $pantryItems[$categoryId] = 0;
-                }
-                if(!isset($palletItems[$categoryId])){
-                    $palletItems[$categoryId] = 0;
-                }
+            } else {
+                throw new InvalidArgumentException('Unknown food status.');
             }
 
-            /* create or update warehouse, pantry, and pallet events */
-            $personId = retrieve_person($userID)->get_personId();
-            $overwrite = isset($_POST['overwrite']) && $_POST['overwrite'] === '1';
-            $existingEvents = get_all_inventoryEvents_by_date($date);
-
-            if ($overwrite && !empty($existingEvents)) {
-                /* Overwrite - Delete existing events first */
-                foreach ($existingEvents as $event) {
-                    if ($event->getLocation() == 'Warehouse') {
-                        $matches = get_matching_inventoryEvent($event);
-                        remove_inventoryEvent($event->getId());
-                        if (isset($matches['Pantry'])) {
-                            remove_inventoryEvent($matches['Pantry']->getId());
-                        }
-                        if (isset($matches['Pallet'])) {
-                            remove_inventoryEvent($matches['Pallet']->getId());
-                        }
-                        break;
-                    }
-                }
-            }
-
-            /* Create inventory events */
-            $warehouseEventId = add_inventoryEvent($personId, 'Warehouse', $date);
-            foreach($warehouseItems as $categoryId => $quantity){
-                add_itemCount($warehouseEventId, $categoryId, $quantity);
-            }
-
-            $pantryEventId = add_inventoryEvent($personId, 'Pantry', $date);
-            foreach($pantryItems as $categoryId => $quantity){
-                add_itemCount($pantryEventId, $categoryId, $quantity);
-            }
-
-            $palletEventId = add_inventoryEvent($personId, 'Pallet', $date);
-            foreach($palletItems as $categoryId => $quantity){
-                add_itemCount($palletEventId, $categoryId, $quantity);
-            }
-
-            $submit_success = true;
-            
-            // Redirect to inventory page to view the newly created inventory
-            header('Location: inventory.php?week=' . $warehouseEventId);
+            header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?') . '?saved=1');
             exit;
-        }
-        else{
-            /* if errors have already been detected array was emptied. Do not show error for missing data */
-            if(empty($errors)){
-                $errors[] = 'Enter quantity for at least 1 item';
-            }
+
+        } catch (InvalidArgumentException $e) {
+            $errors[] = $e->getMessage();
+        } catch (mysqli_sql_exception $e) {
+            $errors[] = 'Database error: ' . $e->getMessage();
         }
     }
+
+//    if (!isset($_POST['food-status']) && !empty($_POST)) {
+//         $warehouseItems = array();
+//         $pantryItems = array();
+//         $date = null;
+
+//         foreach($_POST as $name => $value){
+//             if($name == "date"){
+//                 $date = $value;
+//             }
+//             else if($name == "checkIncludePallets"){
+//                 $include_pallets = true;
+//             }
+//             /* warehouse quantities have prefix "warehouse_" */
+//             else if(strpos($name, 'warehouse_') === 0){
+//                 $categoryId = str_replace('warehouse_', '', $name);
+
+//                 /* only add items that have values to array */
+//                 if(!empty($value)){
+
+//                     /* try to convert value to a number. If it cannot convert, leave it as a string */
+//                     try{
+//                         $value = +$value;
+//                     }
+//                     catch(TypeError $e){
+//                         $value = " ";
+//                     }
+
+//                     /* if error is found, empty the arrays and stop checking */
+//                     if(!is_int($value)){
+//                         $errors[] = 'Warehouse quantities must be in whole numbers';
+//                         $warehouseItems = array();
+//                         $pantryItems = array();
+//                         break;
+//                     }
+//                     else if($value < 0){
+//                         $errors[] = 'Warehouse quantities cannot be negative';
+//                         $warehouseItems = array();
+//                         $pantryItems = array();
+//                         break;
+//                     }
+//                     /* accept items with 0 or greater quantity */
+//                     else if($value >= 0){
+//                         $warehouseItems[$categoryId] = $value;
+//                     }
+//                 }
+//             }
+//             /* pantry quantities have prefix "pantry_" */
+//             else if(strpos($name, 'pantry_') === 0){
+//                 $categoryId = str_replace('pantry_', '', $name);
+
+//                 /* only add items that have values to array */
+//                 if(!empty($value)){
+
+//                     /* try to convert value to a number. If it cannot convert, leave it as a string */
+//                     try{
+//                         $value = +$value;
+//                     }
+//                     catch(TypeError $e){
+//                         $value = " ";
+//                     }
+
+//                     /* if error is found, empty the arrays and stop checking */
+//                     if(!is_int($value)){
+//                         $errors[] = 'Pantry quantities must be in whole numbers';
+//                         $warehouseItems = array();
+//                         $pantryItems = array();
+//                         break;
+//                     }
+//                     else if($value < 0){
+//                         $errors[] = 'Pantry quantities cannot be negative';
+//                         $warehouseItems = array();
+//                         $pantryItems = array();
+//                         break;
+//                     }
+//                     /* accept items with 0 or greater quantity */
+//                     else if($value >= 0){
+//                         $pantryItems[$categoryId] = $value;
+//                     }
+//                 }
+//             }
+//         } 
+
+//         /* build pallet items array (from pallet_totals if checkbox checked, zeros if not) */
+//         $palletItems = array();
+//         if($include_pallets){
+//             foreach($pallet_totals as $categoryId => $quantity){
+//                 $palletItems[$categoryId] = $quantity;
+//             }
+//         }
+
+//         // OLD CODE - add pallet totals to Warehouse only
+//         // if($include_pallets){
+//         //     foreach($pallet_totals as $categoryId => $quantity){
+//         //         if(isset($warehouseItems[$categoryId])){
+//         //             $warehouseItems[$categoryId] += $quantity;
+//         //         }
+//         //         else{
+//         //             $warehouseItems[$categoryId] = $quantity;
+//         //         }
+//         //     }
+//         // }
+
+//         /* if at least 1 item was entered, create inventory events and add items to database */
+//         if(empty($errors) && (count($warehouseItems) > 0 || count($pantryItems) > 0 || count($palletItems) > 0)){
+
+//             /* auto-fill missing items with 0 for complete analytics data */
+//             $allCategories = get_all_active_ItemCategory();
+//             foreach($allCategories as $category){
+//                 // Skip shopping list only items
+//                 if ($category->getShopOnly() == 1) {
+//                     continue;
+//                 }
+//                 $categoryId = $category->getId();
+//                 if(!isset($warehouseItems[$categoryId])){
+//                     $warehouseItems[$categoryId] = 0;
+//                 }
+//                 if(!isset($pantryItems[$categoryId])){
+//                     $pantryItems[$categoryId] = 0;
+//                 }
+//                 if(!isset($palletItems[$categoryId])){
+//                     $palletItems[$categoryId] = 0;
+//                 }
+//             }
+
+//             /* create or update warehouse, pantry, and pallet events */
+//             $personId = retrieve_person($userID)->get_personId();
+//             $overwrite = isset($_POST['overwrite']) && $_POST['overwrite'] === '1';
+//             $existingEvents = get_all_inventoryEvents_by_date($date);
+
+//             if ($overwrite && !empty($existingEvents)) {
+//                 /* Overwrite - Delete existing events first */
+//                 foreach ($existingEvents as $event) {
+//                     if ($event->getLocation() == 'Warehouse') {
+//                         $matches = get_matching_inventoryEvent($event);
+//                         remove_inventoryEvent($event->getId());
+//                         if (isset($matches['Pantry'])) {
+//                             remove_inventoryEvent($matches['Pantry']->getId());
+//                         }
+//                         if (isset($matches['Pallet'])) {
+//                             remove_inventoryEvent($matches['Pallet']->getId());
+//                         }
+//                         break;
+//                     }
+//                 }
+//             }
+
+//             /* Create inventory events */
+//             $warehouseEventId = add_inventoryEvent($personId, 'Warehouse', $date);
+//             foreach($warehouseItems as $categoryId => $quantity){
+//                 add_itemCount($warehouseEventId, $categoryId, $quantity);
+//             }
+
+//             $pantryEventId = add_inventoryEvent($personId, 'Pantry', $date);
+//             foreach($pantryItems as $categoryId => $quantity){
+//                 add_itemCount($pantryEventId, $categoryId, $quantity);
+//             }
+
+//             $palletEventId = add_inventoryEvent($personId, 'Pallet', $date);
+//             foreach($palletItems as $categoryId => $quantity){
+//                 add_itemCount($palletEventId, $categoryId, $quantity);
+//             }
+
+//             $submit_success = true;
+            
+//             // Redirect to inventory page to view the newly created inventory
+//             header('Location: inventory.php?week=' . $warehouseEventId);
+//             exit;
+//         }
+//         else{
+//             /* if errors have already been detected array was emptied. Do not show error for missing data */
+//             if(empty($errors)){
+//                 $errors[] = 'Enter quantity for at least 1 item';
+//             }
+//         }
+//     }
+
 
     /* Previous Inventory column removed
     $previous_event_pair = get_previous_inventoryEvent_pair(new InventoryEvent(0, 0, 0, date('Y-m-d')));
@@ -290,6 +366,8 @@
             border-radius: 15px;
             padding: 1.5rem;
             margin-bottom: 2rem;
+            margin-left: 15%;
+            margin-right: 15%;
         }
         .report-section h1 {
             font-size: 1.5rem;
@@ -561,6 +639,19 @@
             width: 350px;
             padding: 5px;
         }
+        #category-columns {
+            column-count: 2;
+            column-gap: 10%;
+        }
+
+        #category-columns label {
+            display: block;
+            break-inside: avoid;
+            margin-bottom: 0.25rem;
+        }
+        @media (max-width: 480px){
+            #category-columns { column-count: 1;}
+        }
     </style>
 </head>
 <pageheader>
@@ -569,268 +660,206 @@
 <body>
     <?php require_once('header.php') ?>
     <main>
-        <div class="report-container">
-            <?php
-                /* Display success message after submitting inventory */
-                if($submit_success == true){
-                    echo("<h4 style=\"color:black;\"><i>Inventory Submitted: ".date("m/d/Y", strtotime($date))." (Warehouse & Pantry & Pallet)</i></h4>");
-                }
-                /* Display errors from submitting inventory */
-                if (!empty($errors)): ?>
-                <ul>
-                    <?php foreach($errors AS $error): ?>
-                        <li><?php echo("<h4 style=\"color:red;\"><i>".$error."</i></h4>"); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
+        <?php if (isset($_GET['saved'])): ?>
+            <!-- Confirmation message -->
+            <h4 id="saved-msg" style="color:black; margin-left:15%;" ><i>Inventory submitted.</i></h4>
+        <?php endif; ?>
+        <?php foreach ($errors as $error): ?>
+            <h4 style="color:red;"><i><?= htmlspecialchars($error) ?></i></h4>
+        <?php endforeach; ?>
+        <!-- Add Inventory -->
+        <div class="report-section">
+            <h2>Inventory Item Entry</h2>   
+            <form method="POST" id="inv-form" novalidate>
+                <div id="form-errors" role="alert" style="display:none; color:#b00020;"></div>
+                
+                <!-- Shared Fields -->
+                <div class="input-group">
+                    <label for="food-status">Food Status:</label>
+                    <select id="food-status" name="food-status">
+                        <?php $selStatus = $_POST['food-status'] ?? 'Sorted'; ?>
+                        <option value="Sorted" <?= $selStatus === 'Sorted' ? 'selected' : '' ?>>Sorted</option>
+                        <option value="Unsorted" <?= $selStatus === 'Unsorted' ? 'selected' : '' ?>>Unsorted</option>
+                    </select>
+                </div>
 
-            
-            <!-- Add Inventory -->
-            <div class="report-section">
-                <h2>Inventory Item Entry</h2>   
-                <!--<form name="invForm" onsubmit="return validateFormDate()" method="POST" action="viewUpdateInventory.php">
-                    <div class="updateInv-optionRow">
-                        <div class="updateInv-option">
-                        </div>
-                        <div class="updateInv-option">
-                            <label class="updateInv-optionLabel" for="date">Inventory Date:</label>
-                            <input type="date" name="date" id="date"
-                                value="<?php if (!empty($errors)) echo($_POST['date']); else echo date('Y-m-d');?>">
-                        </div>
+                <!--
+                <div class="input-group">
+                    <label for="location">Warehouse Location:</label>
+                        <select id="location" name="location">
+                        <option value="Main">Main</option> 
+                        <option value="Annex">Annex</option> 
+                    </select>
+                </div> -->
+                        
+
+                <!-- Sorted Fields -->
+                <div id="sorted-fields">
+                    <div class="input-group">
+                        <label for="category-options">Item Category:</label>
+                        <select id="category-options" name="category">
+                            <?php foreach ($CATEGORIES as $name): ?>
+                                <option value="<?=  htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- <div class="input-group">
+                        <label for="earliest-date-choice">Earliest Date On Container:</label>
+                        <input type="date" id="earliest-date" name="earliest-date">
                     </div> -->
-                    <div class="form-column"></div>
-                        <div class="input-group">
-                            <label for="custom-name">Specified Name:</label>
-                            <input type="text" id="custom-name" name="custom-name" placeholder="Enter custom name (OPTIONAL)" >
-                        </div>
 
-                        <div class="input-group">
-                            <label for="category-choice">Item Category:</label>
-                            <select id="category-options">
-                                <option value="Cereal/Oatmeal">Cereal/Oatmeal</option>
-                                <option value="Cooking Oil">Cooking Oil</option>
-                                <option value="Peanut Butter">Peanut Butter</option>
-                                <option value="Jelly">Jelly</option>
-                                <option value="Dry Pasta Box">Dry Pasta Box</option>
-                                <option value="Pasta Sauce">Pasta Sauce</option>
-                                <option value="Canned Chicken">Canned Chicken</option>
-                                <option value="Canned Tuna">Canned Tuna</option>
-                                <option value="Condiments">Condiments</option>
-                                <option value="Green Beans">Green Beans</option>
-                                <option value="Corn">Corn</option>
-                                <option value="Mixed Vegetables">Mixed Vegetables</option>
-                                <option value="Baked Beans">Baked Beans</option>
-                                <option value="Canned/Dry Beans">Canned/Dry Beans</option>
-                                <option value="Canned Fruit (Mixed)">Canned Fruit (Mixed)</option>
-                                <option value="Canned Peaches">Canned Peaches</option>
-                                <option value="Canned Pasta">Canned Pasta</option>
-                                <option value="Carrots">Carrots</option>
-                                <option value="Peas">Peas</option>
-                                <option value="Ramen">Ramen</option>
-                                <option value="Milk">Milk</option>
-                                <option value="Diced Tomatoes">Diced Tomatoes</option>
-                                <option value="Rice">Rice</option>
-                                <option value="Flour (Masa)">Flour (Masa)</option>
-                                <option value="Flour (White)">Flour (White)</option>
-                                <option value="Soup">Soup</option>
-                                <option value="Juice">Juice</option>
-                                <option value="Baking Goods">Baking Goods</option>
-                                <option value="Mac & Cheese">Mac & Cheese</option>
-                            </select>
-                        </div>
+                    <div class="input-group">
+                        <label for="box-quantity">Box Quantity:</label> <!-- Number of boxes (standardized container) -->
+                        <input type="number" min="1" step="1" id="box-quantity" name="box-quantity" placeholder="Amount of boxes">
+                    </div>
+                </div>
 
-                        <div class="input-group">
-                            <label for="location-choice">Warehouse Location:</label>
-                              <select id="location-options">
-                                <option value="Main">Main</option>
-                                <option value="Annex">Annex</option>
-                            </select>
-                        </div>
+                <!-- Unsorted Fields -->
+                <div id="unsorted-fields" style="display:none;">
+                    <div class="input-group">
+                        <label for="unsorted-weight">Weight (lbs):</label>
+                        <input type="number" id="unsorted-weight" name="unsorted-weight"
+                            min="0" step="any" placeholder="Enter weight in lbs.">
+                    </div>
 
-                        <div class="input-group">
-                            <label for="earliest-date-choice">Earliest Date On Container:</label>
-                            <input type="date" id="earliest-date" name="earliest-date">
-                        </div>
+                    <div class="input-group">
+                        <label>Categories Inside Unsorted Crate:</label>
+                        <div id="category-checklist">
+                            <div style="display: flex; gap:10%; margin-bottom:0.5rem;">
+                                <label>
+                                    <input type="checkbox" id="cat-none" name="categories[]" value="None"> None
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="cat-all"> <strong>Select All</strong>
+                                </label>
+                            </div>
 
-                        <div class="input-group">
-                            <label for="food-status-choice">Food Status:</label>
-                            <select name="food-status">
-                                <option value="Sorted">Sorted</option>
-                                <option value="Unsorted">Unsorted</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="weight-amount-lbs">Weight Marked on Each Box(lbs):</label>
-                            <input type="number" id="weight-amount-lbs" name="weight-amount-lbs" placeholder="Enter weight in lbs." min="0" step="any">
-                        </div>
-                        <div class="input-group">
-                            <button type="submit" onclick="window.location.href='tempInvSubmitted.php'">Submit to Inventory!</button>
+                            <div id="category-columns"></div>
                         </div>
                     </div>
-                        <!-- <div class="table-wrapper">
-                        <table class="report-table">
-                            <thead>
-                                <tr>
-                                    <th>Item Category</th>
-                                    <th>
-                                        <span class="desktop-text">Warehouse</span>
-                                        <span class="mobile-text">WH</span>
-                                    </th>
-                                    <th>
-                                        <span class="desktop-text">Pantry</span>
-                                        <span class="mobile-text">PT</span>
-                                    </th>
-                                    <th>
-                                        <div class="pallet-column" style="display: block;">
-                                            <span class="desktop-text">Pallet Boxes</span>
-                                            <span class="mobile-text">Pallets</span>
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <span class="desktop-text">Banana Box</span>
-                                        <span class="mobile-text">Ban. Box</span>
-                                    </th>
-                                    <th>
-                                        <span class="desktop-text">Items Per Box</span>
-                                        <span class="mobile-text">Items/Box</span>
-                                    </th>
-                                </tr>
-                            </thead> 
 
-                             <tbody> 
-                                <?php
-                                $categories = get_all_active_ItemCategory();
-                                foreach($categories AS $category): 
-                                    // Skip shopping list only items
-                                    if ($category->getShopOnly() == 1) {
-                                        continue;
-                                    }
-                                ?>
-                                    <tr class="updateInv-row">
-                                        <td>
-                                            <label class="updateInv-label" for="warehouse_<?php echo($category->getId())?>">
-                                                <?php echo($category->getName());?>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <input type="number" class="updateInv-qty" min="0" placeholder="0"
-                                                value="<?php if (!empty($errors)) echo($_POST['warehouse_'.$category->getId()]);?>"
-                                                name="warehouse_<?php echo($category->getId())?>"
-                                                id="warehouse_<?php echo($category->getId())?>">
-                                        </td>
-                                        <td>
-                                            <input type="number" class="updateInv-qty" min="0" placeholder="0"
-                                                value="<?php if (!empty($errors)) echo($_POST['pantry_'.$category->getId()]);?>"
-                                                name="pantry_<?php echo($category->getId())?>"
-                                                id="pantry_<?php echo($category->getId())?>">
-                                        </td>
-                                        <td>
-                                            <div class="pallet-column" style="display: block;">
-                                                <?php if(isset($pallet_totals[$category->getId()]))
-                                                            echo($pallet_totals[$category->getId()])?>
-                                            </div>
-                                        </td>
-                                        <td style="text-align: center;"><?= $category->getBananaBox() == 1 ? '✓' : '' ?></td>
-                                        <td style="text-align: center;"><?php echo($category->getItemsPerBox())?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                    <div class="input-group">
+                        <label for="crate-type">Crate Type:</label>
+                        <select id="crate-type" name="crate-type">
+                            <?php foreach ($CRATE_TYPES as $crate): ?>
+                                <option value="<?= htmlspecialchars($crate) ?>"><?= htmlspecialchars($crate) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                    </div> 
-                    <input type="hidden" id="overwrite" name="overwrite" value="0">
-                    <input type="submit" value="Submit Inventory" />
-                </form>
-                <script>
-                    function showPalletColumn() {
-                        var checkBox = document.getElementById("checkIncludePallets");
-                        var palletColumn = document.getElementsByClassName("pallet-column");
-                        if (checkBox.checked == true){
-                            for (var i = 0; i < palletColumn.length; i++) {
-                                palletColumn[i].style.display = "block";
-                            }
-                        } else {
-                            for (var i = 0; i < palletColumn.length; i++) {
-                                palletColumn[i].style.display = "none";
-                            }
-                        }
-                    }
-                </script> 
-                <script>
-                    /* if form Date is in the past or the future, confirm before submitting form */
-                    /* also check if inventory already exists for the date */
-                    function validateFormDate() {
-                        var overwriteField = document.getElementById('overwrite');
-
-                        // If already confirmed overwrite, skip inventory check
-                        if (overwriteField.value === '1') {
-                            return true;
-                        }
-
-                        const [formYear,formMonth,formDay] = document.forms["invForm"]["date"].value.split("-");
-                        /* check for invalid input */
-                        if(formYear == null || formMonth == null || formDay == null){
-                            alert("Invalid Date");
-                            return false;
-                        }
-                        /* check for invalid date */
-                        else if(isNaN(new Date(document.forms["invForm"]["date"].value))){
-                            alert("Invalid Date");
-                            return false;
-                        }
-
-                        var dateValue = document.forms["invForm"]["date"].value;
-
-                        // Check if inventory exists for this date
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('GET', 'viewUpdateInventory.php?action=checkDate&date=' + dateValue, false);
-                        xhr.send();
-
-                        if (xhr.status === 200) {
-                            var response = JSON.parse(xhr.responseText);
-                            if (response.exists) {
-                                if (confirm("Inventory already exists for " + formMonth + "/" + formDay + "/" + formYear +
-                                            "\n\nDo you want to overwrite it?")) {
-                                    overwriteField.value = '1';
-                                } else {
-                                    return false;
-                                }
-                            }
-                        }
-
-                        let currDate = new Date();
-                        let compareDates = 0;
-                        if(formYear==currDate.getFullYear()){
-                            if(formMonth == currDate.getMonth()+1){
-                                compareDates = formDay-currDate.getDate();
-                            }
-                            else{
-                                compareDates = formMonth-(currDate.getMonth()+1);
-                            }
-                        }
-                        else{
-                            compareDates = formYear-currDate.getFullYear();
-                        }
-
-                        if(compareDates == 0){
-                            return true;
-                        }
-                        else if(compareDates < 0){
-                            return confirm("PAST DATE: "+formMonth+"/"+formDay+"/"+formYear+
-                                            "\nAre you sure you want to submit?");
-                        }
-                        else if(compareDates > 0){
-                            return confirm("FUTURE DATE: "+formMonth+"/"+formDay+"/"+formYear+
-                                            "\nAre you sure you want to submit?");
-                        }
-                    }
-                </script>
-            </div>
-
-        </div> -->
+                </div>
+                    <!-- <div class="input-group">
+                        <label for="weight-amount-lbs">Weight Marked on Each Box(lbs):</label>
+                        <input type="number" id="weight-amount-lbs" name="weight-amount-lbs" placeholder="Enter weight in lbs." min="0" step="any">
+                    </div> -->
+                <div class="input-group">
+                    <button type="submit">Submit to Inventory!</button>
+                </div>
+            </form>
+        </div>
     </main>
-    
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form        = document.getElementById('inv-form');
+        const status      = document.getElementById('food-status');
+        const sortedBox   = document.getElementById('sorted-fields');
+        const unsortedBox = document.getElementById('unsorted-fields');
+        const errorBox    = document.getElementById('form-errors');
+        const checklist   = document.getElementById('category-checklist');
+        const noneBox     = document.getElementById('cat-none');
+        const categorySel = document.getElementById('category-options');
+        const allBox      = document.getElementById('cat-all');
+        const columns     = document.getElementById('category-columns');
 
+        // Build the unsorted checklist from the category dropdown
+        const catBoxes = [];
+        Array.from(categorySel.options).forEach(function (opt) {
+            const label = document.createElement('label');
+            label.style.display = 'block';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.name = 'categories[]';
+            cb.value = opt.value;
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(' ' + opt.text));
+            columns.appendChild(label);
+            catBoxes.push(cb);
+        });
+
+        function syncAll() {
+            allBox.checked = catBoxes.length > 0 && catBoxes.every(cb => cb.checked);
+        }
+
+        allBox.addEventListener('change', function() {
+            catBoxes.forEach(cb => cb.checked = allBox.checked);
+            if (allBox.checked) noneBox.checked = false;
+        });
+
+        noneBox.addEventListener('change', function () {
+            if (noneBox.checked) catBoxes.forEach(cb => cb.checked = false);
+            allBox.checked = false;
+        });
+
+        catBoxes.forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                if (cb.checked) noneBox.checked = false;
+                syncAll();
+            });
+        });
+
+        function setDisabled(container, disabled) {
+            container.querySelectorAll('input, select').forEach(el => el.disabled = disabled);
+        }
+
+        function updateFields() {
+            const isUnsorted = status.value === 'Unsorted';
+            sortedBox.style.display   = isUnsorted ? 'none' : 'block';
+            unsortedBox.style.display = isUnsorted ? 'block' : 'none';
+            setDisabled(sortedBox, isUnsorted);
+            setDisabled(unsortedBox, !isUnsorted);
+            errorBox.style.display = 'none';
+
+        }
+
+        function validate() {
+            const errors = [];
+            if (status.value === 'Sorted') {
+                const qty = Number(document.getElementById('box-quantity').value);
+                if (!categorySel.value) errors.push('Please choose an item category.');
+                if (!Number.isInteger(qty) || qty < 1)
+                    errors.push('Box quantity must be a whole number of 1 or more.');
+            } else {
+                const w = document.getElementById('unsorted-weight').value;
+                if (w === '' || isNaN(Number(w)) || Number(w) < 0)
+                    errors.push('Please enter a weight of 0 or more.');
+                if (!document.getElementById('crate-type').value)
+                    errors.push('Please choose a crate type.');
+                if (!noneBox.checked && !catBoxes.some(cb => cb.checked))
+                    errors.push('Select "None" or at least one category.');
+            }
+            return errors;
+        }
+
+        form.addEventListener('submit', function (e) {
+            const errors = validate();
+            if (errors.length) {
+                e.preventDefault();                       
+                errorBox.innerHTML = errors.map(m => '<div>' + m + '</div>').join('');
+                errorBox.style.display = 'block';
+                errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }       
+        });
+
+        status.addEventListener('change', function () {
+            updateFields();
+            const savedMsg = document.getElementById('saved-msg');
+            if (savedMsg) savedMsg.style.display = 'none';
+        });
+        updateFields();
+    });
+    if (window.location.search.includes('saved=1')) {
+    history.replaceState(null, '', window.location.pathname);
+    }
+</script>
 </body>
 </html>
