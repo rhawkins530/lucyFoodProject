@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 24, 2026 at 05:24 PM
+-- Generation Time: Oct 24, 2026 at 10:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1669,10 +1669,10 @@ CREATE TABLE `dbfoodorder` (
   `id` int(11) NOT NULL,
   `requestor_person_id` int(11) NOT NULL,
   `approver_person_id` int(11) DEFAULT NULL,
-  `order_status` int(11) NOT NULL,
-  `submission_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `order_status` text NOT NULL,
+  `submission_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `approval_date` timestamp NULL DEFAULT NULL,
-  `fulfill_date` timestamp NULL DEFAULT NULL
+  `fulfillment_date` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -5049,6 +5049,12 @@ ALTER TABLE `dbeventpersons`
 --
 ALTER TABLE `dbevents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=187;
+
+--
+-- AUTO_INCREMENT for table `dbfoodorder`
+--
+ALTER TABLE `dbfoodorder`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `dbfoodorderitem`
