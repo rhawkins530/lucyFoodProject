@@ -19,53 +19,64 @@
 
     require_once('database/dbinfo.php');
     require_once('database/dbPersons.php');
-    require_once('database/dbItemCategory.php');
+    require_once('database/dbinventory.php');
     $con = connect();
 
     //New Categorys
         if (isset($_POST['add_category'])) {
-            $cat_name = trim($_POST['cat_name']);
-            $bananaBox = isset($_POST['bananaBox']) ? 1 : 0;
-            $shopOnly = isset($_POST['shopOnly']) ? 1 : 0;
-            $status = "Active";
+            $name = trim($_POST['name']);
 
             /* check that Items Per Box is set */
-            if(isset($_POST["itemsPerBox"])){
+            if(isset($_POST["minimum"])){
 
                 /* try to convert items per box to a number. If it cannot convert, leave it as a string */
                 try{
-                    $itemsPerBox = +$_POST["itemsPerBox"];
+                    $minimum = +$_POST["minimum"];
                 }
                 catch(TypeError  $e){
-                    $itemsPerBox = " ";
+                    $minimum = " ";
                 }
 
                 /* check for errors */
-                if(!is_int($itemsPerBox)){
-                    $errors[] = 'Items Per Box must be in whole numbers';
+                if(!is_int($minimum)){
+                    $errors[] = 'Minimum boxes must be in whole numbers';
                 }
-                else if($itemsPerBox < 0){
-                    $errors[] = 'Items Per Box cannot be negative';
+                else if($minimum < 0){
+                    $errors[] = 'Minimum boxes cannot be negative';
                 }
             }
             else{
-                $errors[] = 'Items Per Box must be a whole number';
+                $errors[] = 'Minimum boxes cannot be empty';
+            }
+            if(isset($_POST["allocated"])){
+
+                /* try to convert items per box to a number. If it cannot convert, leave it as a string */
+                try{
+                    $allocated = +$_POST["allocated"];
+                }
+                catch(TypeError  $e){
+                    $allocated = " ";
+                }
+
+                /* check for errors */
+                if(!is_int($allocated)){
+                    $errors[] = 'Allocated boxes must be in whole numbers';
+                }
+                else if($allocated < 0){
+                    $errors[] = 'Allocated boxes cannot be negative';
+                }
+            }
+            else{
+                $errors[] = 'Minimum boxes cannot be empty';
             }
 
             if(empty($errors)){
-                $existing_item = retrieve_ItemCategory_by_name($cat_name);
+                $existing_item = getItemByName($name);
                 if ($existing_item) {
-                    if($existing_item->getStatus() == 'Deleted') {
-                        activate_itemCategory($existing_item->getId());
-                        update_itemCategory($existing_item->getId(), $cat_name, $bananaBox, $itemsPerBox);
-                        header("Location: viewItemCategories.php");
-                        exit();
-                    } else {
-                        $errors[] = "Category already exists";
-                    }
+                    $errors[] = "Category already exists";
 
                 } else {
-                    add_itemCategory($cat_name, $bananaBox, $itemsPerBox, $status, $shopOnly);
+                    addItem($name, $minimum, $allocated);
 
                     header("Location: viewItemCategories.php");
                     exit();
@@ -83,10 +94,9 @@
     <style>
         pageheader {
             margin-top: 3rem;
-            display: flex; justify-content: center; align-items: center;
-            position: sticky;
-            top: 1rem;
-            z-index: 6;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
         }
         .title {
             text-align: center;
@@ -98,6 +108,8 @@
             padding-top: .4rem;
             border-radius: 10px;
             background-color: #ffffffee;
+            white-space: nowrap;
+            overflow: hidden;
         }
         .report-container {
             max-width: 1100px;
@@ -166,23 +178,15 @@
                     <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px;">
                         <div>
                             <label>Category Name:</label><br>
-                            <input type="text" name="cat_name" required>
+                            <input type="text" name="name" required>
                         </div>
                         <div>
-                            <label>Items Per Box:</label><br>
-                            <input type="number" name="itemsPerBox" min="0" value="0" required>
+                            <label>Minimum Boxes:</label><br>
+                            <input type="number" name="minimum" min="0" value="0" required>
                         </div>
                         <div>
-                            <label>
-                                <input type="checkbox" name="bananaBox">
-                                Banana Box
-                            </label>
-                        </div>
-                        <div>
-                            <label>
-                                <input type="checkbox" name="shopOnly">
-                                Shopping List Only
-                            </label>
+                            <label>Allocated:</label><br>
+                            <input type="number" name="allocated" min="0" value="0" required>
                         </div>
                         <div>
                             <input type="submit" name="add_category" value="Add Category" class="generate-btn">

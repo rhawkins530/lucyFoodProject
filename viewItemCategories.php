@@ -189,17 +189,25 @@
         .section-header h2 {
             margin-bottom: 0;
         }
+        .add-category-btn {
+            display: flex;
+            text-align: center;
+            margin-left: 25px;
+        }
         .add-category-lnk {
             white-space: nowrap;
         }
         .add-category-lnk button {
-            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1.5rem;
             background-color: var(--accent-color);
             color: var(--button-font-color);
             border: none;
             border-radius: 0.25rem;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 1rem;
             font-weight: 500;
             margin-bottom: 0.25rem;
             text-align: center;
@@ -242,7 +250,9 @@
     <?php require_once('header.php'); ?>
     <main>
         <div class="report-container">
-
+            <div class="add-category-btn">
+                <a href="viewAddItemCategory.php" class="add-category-lnk"><button type="button">Add Category</button></a>
+            </div>
             <?php if (!empty($errors)): ?>
                 <ul>
                     <?php foreach($errors AS $error): ?>
@@ -252,56 +262,38 @@
             <?php endif; ?>
             <?php 
                 require_once('database/dbItemCategory.php');
+                require_once('database/dbInventory.php');
                 /* display table of Item Categories with a given status (Active/Inactive/Deleted) */
-                $display_accounts_by_status = function($status, $accessLevel, $extraButton = ''){
+                
                     echo '
                     <div class="report-section">
-                        <div class="section-header">
-                            <h2>'.$status.' Item Categories</h2>
-                            '.$extraButton.'
-                        </div>
                         <div class="table-wrapper">
                             <table class="report-table">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Banana Box</th>
-                                        <th>Shopping List Only</th>
-                                        <th>Items Per Box</th>
+                                        <th>Minimum Boxes</th>
+                                        <th>Allocated Boxes</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody> ';
                             
                                 $num_active = 0;
-                                $categories = get_all_ItemCategory();
-                                foreach ($categories as $category) {
-                                    if($category->getStatus() == $status){
+                                $items = getAllInventoryItems();
+                                foreach ($items as $item) {
                                         $num_active += 1;
 
-                                        $name = $category->getName();
-                                        $itemsPerBox = $category->getItemsPerBox();
-                                        $bananaBox = $category->getBananaBox() == 1 ? "✓" : "";
-                                        $shopOnly = $category->getShopOnly() == 1 ? "✓" : "";
-                                        // Gray out rows for shopping list only items
-                                        $rowClass = $category->getShopOnly() == 1 ? ' class="row-gray"' : '';
-
+                                        $name = $item->getCategoryName();
+                                        $minimum = $item->getMinimumQuantity();
+                                        $allocated = $item->getAllocatedQuantity();
                                         echo '
-                                        <tr' . $rowClass . '>
                                             <td>' . $name . '</td>
-                                            <td style="text-align: center;">' . $bananaBox . '</td>
-                                            <td style="text-align: center;">' . $shopOnly . '</td>
-                                            <td>' . $itemsPerBox . '</td>';
+                                            <td>' . $minimum . '</td>
+                                            <td>' . $allocated . '</td>';
                                         echo ' 
-                                            <td><a href="viewModifyItemCategory.php?id=' . $category->getId() . '" class="text-blue-700 underline"><button class="modify-btn">Modify</button></a>
+                                            <td><a href="viewModifyItemCategory.php?id=' . $item->getId() . '" class="text-blue-700 underline"><button class="modify-btn">Modify</button></a>
                                         </tr>';
-                                    }
-                                }
-                                if($num_active == 0){
-                                    echo '
-                                    <tr>
-                                        <td colspan="5" class="empty-state">No '.$status.' Categories</td>
-                                    </tr>';
                                 }
 
                     echo '
@@ -309,17 +301,11 @@
                             </table>
                         </div>
                     </div>';
-                            }; ?>
+                            ?>
 
                             <!-- Display Table of accounts for each Status -->
                             <?php
                             $addCategoryButton = '<a href="viewAddItemCategory.php" class="add-category-lnk"><button type="button">Add Category</button></a>';
-                            $display_accounts_by_status("Active", $accessLevel, $addCategoryButton);
-                            $display_accounts_by_status("Inactive", $accessLevel);
-                            /* Superadmin can see deleted accounts */
-                            if($accessLevel >= 3){
-                                $display_accounts_by_status("Deleted", $accessLevel);
-                            }
                             ?>
         </div>
 
