@@ -16,6 +16,7 @@ require_once(__DIR__ . '/database/dbinfo.php');
 require_once(__DIR__ . '/database/dbInventoryEvent.php');
 require_once(__DIR__ . '/database/dbItemCategory.php');
 require_once(__DIR__ . '/database/dbItemCounts.php');
+require_once(__DIR__ . '/database/dbInventory.php');
 
 // Get all inventory events sorted by date (newest first), then by ID (highest first)
 $allEventObjects = get_all_inventoryEvents();
@@ -134,43 +135,25 @@ foreach($eventPairs as $index => $pair) {
 
 //Get sort parameters
 $sortCol = isset($_GET['sortCol']) ? (int)$_GET['sortCol'] : -1; // Default to -1 (no sorting)
-$sortDir = isset($_GET['sortDir']) && $_GET['sortDir'] === 'desc' ? 'desc' : 'asc';
+$sortDir = isset($_GET['sortDir']) && $_GET['sortDir'] === 'desc' ? 'DESC' : 'ASC';
 
 //Build the items array for the selected inventory
 //Currently this will not include snapshots of previous inventories
+
 $items = [];
-$headers = [];
-if (($file = fopen("MOCK_INVENTORY_DATA.csv", "r")) !== FALSE) {
-    $headers = fgetcsv($file);
-    $headers[] = 'over_allocated'; // Add a new header for over_allocated column
+$columnNums = [
+    1 => "category_name",
+    2 => "current_quantity",
+    3 => "allocated_quantity",
+    4 => "current_quantity - allocated_quantity",
+    5 => "minimum_quantity"
+];
 
-    while (($row = fgetcsv($file)) !== FALSE) {
-        $row[] = $row[3] > $row[2] ? 1 : 0; // Add over_allocated value based on allocated_boxes and total_boxes
-        $items[] = array_combine($headers, $row);
-    }
-
-    fclose($file);
-}
-
-//Sort the items array based on the sort parameters
-if ($sortCol >= 0 && $sortCol < count($headers)) {
-    usort($items, function($a, $b) use ($headers, $sortCol, $sortDir) {
-        $colName = $headers[$sortCol];
-        if ($colName === 'name') { // Sort by name (string comparison)
-            if ($sortDir === 'asc') {
-                return strcasecmp($a[$colName], $b[$colName]);
-            } else {
-                return strcasecmp($b[$colName], $a[$colName]);
-            }
-        }
-        else {
-            if ($sortDir === 'asc') {
-                return $a[$colName] <=> $b[$colName];
-            } else {
-                return $b[$colName] <=> $a[$colName];
-            }
-        }
-    });
+//Build the items array for the selected inventory
+if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
+    $items = getAllInventoryItemsSorted($columnNums[$sortCol], $sortDir);
+} else {
+    $items = getAllInventoryItems();
 }
 
 /*
@@ -287,7 +270,7 @@ if ($selectedPairIndex !== null) {
             padding: 1rem;
         }
         .report-section {
-            background-color: white;
+            background-color: #D4E7F6;
             /* border: 1px solid var(--shadow-and-border-color); */
             border-radius: 15px;
             padding: 1.5rem;
@@ -572,18 +555,30 @@ if ($selectedPairIndex !== null) {
                 padding: 4px;
             }
             .report-section{
+                background-color: #D4E7F6;
                 padding: 0;
             }
         }
     </style>
 </head>
 <pageheader>
-    <h1 class="title">Inventory Log</h1>
+		    <h1 class="title" style="margin-top: 0; margin-bottom: 0; padding-top: 0;">Inventory Log</h1>
 </pageheader>
 <body>
     <?php require_once('header.php'); ?>
     <main>
-        <div class="report-container">
+
+
+        <?php if($accessLevel >= 1): ?>
+            <div class="report-container" style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;">
+                <a href="editInventory.php?warehouseId=<?= htmlspecialchars($selectedWeek) ?>" style="text-decoration: none;">
+                    <button class="modify-button" style="width: 140px; height: 45px;">
+                        Modify
+                    </button>
+                </a>
+            </div>
+        <?php endif; ?>
+<div class="report-container">
             <div class="report-section">
                 <h2>Food Items</h2>
                 <!-- Old Inventory Snapshot Filter
@@ -642,10 +637,10 @@ if ($selectedPairIndex !== null) {
                         <thead>
                                 <tr>
                                     <th>
-                                        <?php if ($sortCol === 1 && $sortDir === 'asc'): ?>
+                                        <?php if ($sortCol === 1 && $sortDir === 'ASC'): ?>
                                             <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↑</span></a>
                                             <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↑</span></a>
-                                        <?php elseif ($sortCol === 1 && $sortDir === 'desc'): ?>
+                                        <?php elseif ($sortCol === 1 && $sortDir === 'DESC'): ?>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↓</span></a>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↓</span></a>
                                         <?php else: ?>
@@ -654,10 +649,10 @@ if ($selectedPairIndex !== null) {
                                         <?php endif; ?>
                                     </th>
                                     <th>
-                                        <?php if ($sortCol === 2 && $sortDir === 'asc'): ?>
+                                        <?php if ($sortCol === 2 && $sortDir === 'ASC'): ?>
                                             <a href='?sortCol=2&sortDir=desc' style="font-weight: bold;color: white;"><span class="desktop-text">Total Boxes ↑</span></a>
                                             <a href='?sortCol=2&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↑</span></a>
-                                        <?php elseif ($sortCol === 2 && $sortDir === 'desc'): ?>
+                                        <?php elseif ($sortCol === 2 && $sortDir === 'DESC'): ?>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Total Boxes ↓</span></a>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↓</span></a>
                                         <?php else: ?>
@@ -666,10 +661,10 @@ if ($selectedPairIndex !== null) {
                                         <?php endif; ?>
                                     </th>
                                     <th>
-                                        <?php if ($sortCol === 3 && $sortDir === 'asc'): ?>
+                                        <?php if ($sortCol === 3 && $sortDir === 'ASC'): ?>
                                             <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↑</span></a>
                                             <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↑</span></a>
-                                        <?php elseif ($sortCol === 3 && $sortDir === 'desc'): ?>
+                                        <?php elseif ($sortCol === 3 && $sortDir === 'DESC'): ?>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↓</span></a>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↓</span></a>
                                         <?php else: ?>
@@ -678,15 +673,27 @@ if ($selectedPairIndex !== null) {
                                         <?php endif; ?>
                                     </th>
                                     <th>
-                                        <?php if ($sortCol === 4 && $sortDir === 'asc'): ?>
+                                        <?php if ($sortCol === 4 && $sortDir === 'ASC'): ?>
                                             <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↑</span></a>
                                             <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↑</span></a>
-                                        <?php elseif ($sortCol === 4 && $sortDir === 'desc'): ?>
+                                        <?php elseif ($sortCol === 4 && $sortDir === 'DESC'): ?>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↓</span></a>
                                             <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↓</span></a>
                                         <?php else: ?>
                                             <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="desktop-text">Over Allocated ⇅</span></a>
                                             <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="mobile-text">Over Allocated ⇅</span></a>
+                                        <?php endif; ?>
+                                    </th>
+                                    <th>
+                                        <?php if ($sortCol === 5 && $sortDir === 'ASC'): ?>
+                                            <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↑</span></a>
+                                            <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↑</span></a>
+                                        <?php elseif ($sortCol === 5 && $sortDir === 'DESC'): ?>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↓</span></a>
+                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↓</span></a>
+                                        <?php else: ?>
+                                            <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="desktop-text">Minimum Quantity ⇅</span></a>
+                                            <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="mobile-text">Minimum Quantity ⇅</span></a>
                                         <?php endif; ?>
                                     </th>
                                 </tr>
@@ -695,10 +702,11 @@ if ($selectedPairIndex !== null) {
                             <?php if (count($items) > 0): ?>
                                 <?php foreach ($items as $item): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($item['name']) ?></td>
-                                        <td><?= htmlspecialchars($item['total_boxes']) ?></td>
-                                        <td><?= htmlspecialchars($item['allocated_boxes']) ?></td>
-                                        <td><?= $item['over_allocated'] ? '✓' : '' ?></td>
+                                        <td><?= htmlspecialchars($item->getCategoryName()) ?></td>
+                                        <td><?= htmlspecialchars($item->getCurrentQuantity()) ?></td>
+                                        <td><?= htmlspecialchars($item->getAllocatedQuantity()) ?></td>
+                                        <td><?= $item->getAllocatedQuantity() > $item->getCurrentQuantity() ? '✓' : '' ?></td>
+                                        <td><?= htmlspecialchars($item->getMinimumQuantity()) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -710,7 +718,7 @@ if ($selectedPairIndex !== null) {
                     </table>
                 </div>
             </div>
-        </div>
+			        </div>
     </main>
 
     <script>

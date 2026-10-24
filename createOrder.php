@@ -85,7 +85,7 @@
 <html>
 <head>
     <?php require_once('universal.inc') ?>
-    <title>Modify User | CCDA</title>
+    <title>Create Food Order | CCDA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         pageheader {

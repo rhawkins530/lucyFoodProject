@@ -222,7 +222,7 @@ if ($selectedPairIndex !== null) {
 <html>
 <head>
     <?php require_once('universal.inc'); ?>
-    <title>Inventory Log | CCDA</title>
+    <title>View Food Orders | CCDA</title>
     <link rel="stylesheet" href="css/base.css">
     <style>
         pageheader {
@@ -246,7 +246,7 @@ if ($selectedPairIndex !== null) {
             padding: 1rem;
         }
         .report-section {
-            background-color: white;
+            background-color: #D4E7F6;
             /* border: 1px solid var(--shadow-and-border-color); */
             border-radius: 15px;
             padding: 1.5rem;
@@ -534,11 +534,37 @@ if ($selectedPairIndex !== null) {
                 padding: 0;
             }
         }
+        .order-list-section{
+            display: block; 
+            background-color: #D4E7F6;
+            padding: 10px; }
+
+        th.sortable { 
+            cursor: pointer; 
+            user-select: none; 
+            white-space: nowrap;
+        }
+
+        th.sortable:hover {
+            opacity: 0.85;
+        }
+    th.sortable .arrow { 
+        display: inline-block;
+        width: 1em; 
+    }
+
+    .button {
+        display: flex;
+        margin-left: auto;
+        width: 25%;
+        height: 5%;
+    }
     </style>
 </head>
 <pageheader>
     <h1 class="title">Food Orders</h1>
 </pageheader>
+
 <body>
     <?php require_once('header.php'); ?>
     <main>
@@ -547,32 +573,128 @@ if ($selectedPairIndex !== null) {
                 <h2>Food Orders</h2>
                 <div class="week-and-filter-section">
                     <div class="form-section">
-                        <label for="weekSelect">Select Order Type:</label>
-                        <select id="weekSelect" name="week" class="toolbar-select" style="min-width: 1rem; important!;"  onchange="window.location.href='?year='+<?php echo $filterEventList ?>+'&week=' + this.value">
+                        <label for="typeSelect">Select Order Type:</label>
+                        <select id="typeSelect">
+                            <option value="all">Show All</option>
+                            <option value="Individual">Individual Orders</option>
+                            <option value="Multiple">Multiple Orders</option>
                         </select>
                     </div>
-                    <div class="form-section">
-                        <label for="yearSelect" style="font-weight: 500;">Filter Orders:</label>
-                        <select id="yearSelect" name="year" class="toolbar-select" style="min-width: 1rem; important!;" onchange="window.location.href='?year=' + this.value +'&week='+<?php echo intval($selectedWeek) ?>">
-                            <option value="30" <?= ($filterEventList == "30") ? 'selected' : '' ?>>
-                                    Most Recent 
-                            </option>
-                            <optgroup label="By Year">
-                            <?php foreach ($uniqueYears as $year): ?>
-                                <option value="<?= $year ?>" <?= ($year == $filterEventList) ? 'selected' : '' ?>>
-                                    <?= $year ?>
-                                </option>
-                            <?php endforeach; ?>
-                            </optgroup>
-                        </select>
-                    </div>
+                    <a class="button" href="reviewOrders.php" >Approve/Reject Orders</a> <!-- Will link to a page that displays only pending orders and has approve/reject options -->
                 </div>
                 <hr>
                 <br>   
+                <?php
+                    // Placeholder data
+                    // Dates format YYYY-MM-DD so they sort correctly
+                    $orders = [
+                        ['name' => 'CharityPlaceholderOrder_1.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1.pdf', 'type' => 'Individual', 'date' => '2026-10-10', 'status' => 'Pending'],
+                        ['name' => 'CharityPlaceholderOrder_2.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1.pdf', 'type' => 'Individual', 'date' => '2026-10-03', 'status' => 'Completed'],
+                        ['name' => 'CharityPlaceholderOrder_3.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1.pdf', 'type' => 'Individual', 'date' => '2026-10-14', 'status' => 'Approved'],
+                        ['name' => 'CharityMultiPlaceholderOrder_1.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1_Multi.pdf', 'type' => 'Multiple', 'date' => '2026-10-16', 'status' => 'Pending'],
+                    ];
+                    ?>
+                    <div class="order-list-section">
+                        <table class="report-table" id="orderTable">
+                            <thead>
+                                <tr>
+                                    <th>Order Form</th>
+                                    <th class="sortable" data-sort="type">Type <span class="arrow"></span></th>
+                                    <th class="sortable" data-sort="date">Date Submitted <span class="arrow"></span></th>
+                                    <th class="sortable" data-sort="status">Status <span class="arrow"></span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderBody">
+                                <?php foreach ($orders as $o): ?>
+                                    <tr data-type="<?= htmlspecialchars($o['type']) ?>"
+                                        data-date="<?= htmlspecialchars($o['date']) ?>"
+                                        data-status="<?= htmlspecialchars($o['status']) ?>">
+                                        <td>
+                                            <a href="<?= htmlspecialchars($o['file']) ?>" target="_blank" rel="noopener noreferrer">
+                                                <?= htmlspecialchars($o['name']) ?>
+                                            </a>
+                                        </td>
+                                        <td><?= htmlspecialchars($o['type']) ?></td>
+                                        <td><?= date('M j, Y', strtotime($o['date'])) ?></td>
+                                        <td><?= htmlspecialchars($o['status']) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <tr id="noOrdersRow" style="display:none;">
+                                    <td colspan="4" class="empty-state">No orders match this selection.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
             </div>
         </div>
     </main>
 
+    <script>
+        (function () {
+            const typeSelect = document.getElementById('typeSelect');
+            const body = document.getElementById('orderBody');
+            const noRow = document.getElementById('noOrdersRow');
+            const headers = document.querySelectorAll('th.sortable');
+            let sortKey = 'date';
+            let sortDir = 'desc'; // newest first by default
+
+            function dataRows() {
+                return Array.from(body.querySelectorAll('tr[data-type]'));
+            }
+
+            function applyFilter() {
+                const selected = typeSelect.value;
+                let visible = 0;
+                dataRows().forEach(row => {
+                    const show = selected === 'all' || row.dataset.type === selected;
+                    row.style.display = show ? '' : 'none';
+                    if (show) visible++;
+                });
+                noRow.style.display = visible === 0 ? '' : 'none';
+            }
+
+            // Status order for sorting. Change the order here if you want a different one.
+            const statusRank = { Pending: 1, Approved: 2, Rejected: 3, Completed: 4 };
+
+            function applySort() {
+                const rows = dataRows();
+                rows.sort((a, b) => {
+                    const av = a.dataset[sortKey], bv = b.dataset[sortKey];
+                    let cmp;
+                    if (sortKey === 'status') {
+                        cmp = (statusRank[av] ?? 99) - (statusRank[bv] ?? 99);
+                    } else {
+                        // YYYY-MM-DD strings sort correctly as text
+                        cmp = av.localeCompare(bv, undefined, { sensitivity: 'base' });
+                    }
+                    return sortDir === 'asc' ? cmp : -cmp;
+                });
+                rows.forEach(r => body.insertBefore(r, noRow)); // keep the empty-state row last
+
+                headers.forEach(h => {
+                    h.querySelector('.arrow').textContent =
+                        h.dataset.sort === sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '';
+                });
+            }
+
+            headers.forEach(h => h.addEventListener('click', () => {
+                const key = h.dataset.sort;
+                if (key === sortKey) {
+                    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortKey = key;
+                    sortDir = key === 'date' ? 'desc' : 'asc';
+                }
+                applySort();
+            }));
+
+            typeSelect.addEventListener('change', applyFilter);
+
+            applySort();
+            applyFilter();
+        })();
+        </script>
+                                
 </body>
 </html>
 

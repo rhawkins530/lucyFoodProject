@@ -85,7 +85,7 @@
 <html>
 <head>
     <?php require_once('universal.inc') ?>
-    <title>Modify User | CCDA</title>
+    <title>Create Food Order | CCDA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         pageheader {
@@ -109,7 +109,7 @@
             padding: 1rem;
         }
         .report-section {
-            background-color: white;
+            background-color: #D4E7F6;
             /* border: 1px solid var(--shadow-and-border-color); */
             border-radius: 15px;
             padding: 1.5rem;
