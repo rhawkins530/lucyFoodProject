@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 21, 2026 at 08:35 PM
+-- Generation Time: Oct 24, 2026 at 05:24 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1662,6 +1662,35 @@ INSERT INTO `dbevents` (`id`, `name`, `type`, `startDate`, `startTime`, `endTime
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dbfoodorder`
+--
+
+CREATE TABLE `dbfoodorder` (
+  `id` int(11) NOT NULL,
+  `requestor_person_id` int(11) NOT NULL,
+  `approver_person_id` int(11) DEFAULT NULL,
+  `order_status` int(11) NOT NULL,
+  `submission_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `approval_date` timestamp NULL DEFAULT NULL,
+  `fulfill_date` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dbfoodorderitem`
+--
+
+CREATE TABLE `dbfoodorderitem` (
+  `id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `item_category_id` int(11) NOT NULL,
+  `quantity_requested` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dbgroups`
 --
 
@@ -1698,7 +1727,7 @@ CREATE TABLE `dbinventory` (
 --
 
 INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_quantity`, `minimum_quantity`, `allocated_quantity`) VALUES
-(1, 1, 'Cereal/Oatmeal', 3, 4, 20),
+(1, 1, 'Cereal/Oatmeal', 26, 6, 20),
 (2, 2, 'Cooking Oil', 5, 9, 4),
 (3, 3, 'Peanut Butter', 16, 1, 23),
 (4, 4, 'Jelly', 15, 4, 24),
@@ -1726,7 +1755,8 @@ INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_q
 (26, 26, 'Soup', 23, 2, 0),
 (27, 27, 'Juice', 37, 9, 26),
 (28, 28, 'Baking Goods', 32, 8, 9),
-(29, 29, 'Macaroni and Cheese', 28, 8, 26);
+(29, 29, 'Macaroni and Cheese', 28, 8, 26),
+(32, 0, 'test', 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -4826,6 +4856,19 @@ ALTER TABLE `dbevents`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `dbfoodorder`
+--
+ALTER TABLE `dbfoodorder`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `dbfoodorderitem`
+--
+ALTER TABLE `dbfoodorderitem`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_food_order` (`order_id`);
+
+--
 -- Indexes for table `dbgroups`
 --
 ALTER TABLE `dbgroups`
@@ -5008,10 +5051,16 @@ ALTER TABLE `dbevents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=187;
 
 --
+-- AUTO_INCREMENT for table `dbfoodorderitem`
+--
+ALTER TABLE `dbfoodorderitem`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `dbinventory`
 --
 ALTER TABLE `dbinventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `dbinventoryevent`
@@ -5108,6 +5157,16 @@ ALTER TABLE `monthly_hours_snapshot`
 --
 ALTER TABLE `user_verified_ids`
   MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `dbfoodorderitem`
+--
+ALTER TABLE `dbfoodorderitem`
+  ADD CONSTRAINT `fk_food_order` FOREIGN KEY (`order_id`) REFERENCES `dbfoodorder` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
