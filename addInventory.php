@@ -64,15 +64,15 @@
     // Categories with IDs
     $CATEGORIES = [ 
         1 => 'Cereal/Oatmeal', 2 => 'Cooking Oil', 3 => 'Peanut Butter',
-        4 => 'Jelly', 5 => 'Dry Pasta Box', 6 => 'Pasta Sauce',
+        4 => 'Jelly', 5 => 'Dried Pasta', 6 => 'Pasta Sauce',
         7 => 'Canned Chicken', 8 => 'Canned Tuna', 9 => 'Condiments',
         10 => 'Green Beans', 11 => 'Corn', 12 => 'Mixed Vegetables',
-        13 => 'Baked Beans', 14 => 'Canned/Dry Beans', 15 => 'Canned Fruit (Mixed)',
+        13 => 'Baked Beans', 14 => 'Canned/Dried Beans', 15 => 'Canned Fruit (Mixed)',
         16 => 'Canned Peaches', 17 => 'Canned Pasta', 18 => 'Carrots',
         19 => 'Peas', 20 => 'Ramen', 21 => 'Milk',
         22 => 'Diced Tomatoes', 23 => 'Rice', 24 => 'Flour (Masa)',
         25 => 'Flour (White)', 26 => 'Soup', 27 => 'Juice',
-        28 => 'Baking Goods', 29 => 'Mac & Cheese',
+        28 => 'Baking Goods', 29 => 'Macaroni & Cheese',
     ];
     
     //$LOCATIONS = ['Main'];
