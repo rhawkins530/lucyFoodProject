@@ -18,120 +18,7 @@ require_once(__DIR__ . '/database/dbItemCategory.php');
 require_once(__DIR__ . '/database/dbItemCounts.php');
 require_once(__DIR__ . '/database/dbInventory.php');
 
-// Get all inventory events sorted by date (newest first), then by ID (highest first)
-$allEventObjects = get_all_inventoryEvents();
-usort($allEventObjects, function($a, $b) {
-    $dateDiff = strtotime($b->getDate()) - strtotime($a->getDate());
-    if ($dateDiff != 0) {
-        return $dateDiff;
-    }
-    return $b->getId() - $a->getId();
-});
 
-// Build event triplets (warehouse + pantry + pallet)
-$eventPairs = array();
-foreach($allEventObjects as $event) {
-    if($event->getLocation() == 'Warehouse') {
-        $matches = get_matching_inventoryEvent($event);
-        $pantryEvent = $matches['Pantry'] ?? null;
-        $palletEvent = $matches['Pallet'] ?? null;
-        $eventPairs[] = array(
-            'warehouse' => $event,
-            'pantry' => $pantryEvent,
-            'pallet' => $palletEvent,
-            'date' => $event->getDate(),
-            'warehouseId' => $event->getId(),
-            'pantryId' => $pantryEvent ? $pantryEvent->getId() : null,
-            'palletId' => $palletEvent ? $palletEvent->getId() : null
-        );
-    }
-}
-
-// OLD CODE - orphan pantry logic (no longer needed with triplets)
-// foreach($allEventObjects as $event) {
-//     if($event->getLocation() == 'Pantry') {
-//         $warehouseEvent = get_matching_inventoryEvent($event);
-//         if($warehouseEvent === null) {
-//             $eventPairs[] = array(
-//                 'warehouse' => null,
-//                 'pantry' => $event,
-//                 'date' => $event->getDate(),
-//                 'warehouseId' => null,
-//                 'pantryId' => $event->getId()
-//             );
-//         }
-//     }
-// }
-
-// Re-sort pairs by date (newest first)
-usort($eventPairs, function($a, $b) {
-    $dateDiff = strtotime($b['date']) - strtotime($a['date']);
-    if ($dateDiff != 0) {
-        return $dateDiff;
-    }
-    $aId = $a['warehouseId'] ?? $a['pantryId'];
-    $bId = $b['warehouseId'] ?? $b['pantryId'];
-    return $bId - $aId;
-});
-
-// Get the selected week from query params, default to latest
-$selectedWeek = $_GET['week'] ?? (count($eventPairs) > 0 ? ($eventPairs[0]['warehouseId'] ?? $eventPairs[0]['pantryId']) : null);
-
-// Get the unique years from dates
-$uniqueYears = array();
-foreach($eventPairs as $index => $pair) {
-    $year = date('Y', strtotime($pair["date"]));
-    if(!in_array($year, $uniqueYears))
-        $uniqueYears[] = $year;
-}
-
-// Default for filterEventList is 30 Most Recent inventories
-$filterEventList = 30;
-
-// Get the selected year from query params, if it exists
-if(isset($_GET['year'])){
-    if(in_array($_GET['year'], $uniqueYears)){
-        $filterEventList = $_GET['year'];
-        // if year and week are in params, make sure the week is in the selected year.
-        // otherwise, change week to be the most recent inventory in the year selected.
-        if($selectedWeek){
-            $currentEvent = retrieve_inventoryEvent($selectedWeek);
-            if($currentEvent){
-                $currentEventYear = date('Y', strtotime($currentEvent->getDate()));
-                if($currentEventYear != $filterEventList){
-                    //set current week to the most recent inventory with the year selected
-                    foreach($eventPairs as $index => $pair) {
-                        $year = date('Y', strtotime($pair["date"]));
-                        if($year == $filterEventList){
-                            $selectedWeek = $pair["warehouseId"];
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        
-    } 
-    else if($_GET['year'] < 100 && $_GET['year'] > 0)
-        $filterEventList = $_GET['year'];
-} 
-// If year is not set but week is set
-else if(isset($_GET['week'])){
-    $currentEvent = retrieve_inventoryEvent($selectedWeek);
-    if($currentEvent){
-        $filterEventList = date('Y', strtotime($currentEvent->getDate()));
-    }
-}
-
-// Find the selected pair index
-$selectedPairIndex = null;
-foreach($eventPairs as $index => $pair) {
-    $pairId = $pair['warehouseId'] ?? $pair['pantryId'];
-    if($pairId == $selectedWeek) {
-        $selectedPairIndex = $index;
-        break;
-    }
-}
 
 //Get sort parameters
 $sortCol = isset($_GET['sortCol']) ? (int)$_GET['sortCol'] : -1; // Default to -1 (no sorting)
@@ -156,90 +43,6 @@ if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
     $items = getAllInventoryItems();
 }
 
-/*
-Previous Inventory Code
-if ($selectedPairIndex !== null) {
-    $selectedPair = $eventPairs[$selectedPairIndex];
-    $sameDateEvents = [];
-    
-    // Collect warehouse, pantry, and pallet events from the triplet
-    if ($selectedPair['warehouse']) {
-        $sameDateEvents[] = $selectedPair['warehouse'];
-    }
-    if ($selectedPair['pantry']) {
-        $sameDateEvents[] = $selectedPair['pantry'];
-    }
-    if (isset($selectedPair['pallet']) && $selectedPair['pallet']) {
-        $sameDateEvents[] = $selectedPair['pallet'];
-    }
-
-    // Get all item categories (including inactive for historical data)
-    $allCategories = get_all_ItemCategory();
-
-    // Build set of categories with data in this inventory
-    $categoriesWithData = [];
-    foreach ($sameDateEvents as $event) {
-        $eventCounts = get_itemCounts_by_inventoryEvent($event->getId());
-        foreach ($eventCounts as $count) {
-            $categoriesWithData[$count->getItemCategory()] = true;
-        }
-    }
-
-    // Build items array with location-specific counts
-    foreach ($allCategories as $category) {
-        $categoryId = $category->getId();
-
-        // Skip shopping list only items
-        if ($category->getShopOnly() == 1) {
-            continue;
-        }
-
-        // Only show categories that have data in this inventory
-        if (!isset($categoriesWithData[$categoryId])) {
-            continue;
-        }
-
-        $warehouseBoxes = 0;
-        $pantryBoxes = 0;
-        $palletBoxes = 0;
-
-        // Check all events on the same date for this category
-        foreach ($sameDateEvents as $event) {
-            $eventCounts = get_itemCounts_by_inventoryEvent($event->getId());
-            foreach ($eventCounts as $count) {
-                if ($count->getItemCategory() === $categoryId) {
-                    if ($event->getLocation() === 'Warehouse') {
-                        $warehouseBoxes += $count->getQuantity();
-                    } elseif ($event->getLocation() === 'Pantry') {
-                        $pantryBoxes += $count->getQuantity();
-                    } elseif ($event->getLocation() === 'Pallet') {
-                        $palletBoxes += $count->getQuantity();
-                    }
-                }
-            }
-        }
-
-        $totalBoxes = $warehouseBoxes + $pantryBoxes + $palletBoxes;
-
-        $items[] = [
-            'id' => $categoryId,
-            'item_name' => $category->getName(),
-            'itemsPerBox' => $category->getItemsPerBox(),
-            'bananaBox' => $category->getBananaBox(),
-            'warehouse_boxes' => $warehouseBoxes,
-            'pantry_boxes' => $pantryBoxes,
-            'pallet_boxes' => $palletBoxes,
-            'total_boxes' => $totalBoxes
-        ];
-
-    }
-    
-    // Sort items by name
-    usort($items, function($a, $b) {
-        return strcmp($a['item_name'], $b['item_name']);
-    });
-}
-*/
 ?>
 
 <!DOCTYPE html>
@@ -567,11 +370,9 @@ if ($selectedPairIndex !== null) {
 <body>
     <?php require_once('header.php'); ?>
     <main>
-
-
         <?php if($accessLevel >= 1): ?>
             <div class="report-container" style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;">
-                <a href="editInventory.php?warehouseId=<?= htmlspecialchars($selectedWeek) ?>" style="text-decoration: none;">
+                <a href="editInventory.php" style="text-decoration: none;">
                     <button class="modify-button" style="width: 140px; height: 45px;">
                         Modify
                     </button>
@@ -581,57 +382,8 @@ if ($selectedPairIndex !== null) {
 <div class="report-container">
             <div class="report-section">
                 <h2>Food Items</h2>
-                <!-- Old Inventory Snapshot Filter
-                <div class="week-and-filter-section">
-                    <div class="form-section">
-                        <label for="weekSelect">Select Inventory to View:</label>
-                        <select id="weekSelect" name="week" class="toolbar-select" style="min-width: 1rem; important!;"  onchange="window.location.href='?year='+<?php echo $filterEventList ?>+'&week=' + this.value">
-                            <?php if (count($eventPairs) > 0): ?>
-                                <?php foreach ($eventPairs as $index => $pair): ?>
-                                    <?php $pairId = $pair['warehouseId'] ?? $pair['pantryId']; ?>
-                                    <?php if (date('Y', strtotime($pair['date'])) == $filterEventList || ($filterEventList < 100 && $index < $filterEventList)): ?>
-                                        <option value="<?= htmlspecialchars($pairId) ?>" <?= ($pairId == $selectedWeek) ? 'selected' : '' ?>>
-                                            <?= date('m/d/Y', strtotime($pair['date'])) ?>
-                                        </option>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-                    <div class="form-section">
-                        <label for="yearSelect" style="font-weight: 500;">Filter Inventories:</label>
-                        <select id="yearSelect" name="year" class="toolbar-select" style="min-width: 1rem; important!;" onchange="window.location.href='?year=' + this.value +'&week='+<?php echo intval($selectedWeek) ?>">
-                            <option value="30" <?= ($filterEventList == "30") ? 'selected' : '' ?>>
-                                    Most Recent 
-                            </option>
-                            <optgroup label="By Year">
-                            <?php foreach ($uniqueYears as $year): ?>
-                                <option value="<?= $year ?>" <?= ($year == $filterEventList) ? 'selected' : '' ?>>
-                                    <?= $year ?>
-                                </option>
-                            <?php endforeach; ?>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
-                -->
                 <hr>
                 <br>
-                <!-- Old Inventory Sorter
-                <div class="table-toolbar">
-                    <div class="toolbar-left">
-                        <label for="sortSelect" style="color: var(--page-font-color); margin-right: 0.5rem;">Sort by:</label>
-                        <select id="sortSelect" class="toolbar-select">
-                            <option value="name-asc">Name (A-Z)</option>
-                            <option value="name-desc">Name (Z-A)</option>
-                        </select>
-                    </div>
-                    <div class="toolbar-right">
-                        <input type="text" id="searchInput" class="toolbar-search" placeholder="Search items...">
-                        <button type="button" id="clearSearch" class="toolbar-btn-clear">Clear</button>
-                    </div>
-                </div>
-                -->
                 <div class="table-wrapper">
                     <table class="report-table" id="inventoryTable">
                         <thead>
