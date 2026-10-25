@@ -63,6 +63,7 @@ function addFoodOrder($requestorId, $foodOrderItems = []) {
             $con->rollback();
             mysqli_close($con);
         }
+        return false; // Return false in case of an exception
     }
 }
 
