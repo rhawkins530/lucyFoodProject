@@ -95,7 +95,7 @@
         }
         if (empty($errors)) {
             if (addFoodOrder($_SESSION['_personId'], $foodOrderItems)) {
-                header('Location: createIndivOrder.php?created=success');
+                header('Location: createOrder.php?created=success');
                 die();
             }
             else {
@@ -401,9 +401,6 @@
 <body>
     <?php require_once('header.php') ?>
     <div class="report-container">
-        <?php if (isset($_GET['created']) && $_GET['created'] == 'success'): ?>
-            <div class="happy-toast">Your food order was submitted.</div>
-        <?php endif; ?>
         <?php foreach ($errors as $error): ?>
             <div class="error-toast"><?php echo htmlspecialchars($error); ?></div>
         <?php endforeach; ?>
