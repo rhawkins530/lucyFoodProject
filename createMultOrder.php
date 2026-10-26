@@ -71,38 +71,156 @@
     */
 
     $errors = [];
+    // Each order on the page is posted as orders[index][field]
+    $orders = $_POST['orders'] ?? [];
     if (!empty($_POST)) {
         // Pantry and contact fields aren't saved yet; dbfoodorder has no columns for them.
-        $boxes = $_POST['boxes'] ?? [];
-        $foodOrderItems = [];
-        foreach ($ORDER_CATEGORIES as $category) {
-            $quantity = trim($boxes[$category['categoryId']] ?? '');
-            if ($quantity === '') {
-                continue;
+        $ordersToSave = [];
+        $orderNumber = 0;
+        foreach ($orders as $order) {
+            $orderNumber++;
+            $boxes = $order['boxes'] ?? [];
+            $foodOrderItems = [];
+            foreach ($ORDER_CATEGORIES as $category) {
+                $quantity = trim($boxes[$category['categoryId']] ?? '');
+                if ($quantity === '') {
+                    continue;
+                }
+                if (!ctype_digit($quantity)) {
+                    $errors[] = "Order " . $orderNumber . ": Number of boxes for " . $category['name'] . " must be a whole number";
+                    continue;
+                }
+                if ((int)$quantity === 0) {
+                    continue;
+                }
+                $foodOrderItems[] = [$category['categoryId'], (int)$quantity];
             }
-            if (!ctype_digit($quantity)) {
-                $errors[] = "Number of boxes for " . $category['name'] . " must be a whole number";
-                continue;
+
+            if (empty($foodOrderItems)) {
+                $errors[] = "Order " . $orderNumber . ": Request at least one box";
             }
-            if ((int)$quantity === 0) {
-                continue;
-            }
-            $foodOrderItems[] = [$category['categoryId'], (int)$quantity];
+            $ordersToSave[] = $foodOrderItems;
         }
 
-        if (empty($foodOrderItems) && empty($errors)) {
-            $errors[] = "Request at least one box";
+        if (empty($ordersToSave)) {
+            $errors[] = "Fill out at least one order";
         }
         if (empty($errors)) {
             // Multiple orders are saved as pending for an admin to approve or reject
-            if (addFoodOrder($_SESSION['_personId'], $foodOrderItems)) {
+            $orderNumber = 0;
+            foreach ($ordersToSave as $foodOrderItems) {
+                $orderNumber++;
+                if (!addFoodOrder($_SESSION['_personId'], $foodOrderItems)) {
+                    $errors[] = "Unable to create food order " . $orderNumber;
+                    break;
+                }
+            }
+            if (empty($errors)) {
                 header('Location: createOrder.php?created=success');
                 die();
             }
-            else {
-                $errors[] = "Unable to create food order";
-            }
         }
+    }
+
+    // Show the submitted orders again after an error, or one empty order on first load
+    if (empty($orders)) {
+        $orders = [[]];
+    }
+
+    /*
+    * Print the fields for one order.
+    * $index is used in the field names (orders[$index][...]), and $order holds any values to fill back in.
+    */
+    function renderOrderEntry($index, $order, $categories) {
+        $value = function($field, $default = '') use ($order) {
+            return htmlspecialchars($order[$field] ?? $default);
+        };
+        $name = 'orders[' . $index . ']';
+        $id = $index;
+?>
+            <div class="order-entry" data-index="<?php echo $index; ?>">
+                <div class="order-entry-header">
+                    <h2 class="order-entry-title">Order</h2>
+                    <button type="button" class="modify-delete-btn remove-order-btn">Remove This Order</button>
+                </div>
+                <div class="report-section">
+                    <h2>Pantry Information</h2>
+                    <div class="updateInv-allRows">
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="submission_date_<?php echo $id; ?>">Submission Date</label>
+                            <input type="date" id="submission_date_<?php echo $id; ?>" name="<?php echo $name; ?>[submission_date]" value="<?php echo $value('submission_date', date('Y-m-d')); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="delivery_date_<?php echo $id; ?>">Requested Delivery Date</label>
+                            <input type="date" id="delivery_date_<?php echo $id; ?>" name="<?php echo $name; ?>[delivery_date]" value="<?php echo $value('delivery_date'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="delivery_time_<?php echo $id; ?>">Requested Delivery Time</label>
+                            <input type="time" id="delivery_time_<?php echo $id; ?>" name="<?php echo $name; ?>[delivery_time]" value="<?php echo $value('delivery_time'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="pantry_name_<?php echo $id; ?>">Pantry Name</label>
+                            <input type="text" id="pantry_name_<?php echo $id; ?>" name="<?php echo $name; ?>[pantry_name]" value="<?php echo $value('pantry_name'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="pantry_address_<?php echo $id; ?>">Pantry Address (Street, City)</label>
+                            <input type="text" id="pantry_address_<?php echo $id; ?>" name="<?php echo $name; ?>[pantry_address]" value="<?php echo $value('pantry_address'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="poc_name_<?php echo $id; ?>">Point of Contact (POC)</label>
+                            <input type="text" id="poc_name_<?php echo $id; ?>" name="<?php echo $name; ?>[poc_name]" value="<?php echo $value('poc_name'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="poc_phone_<?php echo $id; ?>">POC Phone Number</label>
+                            <input type="tel" id="poc_phone_<?php echo $id; ?>" name="<?php echo $name; ?>[poc_phone]" value="<?php echo $value('poc_phone'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="secondary_poc_name_<?php echo $id; ?>">Secondary POC</label>
+                            <input type="text" id="secondary_poc_name_<?php echo $id; ?>" name="<?php echo $name; ?>[secondary_poc_name]" value="<?php echo $value('secondary_poc_name'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="secondary_poc_phone_<?php echo $id; ?>">Secondary POC Phone Number</label>
+                            <input type="tel" id="secondary_poc_phone_<?php echo $id; ?>" name="<?php echo $name; ?>[secondary_poc_phone]" value="<?php echo $value('secondary_poc_phone'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="special_instructions_<?php echo $id; ?>">Special Instructions (Optional)</label>
+                            <textarea id="special_instructions_<?php echo $id; ?>" name="<?php echo $name; ?>[special_instructions]"><?php echo $value('special_instructions'); ?></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h2>SLP Food Categories</h2>
+                    <div class="table-wrapper">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Warehouse Location</th>
+                                    <th>Category</th>
+                                    <th># of Boxes Requested</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($categories as $i => $category): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($category['location']); ?></td>
+                                        <td>
+                                            <label for="boxes_<?php echo $id; ?>_<?php echo $i; ?>"><?php echo htmlspecialchars($category['name']); ?></label>
+                                            <?php if ($category['highDemand']): ?><span class="high-demand">*</span><?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <input type="number" id="boxes_<?php echo $id; ?>_<?php echo $i; ?>" name="<?php echo $name; ?>[boxes][<?php echo $category['categoryId']; ?>]" min="0" step="1" value="<?php echo htmlspecialchars($order['boxes'][$category['categoryId']] ?? ''); ?>">
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="form-note">Baking goods include flour, sugar, masa, and oil. "Vegetable" includes green beans, corn, dark beans, and mixed vegetables, based on availability.</p>
+                    <p class="form-note"><span class="high-demand">*</span> Items are in high demand, so there is a possibility of shortage.</p>
+                </div>
+            </div>
+<?php
     }
 ?>
     
@@ -393,6 +511,24 @@
     background-color: #D4E7F6;
     color: red;
 }
+.order-entry + .order-entry {
+    border-top: 2px solid #ccc;
+    padding-top: 1rem;
+}
+.order-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.order-entry-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--secondary-accent-color);
+}
+.remove-order-btn {
+    width: auto;
+}
 
     </style>
 </head>
@@ -406,88 +542,52 @@
             <div class="error-toast"><?php echo htmlspecialchars($error); ?></div>
         <?php endforeach; ?>
         <form class="order-form" action="createMultOrder.php" method="POST">
-            <div class="report-section">
-                <h2>Pantry Information</h2>
-                <div class="updateInv-allRows">
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="submission_date">Submission Date</label>
-                        <input type="date" id="submission_date" name="submission_date" value="<?php echo htmlspecialchars($_POST['submission_date'] ?? date('Y-m-d')); ?>" required>
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="delivery_date">Requested Delivery Date</label>
-                        <input type="date" id="delivery_date" name="delivery_date" value="<?php echo htmlspecialchars($_POST['delivery_date'] ?? ''); ?>">
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="delivery_time">Requested Delivery Time</label>
-                        <input type="time" id="delivery_time" name="delivery_time" value="<?php echo htmlspecialchars($_POST['delivery_time'] ?? ''); ?>">
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="pantry_name">Pantry Name</label>
-                        <input type="text" id="pantry_name" name="pantry_name" value="<?php echo htmlspecialchars($_POST['pantry_name'] ?? ''); ?>" required>
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="pantry_address">Pantry Address (Street, City)</label>
-                        <input type="text" id="pantry_address" name="pantry_address" value="<?php echo htmlspecialchars($_POST['pantry_address'] ?? ''); ?>" required>
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="poc_name">Point of Contact (POC)</label>
-                        <input type="text" id="poc_name" name="poc_name" value="<?php echo htmlspecialchars($_POST['poc_name'] ?? ''); ?>" required>
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="poc_phone">POC Phone Number</label>
-                        <input type="tel" id="poc_phone" name="poc_phone" value="<?php echo htmlspecialchars($_POST['poc_phone'] ?? ''); ?>" required>
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="secondary_poc_name">Secondary POC</label>
-                        <input type="text" id="secondary_poc_name" name="secondary_poc_name" value="<?php echo htmlspecialchars($_POST['secondary_poc_name'] ?? ''); ?>">
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="secondary_poc_phone">Secondary POC Phone Number</label>
-                        <input type="tel" id="secondary_poc_phone" name="secondary_poc_phone" value="<?php echo htmlspecialchars($_POST['secondary_poc_phone'] ?? ''); ?>">
-                    </div>
-                    <div class="updateInv-row">
-                        <label class="updateInv-label" for="special_instructions">Special Instructions (Optional)</label>
-                        <textarea id="special_instructions" name="special_instructions"><?php echo htmlspecialchars($_POST['special_instructions'] ?? ''); ?></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="report-section">
-                <h2>SLP Food Categories</h2>
-                <div class="table-wrapper">
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>Warehouse Location</th>
-                                <th>Category</th>
-                                <th># of Boxes Requested</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($ORDER_CATEGORIES as $i => $category): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($category['location']); ?></td>
-                                    <td>
-                                        <label for="boxes_<?php echo $i; ?>"><?php echo htmlspecialchars($category['name']); ?></label>
-                                        <?php if ($category['highDemand']): ?><span class="high-demand">*</span><?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <input type="number" id="boxes_<?php echo $i; ?>" name="boxes[<?php echo $category['categoryId']; ?>]" min="0" step="1" value="<?php echo htmlspecialchars($_POST['boxes'][$category['categoryId']] ?? ''); ?>">
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="form-note">Baking goods include flour, sugar, masa, and oil. "Vegetable" includes green beans, corn, dark beans, and mixed vegetables, based on availability.</p>
-                <p class="form-note"><span class="high-demand">*</span> Items are in high demand, so there is a possibility of shortage.</p>
+            <div id="order-entries">
+                <?php foreach ($orders as $index => $order) { renderOrderEntry((int)$index, $order, $ORDER_CATEGORIES); } ?>
             </div>
 
             <div class="modifyUsers-formBtns">
-                <button type="submit" class="modify-save-btn">Submit Order Form</button>
+                <button type="button" id="add-order-btn" class="modify-save-btn">Add Another Order</button>
+                <button type="submit" class="modify-save-btn">Submit Order Forms</button>
             </div>
         </form>
+
+        <!-- Copied by the "Add Another Order" button; __INDEX__ is replaced with the new order's index -->
+        <template id="order-entry-template">
+            <?php renderOrderEntry('__INDEX__', [], $ORDER_CATEGORIES); ?>
+        </template>
     </div>
 
+    <script>
+        const orderEntries = document.getElementById('order-entries');
+        const orderTemplate = document.getElementById('order-entry-template');
+        let nextOrderIndex = Math.max(-1, ...[...orderEntries.children].map(entry => Number(entry.dataset.index))) + 1;
+
+        // Number the orders and only allow removing one when there's more than one
+        function updateOrderEntries() {
+            const entries = orderEntries.querySelectorAll('.order-entry');
+            entries.forEach((entry, i) => {
+                entry.querySelector('.order-entry-title').textContent = 'Order ' + (i + 1);
+                entry.querySelector('.remove-order-btn').style.display = entries.length > 1 ? '' : 'none';
+            });
+        }
+
+        document.getElementById('add-order-btn').addEventListener('click', function() {
+            const html = orderTemplate.innerHTML.replaceAll('__INDEX__', nextOrderIndex);
+            nextOrderIndex++;
+            orderEntries.insertAdjacentHTML('beforeend', html);
+            updateOrderEntries();
+            orderEntries.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        orderEntries.addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-order-btn')) {
+                event.target.closest('.order-entry').remove();
+                updateOrderEntries();
+            }
+        });
+
+        updateOrderEntries();
+    </script>
 </body>
 </html>
