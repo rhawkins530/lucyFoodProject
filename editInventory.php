@@ -23,37 +23,6 @@
     require_once('database/dbItemCategory.php');
     require_once('database/dbInventory.php');
 
-    /* Get event ID parameter (either warehouseId or pantryId) */
-    $warehouseId = $_GET['warehouseId'] ?? null;
-    $pantryId = $_GET['pantryId'] ?? null;
-
-    if($warehouseId) {
-        /* Warehouse-anchored: get warehouse, find matching pantry and pallet */
-        $warehouseEvent = retrieve_inventoryEvent($warehouseId);
-        if(!$warehouseEvent || $warehouseEvent->getLocation() != 'Warehouse') {
-            echo "Warehouse event not found";
-            die();
-        }
-        $matches = get_matching_inventoryEvent($warehouseEvent);
-        $pantryEvent = $matches['Pantry'] ?? null;
-        $palletEvent = $matches['Pallet'] ?? null;
-        $eventDate = $warehouseEvent->getDate();
-    } else if($pantryId) {
-        /* Pantry-anchored: get pantry, find matching warehouse and pallet */
-        $pantryEvent = retrieve_inventoryEvent($pantryId);
-        if(!$pantryEvent || $pantryEvent->getLocation() != 'Pantry') {
-            echo "Pantry event not found";
-            die();
-        }
-        $matches = get_matching_inventoryEvent($pantryEvent);
-        $warehouseEvent = $matches['Warehouse'] ?? null;
-        $palletEvent = $matches['Pallet'] ?? null;
-        $eventDate = $pantryEvent->getDate();
-    } else {
-        echo "Invalid event ID";
-        die();
-    }
-
     /* Get all inventory items (same rows as the inventory.php table) */
     $items = getAllInventoryItems();
 
@@ -61,63 +30,41 @@
     $errors = [];
     $success = false;
     $deleted = false;
-    if (!empty($_POST)) {
-        if(isset($_POST['cancel_button'])) {
-            header('Location: inventory.php');
-            die();
-        }
-        else if(isset($_POST['delete_button'])) {
-            /* Delete warehouse, pantry, and pallet events */
-            if($warehouseEvent) {
-                remove_inventoryEvent($warehouseEvent->getId());
-            }
-            if($pantryEvent) {
-                remove_inventoryEvent($pantryEvent->getId());
-            }
-            if($palletEvent) {
-                remove_inventoryEvent($palletEvent->getId());
-            }
-            header('Location: inventory.php');
-            die();
-        }
-        else if(isset($_POST['save_button'])) {
-            /* Update total boxes for each inventory item */
-            foreach($items as $item) {
-                $fieldName = 'total_boxes_' . $item->getId();
-
-                if(isset($_POST[$fieldName])) {
-                    try{
-                        $newQty = +$_POST[$fieldName];
-                    }
-                    catch(TypeError $e){
-                        $newQty = " ";
-                    }
-
-                    if(!is_int($newQty)){
-                        $errors[] = $item->getCategoryName() . ' total boxes must be in whole numbers';
-                        continue;
-                    }
-                    else if($newQty < 0){
-                        $errors[] = $item->getCategoryName() . ' total boxes cannot be negative';
-                        continue;
-                    }
-
-                    if($item->getCurrentQuantity() != $newQty) {
-                        setInventoryQuantity($item->getId(), $newQty);
-                    }
+    
+    if(isset($_POST['cancel_button'])) {
+        header('Location: inventory.php');
+        die();
+    }
+    else if(isset($_POST['save_button'])) {
+        /* Update total boxes for each inventory item */
+        foreach($items as $item) {
+            $fieldName = 'total_boxes_' . $item->getId();
+            if(isset($_POST[$fieldName])) {
+                try{
+                    $newQty = +$_POST[$fieldName];
+                }
+                catch(TypeError $e){
+                    $newQty = " ";
+                }
+                if(!is_int($newQty)){
+                    $errors[] = $item->getCategoryName() . ' total boxes must be in whole numbers';
+                    continue;
+                }
+                else if($newQty < 0){
+                    $errors[] = $item->getCategoryName() . ' total boxes cannot be negative';
+                    continue;
+                }
+                if($item->getCurrentQuantity() != $newQty) {
+                    setInventoryQuantity($item->getId(), $newQty);
                 }
             }
-
-            if(empty($errors)) {
-                /* Redirect to inventory page to view the updated inventory */
-                $redirectId = $warehouseEvent ? $warehouseEvent->getId() : ($pantryEvent ? $pantryEvent->getId() : null);
-                if ($redirectId) {
-                    header('Location: inventory.php?week=' . $redirectId);
-                    exit;
-                }
-            }
+        }
+        if(empty($errors)) {
+            header('Location: inventory.php');
+            exit;
         }
     }
+
 ?>
 
 <!DOCTYPE html>
@@ -128,10 +75,9 @@
     <style>
         pageheader {
             margin-top: 3rem;
-            display: flex; justify-content: center; align-items: center;
-            position: sticky;
-            top: 1rem;
-            z-index: 6;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
         }
         .title {
             text-align: center;
@@ -274,18 +220,6 @@
     <?php require_once('header.php') ?>
     <main class="edit-container">
         <a href="inventory.php" class="back-btn" style="margin-top: 0;">← Back</a>
-        
-<!--
-         Event Info (Read-Only)
-        <div class="event-info">
-            <p><strong>Date:</strong> <?= date('M j, Y', strtotime($eventDate)) ?></p>
-        </div>
--->
-        <!-- Success Message -->
-        <?php if($success): ?>
-            <h4 style="color:black;"><i>Inventory Updated: <?= date("F jS, Y", strtotime($eventDate)) ?></i></h4>
-        <?php endif; ?>
-
         <!-- Error Messages -->
         <?php if(!empty($errors)): ?>
             <ul>
