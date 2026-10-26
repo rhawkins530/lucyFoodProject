@@ -71,6 +71,7 @@
     */
 
     $errors = [];
+    $shortItems = [];
     if (!empty($_POST)) {
         // Pantry and contact fields aren't saved yet; dbfoodorder has no columns for them.
         $boxes = $_POST['boxes'] ?? [];
@@ -94,12 +95,25 @@
             $errors[] = "Request at least one box";
         }
         if (empty($errors)) {
-            if (addFoodOrder($_SESSION['_personId'], $foodOrderItems)) {
+            $insufficient = addIndividualFoodOrder($_SESSION['_personId'], $foodOrderItems);
+            if ($insufficient === false) {
+                $errors[] = "Unable to create food order";
+            }
+            else if (empty($insufficient)) {
                 header('Location: createOrder.php?created=success');
                 die();
             }
             else {
-                $errors[] = "Unable to create food order";
+                // Not enough inventory, so list each short item using the names on this form
+                foreach ($ORDER_CATEGORIES as $category) {
+                    if (isset($insufficient[$category['categoryId']])) {
+                        $shortItems[] = [
+                            'name' => $category['name'],
+                            'requested' => (int)$boxes[$category['categoryId']],
+                            'available' => $insufficient[$category['categoryId']],
+                        ];
+                    }
+                }
             }
         }
     }
@@ -392,6 +406,12 @@
     background-color: #D4E7F6;
     color: red;
 }
+.report-container .error-toast ul {
+    margin: 0.5rem 0 0 1.5rem;
+}
+.report-container .error-toast li {
+    list-style-type: disc;
+}
 
     </style>
 </head>
@@ -404,6 +424,16 @@
         <?php foreach ($errors as $error): ?>
             <div class="error-toast"><?php echo htmlspecialchars($error); ?></div>
         <?php endforeach; ?>
+        <?php if (!empty($shortItems)): ?>
+            <div class="error-toast">
+                These requested quantities are more than what's in inventory:
+                <ul>
+                    <?php foreach ($shortItems as $shortItem): ?>
+                        <li><strong><?php echo htmlspecialchars($shortItem['name']); ?></strong>: <?php echo $shortItem['requested']; ?> requested, <?php echo $shortItem['available']; ?> in inventory</li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
         <form class="order-form" action="createIndivOrder.php" method="POST">
             <div class="report-section">
                 <h2>Pantry Information</h2>

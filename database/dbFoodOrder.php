@@ -2,6 +2,7 @@
 
 include_once('dbinfo.php');
 include_once(dirname(__FILE__).'/../domain/FoodOrder.php');
+include_once(dirname(__FILE__).'/dbInventory.php');
 
 
 /*
@@ -65,6 +66,101 @@ function addFoodOrder($requestorId, $foodOrderItems = []) {
         }
         return false; // Return false in case of an exception
     }
+}
+
+/*
+    Add a new individual food order. Individual orders don't need an admin to approve them,
+    so if there is enough inventory the order is saved as approved and its boxes are removed from inventory.
+    Parameters:
+    - $requestorId: The ID of the person requesting the food order.
+    - $foodOrderItems: An array of tuples, where each tuple contains (item_category_id, quantity_requested) for each item in the order.
+    Returns:
+    - An empty array if the order was saved and the inventory was updated.
+    - An array of item_category_id => quantity in inventory for each item without enough inventory.
+      Nothing is saved in this case.
+    - false if the order couldn't be saved.
+*/
+function addIndividualFoodOrder($requestorId, $foodOrderItems = []) {
+    // Orders use item_category_id, but the inventory functions use the dbinventory row id
+    $inventoryIds = [];
+    foreach (getAllInventoryItems() as $inventoryItem) {
+        $inventoryIds[$inventoryItem->getItemCategoryId()] = $inventoryItem->getId();
+    }
+
+    // Check that there is enough inventory for every item before saving anything
+    $insufficient = [];
+    foreach ($foodOrderItems as $item) {
+        $itemCategoryId = (int)$item[0];
+        $quantityRequested = (int)$item[1];
+        $inventoryId = $inventoryIds[$itemCategoryId] ?? null;
+        $currentQuantity = $inventoryId === null ? 0 : (int)getInventoryQuantity($inventoryId);
+        if ($quantityRequested > $currentQuantity) {
+            $insufficient[$itemCategoryId] = $currentQuantity;
+        }
+    }
+    if (!empty($insufficient)) {
+        return $insufficient;
+    }
+
+    try {
+        $con = connect();
+        $requestorId = (int)$requestorId;
+        $order_status = "approved"; // Individual orders are approved as soon as they're submitted
+
+        // Start a transaction
+        $con->begin_transaction();
+
+        // Insert the food order
+        $query = "INSERT INTO dbfoodorder
+                    (requestor_person_id, order_status, submission_date, fulfillment_date)
+                VALUES ($requestorId, '$order_status', NOW(), NOW())";
+        $okOrder = mysqli_query($con, $query);
+
+        if (!$okOrder) { // If inserting the order fails, rollback the transaction and return false
+            $con->rollback();
+            mysqli_close($con);
+            return false;
+        }
+
+        $orderId = mysqli_insert_id($con); // Get the ID of the newly inserted order
+
+        // Insert food order items
+        foreach ($foodOrderItems as $item) {
+            $itemCategoryId = (int)$item[0];
+            $quantityRequested = (int)$item[1];
+
+            $queryItem = "INSERT INTO dbfoodorderitem
+                            (order_id, item_category_id, quantity_requested)
+                        VALUES ($orderId, $itemCategoryId, $quantityRequested)";
+            $okItem = mysqli_query($con, $queryItem);
+
+            if (!$okItem) { // If inserting an item fails, rollback the transaction and return false
+                $con->rollback();
+                mysqli_close($con);
+                return false;
+            }
+        }
+
+        $okCommit = $con->commit();
+        mysqli_close($con);
+        if (!$okCommit) {
+            return false;
+        }
+    }
+    catch (Exception $e) {
+        // Handle exception, rollback transaction if needed
+        if (isset($con)) {
+            $con->rollback();
+            mysqli_close($con);
+        }
+        return false; // Return false in case of an exception
+    }
+
+    // The order was saved, so take the boxes out of inventory
+    foreach ($foodOrderItems as $item) {
+        changeInventoryQuantity($inventoryIds[(int)$item[0]], -(int)$item[1]);
+    }
+    return [];
 }
 
 /*
