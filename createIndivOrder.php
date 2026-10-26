@@ -388,6 +388,10 @@
     font-size: 0.85rem;
     margin-top: 1rem;
 }
+.report-container .error-toast {
+    background-color: #D4E7F6;
+    color: red;
+}
 
     </style>
 </head>
@@ -409,43 +413,43 @@
                 <div class="updateInv-allRows">
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="submission_date">Submission Date</label>
-                        <input type="date" id="submission_date" name="submission_date" value="<?php echo date('Y-m-d'); ?>" required>
+                        <input type="date" id="submission_date" name="submission_date" value="<?php echo htmlspecialchars($_POST['submission_date'] ?? date('Y-m-d')); ?>" required>
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="delivery_date">Requested Delivery Date</label>
-                        <input type="date" id="delivery_date" name="delivery_date">
+                        <input type="date" id="delivery_date" name="delivery_date" value="<?php echo htmlspecialchars($_POST['delivery_date'] ?? ''); ?>">
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="delivery_time">Requested Delivery Time</label>
-                        <input type="time" id="delivery_time" name="delivery_time">
+                        <input type="time" id="delivery_time" name="delivery_time" value="<?php echo htmlspecialchars($_POST['delivery_time'] ?? ''); ?>">
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="pantry_name">Pantry Name</label>
-                        <input type="text" id="pantry_name" name="pantry_name" required>
+                        <input type="text" id="pantry_name" name="pantry_name" value="<?php echo htmlspecialchars($_POST['pantry_name'] ?? ''); ?>" required>
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="pantry_address">Pantry Address (Street, City)</label>
-                        <input type="text" id="pantry_address" name="pantry_address" required>
+                        <input type="text" id="pantry_address" name="pantry_address" value="<?php echo htmlspecialchars($_POST['pantry_address'] ?? ''); ?>" required>
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="poc_name">Point of Contact (POC)</label>
-                        <input type="text" id="poc_name" name="poc_name" required>
+                        <input type="text" id="poc_name" name="poc_name" value="<?php echo htmlspecialchars($_POST['poc_name'] ?? ''); ?>" required>
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="poc_phone">POC Phone Number</label>
-                        <input type="tel" id="poc_phone" name="poc_phone" required>
+                        <input type="tel" id="poc_phone" name="poc_phone" value="<?php echo htmlspecialchars($_POST['poc_phone'] ?? ''); ?>" required>
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="secondary_poc_name">Secondary POC</label>
-                        <input type="text" id="secondary_poc_name" name="secondary_poc_name">
+                        <input type="text" id="secondary_poc_name" name="secondary_poc_name" value="<?php echo htmlspecialchars($_POST['secondary_poc_name'] ?? ''); ?>">
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="secondary_poc_phone">Secondary POC Phone Number</label>
-                        <input type="tel" id="secondary_poc_phone" name="secondary_poc_phone">
+                        <input type="tel" id="secondary_poc_phone" name="secondary_poc_phone" value="<?php echo htmlspecialchars($_POST['secondary_poc_phone'] ?? ''); ?>">
                     </div>
                     <div class="updateInv-row">
                         <label class="updateInv-label" for="special_instructions">Special Instructions (Optional)</label>
-                        <textarea id="special_instructions" name="special_instructions"></textarea>
+                        <textarea id="special_instructions" name="special_instructions"><?php echo htmlspecialchars($_POST['special_instructions'] ?? ''); ?></textarea>
                     </div>
                 </div>
             </div>
