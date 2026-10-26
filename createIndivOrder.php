@@ -79,6 +79,34 @@
             
         }
     }
+
+    // Categories from the St. Lucy order form, in the same order as the PDF
+    $ORDER_CATEGORIES = [
+        ['location' => 'A3', 'name' => 'Canned Pasta', 'highDemand' => false],
+        ['location' => 'A3/A4', 'name' => 'Soup', 'highDemand' => false],
+        ['location' => 'A4', 'name' => 'Pasta Sauce', 'highDemand' => false],
+        ['location' => 'A7', 'name' => 'Canned Fruit', 'highDemand' => false],
+        ['location' => 'A7/A8', 'name' => 'Baking Goods', 'highDemand' => false],
+        ['location' => 'A11', 'name' => 'Meal Helpers', 'highDemand' => false],
+        ['location' => 'A11', 'name' => 'Mac & Cheese', 'highDemand' => true],
+        ['location' => 'A12', 'name' => 'Dry Pasta', 'highDemand' => false],
+        ['location' => 'A12', 'name' => 'Condiments', 'highDemand' => false],
+        ['location' => 'A15', 'name' => 'Dark Beans', 'highDemand' => false],
+        ['location' => 'A15/A16', 'name' => 'Snacks/Cookies', 'highDemand' => false],
+        ['location' => 'B3/B4', 'name' => 'Cereal & Oatmeal', 'highDemand' => false],
+        ['location' => 'B4', 'name' => 'Oil', 'highDemand' => false],
+        ['location' => 'B7/B8', 'name' => 'Jelly', 'highDemand' => false],
+        ['location' => 'B7', 'name' => 'Baked Beans', 'highDemand' => false],
+        ['location' => 'B8', 'name' => 'Peanut Butter', 'highDemand' => true],
+        ['location' => 'C3', 'name' => 'Canned Meat', 'highDemand' => true],
+        ['location' => 'C4', 'name' => 'Juice & Beverage', 'highDemand' => false],
+        ['location' => 'C4', 'name' => 'Tuna', 'highDemand' => true],
+        ['location' => 'C7/C8', 'name' => 'Vegetable', 'highDemand' => false],
+        ['location' => 'C11/C12', 'name' => 'Tomato Product', 'highDemand' => false],
+        ['location' => 'Refrigerator', 'name' => 'Tortilla', 'highDemand' => false],
+        ['location' => 'W-BARREL', 'name' => 'Bagged Rice', 'highDemand' => false],
+        ['location' => 'R-BARREL', 'name' => 'Bagged Dry Bean', 'highDemand' => false],
+    ];
 ?>
     
 <!DOCTYPE html>
@@ -339,94 +367,30 @@
             }
         }
 
-.form-display {
-        display: flex;
-        justify-content: center;
-		align-items: center;
-        text-align: center;
-		width: 100%;
-        margin: auto;
-
-}
-.form-display img {
-    width: 70%;
-    height: 100%;
-}
-
-.form-display a {
-    cursor: pointer;
-}
-
-.downloads {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-}
-
-.downloads form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 10px;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-}
-
-.downloads input[type="file"] {
-    width: 250px;
+.order-form input[type="text"],
+.order-form input[type="tel"],
+.order-form input[type="date"],
+.order-form input[type="time"],
+.order-form textarea {
+    width: 300px;
     max-width: 100%;
-
+    margin-right: 30%;
+    padding: 0.4rem 0.6rem;
 }
-
-.downloads a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.order-form textarea {
+    min-height: 5rem;
 }
-
-.downloads a:hover {
-    color: red;
+.order-form .report-table input[type="number"] {
+    width: 100px;
+    padding: 0.4rem 0.6rem;
 }
-
-hr {
-    width: 80%;
-    border: none;
-    height: 2px;
-    background-color: #ccc;
-    margin: 20px auto;
+.order-form .high-demand {
+    color: darkred;
+    font-weight: 600;
 }
-
-br {
-    line-height: 1;
-}
-
-.downloads form button {
-    align-self: flex-end;
-    margin-right: 20px;
-}
-
-.downloads ol li {
-    width: 100%;
-    box-sizing: border-box; 
-}
-
-.downloads ol {
-    list-style: decimal !important;
-    padding-left: 40px !important;
-}
-
-.downloads li {
-    display: list-item !important;
-    list-style: decimal !important;
-    margin-bottom: 15px;
-}
-
-.reference-img {
-    width: 75px;
+.order-form .form-note {
+    font-size: 0.85rem;
+    margin-top: 1rem;
 }
 
     </style>
@@ -436,25 +400,89 @@ br {
 </pageheader>
 <body>
     <?php require_once('header.php') ?>
-    <div class="downloads">
-        <br>
-        <ol>
-            <li><span>Download and fill out order form:</span>
-            
-            <a style="margin-top: 20px;" href="images/St. Lucy Blank Order Form-2026 1.pdf" download><u>Download Form PDF</u><img class="reference-img" src="images/StLucyBlankOrderFormPNG.png"></a>
-            </li>       
-            <li>
-                <div style="margin-bottom: 25px;">Upload order form: </div>
-                <form action="createOrder.php" method="POST" enctype="multipart/form-data">
-                    <input type="file" name="document" accept=".pdf"required>
-                    <br>
-                    <button type="submit">Submit Order Form</button>
-                </form>
-            </li>
-        </ol>
+    <div class="report-container">
+        <form class="order-form" action="createOrder.php" method="POST">
+            <div class="report-section">
+                <h2>Pantry Information</h2>
+                <div class="updateInv-allRows">
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="submission_date">Submission Date</label>
+                        <input type="date" id="submission_date" name="submission_date" value="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="delivery_date">Requested Delivery Date</label>
+                        <input type="date" id="delivery_date" name="delivery_date">
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="delivery_time">Requested Delivery Time</label>
+                        <input type="time" id="delivery_time" name="delivery_time">
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="pantry_name">Pantry Name</label>
+                        <input type="text" id="pantry_name" name="pantry_name" required>
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="pantry_address">Pantry Address (Street, City)</label>
+                        <input type="text" id="pantry_address" name="pantry_address" required>
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="poc_name">Point of Contact (POC)</label>
+                        <input type="text" id="poc_name" name="poc_name" required>
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="poc_phone">POC Phone Number</label>
+                        <input type="tel" id="poc_phone" name="poc_phone" required>
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="secondary_poc_name">Secondary POC</label>
+                        <input type="text" id="secondary_poc_name" name="secondary_poc_name">
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="secondary_poc_phone">Secondary POC Phone Number</label>
+                        <input type="tel" id="secondary_poc_phone" name="secondary_poc_phone">
+                    </div>
+                    <div class="updateInv-row">
+                        <label class="updateInv-label" for="special_instructions">Special Instructions (Optional)</label>
+                        <textarea id="special_instructions" name="special_instructions"></textarea>
+                    </div>
+                </div>
+            </div>
 
-        <br>
-        <hr>
+            <div class="report-section">
+                <h2>SLP Food Categories</h2>
+                <div class="table-wrapper">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Warehouse Location</th>
+                                <th>Category</th>
+                                <th># of Boxes Requested</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($ORDER_CATEGORIES as $i => $category): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($category['location']); ?></td>
+                                    <td>
+                                        <label for="boxes_<?php echo $i; ?>"><?php echo htmlspecialchars($category['name']); ?></label>
+                                        <?php if ($category['highDemand']): ?><span class="high-demand">*</span><?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <input type="number" id="boxes_<?php echo $i; ?>" name="boxes[<?php echo htmlspecialchars($category['name']); ?>]" min="0" step="1">
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="form-note">Baking goods include flour, sugar, masa, and oil. "Vegetable" includes green beans, corn, dark beans, and mixed vegetables, based on availability.</p>
+                <p class="form-note"><span class="high-demand">*</span> Items are in high demand, so there is a possibility of shortage.</p>
+            </div>
+
+            <div class="modifyUsers-formBtns">
+                <button type="submit" class="modify-save-btn">Submit Order Form</button>
+            </div>
+        </form>
     </div>
 
 </body>
