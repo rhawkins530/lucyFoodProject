@@ -26,7 +26,7 @@
     }
     
     require_once('include/input-validation.php');
-    require_once('database/dbPersons.php');
+    require_once('database/dbFoodOrder.php');
 
     // Does the person exist?
     /*$thePerson = retrieve_person_by_personId($_GET['id']);
@@ -35,78 +35,74 @@
         die();
     }*/
 
+    // Categories from the St. Lucy order form, in the same order as the PDF.
+    // categoryId is the item_category_id in dbinventory.
+    $ORDER_CATEGORIES = [
+        ['location' => 'A3', 'name' => 'Canned Pasta', 'categoryId' => 17, 'highDemand' => false],
+        ['location' => 'A3/A4', 'name' => 'Soup', 'categoryId' => 26, 'highDemand' => false],
+        ['location' => 'A4', 'name' => 'Pasta Sauce', 'categoryId' => 6, 'highDemand' => false],
+        ['location' => 'A7', 'name' => 'Canned Fruit', 'categoryId' => 15, 'highDemand' => false],
+        ['location' => 'A7/A8', 'name' => 'Baking Goods', 'categoryId' => 28, 'highDemand' => false],
+        ['location' => 'A11', 'name' => 'Meal Helpers', 'categoryId' => 30, 'highDemand' => false],
+        ['location' => 'A11', 'name' => 'Mac & Cheese', 'categoryId' => 29, 'highDemand' => true],
+        ['location' => 'A12', 'name' => 'Dry Pasta', 'categoryId' => 5, 'highDemand' => false],
+        ['location' => 'A12', 'name' => 'Condiments', 'categoryId' => 9, 'highDemand' => false],
+        ['location' => 'A15', 'name' => 'Dark Beans', 'categoryId' => 31, 'highDemand' => false],
+        ['location' => 'A15/A16', 'name' => 'Snacks/Cookies', 'categoryId' => 32, 'highDemand' => false],
+        ['location' => 'B3/B4', 'name' => 'Cereal & Oatmeal', 'categoryId' => 1, 'highDemand' => false],
+        ['location' => 'B4', 'name' => 'Oil', 'categoryId' => 2, 'highDemand' => false],
+        ['location' => 'B7/B8', 'name' => 'Jelly', 'categoryId' => 4, 'highDemand' => false],
+        ['location' => 'B7', 'name' => 'Baked Beans', 'categoryId' => 13, 'highDemand' => false],
+        ['location' => 'B8', 'name' => 'Peanut Butter', 'categoryId' => 3, 'highDemand' => true],
+        ['location' => 'C3', 'name' => 'Canned Meat', 'categoryId' => 33, 'highDemand' => true],
+        ['location' => 'C4', 'name' => 'Juice & Beverage', 'categoryId' => 27, 'highDemand' => false],
+        ['location' => 'C4', 'name' => 'Tuna', 'categoryId' => 8, 'highDemand' => true],
+        ['location' => 'C7/C8', 'name' => 'Vegetable', 'categoryId' => 34, 'highDemand' => false],
+        ['location' => 'C11/C12', 'name' => 'Tomato Product', 'categoryId' => 35, 'highDemand' => false],
+        ['location' => 'Refrigerator', 'name' => 'Tortilla', 'categoryId' => 36, 'highDemand' => false],
+        ['location' => 'W-BARREL', 'name' => 'Bagged Rice', 'categoryId' => 23, 'highDemand' => false],
+        ['location' => 'R-BARREL', 'name' => 'Bagged Dry Bean', 'categoryId' => 37, 'highDemand' => false],
+    ];
+
     /* 
     * _POST is empty when the page is first loaded.
     *  Submitting the form on this page reloads the page with data in _POST
-    *  if _POST is not empty, process data from form
+    *  if _POST is not empty, save the order
     */
 
     $errors = [];
     if (!empty($_POST)) {
-        if(isset($_POST["cancel_button"])){
-            header('Location: index.php');
-            die();
+        // Pantry and contact fields aren't saved yet; dbfoodorder has no columns for them.
+        $boxes = $_POST['boxes'] ?? [];
+        $foodOrderItems = [];
+        foreach ($ORDER_CATEGORIES as $category) {
+            $quantity = trim($boxes[$category['categoryId']] ?? '');
+            if ($quantity === '') {
+                continue;
+            }
+            if (!ctype_digit($quantity)) {
+                $errors[] = "Number of boxes for " . $category['name'] . " must be a whole number";
+                continue;
+            }
+            if ((int)$quantity === 0) {
+                continue;
+            }
+            $foodOrderItems[] = [$category['categoryId'], (int)$quantity];
         }
-        if(isset($_POST["create_button"])){
-            $id = $_POST["id"];
-            $first_name = $_POST["fname"];
-            $last_name = $_POST["lname"];
-            $email = $_POST["email"];
-            $type = $_POST["role"] ?? '';
-            $password = $_POST["password"];
 
-            if(retrieve_person($_POST["id"])){
-                $errors[] = "Username already exists";
+        if (empty($foodOrderItems) && empty($errors)) {
+            $errors[] = "Request at least one box";
+        }
+        if (empty($errors)) {
+            if (addFoodOrder($_SESSION['_personId'], $foodOrderItems)) {
+                header('Location: createIndivOrder.php?created=success');
+                die();
             }
-            if(retrieve_person_by_email($_POST["email"])){
-                $errors[] = "Email already exists";
+            else {
+                $errors[] = "Unable to create food order";
             }
-            if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-                $errors[] = "Invalid email";
-            }
-            if($accessLevel < 3 && $type == "superadmin"){
-                $errors[] = "Unable to change role";
-            }
-            if(empty($errors)){
-                if(create_person($id, $first_name, $last_name, $email, $type, $password)){
-                    header('Location: viewAuditUsers.php');
-                    die();
-                }
-                else{
-                    $errors[] = "Unable to create user";
-                }
-            }
-            
         }
     }
-
-    // Categories from the St. Lucy order form, in the same order as the PDF
-    $ORDER_CATEGORIES = [
-        ['location' => 'A3', 'name' => 'Canned Pasta', 'highDemand' => false],
-        ['location' => 'A3/A4', 'name' => 'Soup', 'highDemand' => false],
-        ['location' => 'A4', 'name' => 'Pasta Sauce', 'highDemand' => false],
-        ['location' => 'A7', 'name' => 'Canned Fruit', 'highDemand' => false],
-        ['location' => 'A7/A8', 'name' => 'Baking Goods', 'highDemand' => false],
-        ['location' => 'A11', 'name' => 'Meal Helpers', 'highDemand' => false],
-        ['location' => 'A11', 'name' => 'Mac & Cheese', 'highDemand' => true],
-        ['location' => 'A12', 'name' => 'Dry Pasta', 'highDemand' => false],
-        ['location' => 'A12', 'name' => 'Condiments', 'highDemand' => false],
-        ['location' => 'A15', 'name' => 'Dark Beans', 'highDemand' => false],
-        ['location' => 'A15/A16', 'name' => 'Snacks/Cookies', 'highDemand' => false],
-        ['location' => 'B3/B4', 'name' => 'Cereal & Oatmeal', 'highDemand' => false],
-        ['location' => 'B4', 'name' => 'Oil', 'highDemand' => false],
-        ['location' => 'B7/B8', 'name' => 'Jelly', 'highDemand' => false],
-        ['location' => 'B7', 'name' => 'Baked Beans', 'highDemand' => false],
-        ['location' => 'B8', 'name' => 'Peanut Butter', 'highDemand' => true],
-        ['location' => 'C3', 'name' => 'Canned Meat', 'highDemand' => true],
-        ['location' => 'C4', 'name' => 'Juice & Beverage', 'highDemand' => false],
-        ['location' => 'C4', 'name' => 'Tuna', 'highDemand' => true],
-        ['location' => 'C7/C8', 'name' => 'Vegetable', 'highDemand' => false],
-        ['location' => 'C11/C12', 'name' => 'Tomato Product', 'highDemand' => false],
-        ['location' => 'Refrigerator', 'name' => 'Tortilla', 'highDemand' => false],
-        ['location' => 'W-BARREL', 'name' => 'Bagged Rice', 'highDemand' => false],
-        ['location' => 'R-BARREL', 'name' => 'Bagged Dry Bean', 'highDemand' => false],
-    ];
 ?>
     
 <!DOCTYPE html>
@@ -401,7 +397,13 @@
 <body>
     <?php require_once('header.php') ?>
     <div class="report-container">
-        <form class="order-form" action="createOrder.php" method="POST">
+        <?php if (isset($_GET['created']) && $_GET['created'] == 'success'): ?>
+            <div class="happy-toast">Your food order was submitted.</div>
+        <?php endif; ?>
+        <?php foreach ($errors as $error): ?>
+            <div class="error-toast"><?php echo htmlspecialchars($error); ?></div>
+        <?php endforeach; ?>
+        <form class="order-form" action="createIndivOrder.php" method="POST">
             <div class="report-section">
                 <h2>Pantry Information</h2>
                 <div class="updateInv-allRows">
@@ -468,7 +470,7 @@
                                         <?php if ($category['highDemand']): ?><span class="high-demand">*</span><?php endif; ?>
                                     </td>
                                     <td>
-                                        <input type="number" id="boxes_<?php echo $i; ?>" name="boxes[<?php echo htmlspecialchars($category['name']); ?>]" min="0" step="1">
+                                        <input type="number" id="boxes_<?php echo $i; ?>" name="boxes[<?php echo $category['categoryId']; ?>]" min="0" step="1" value="<?php echo htmlspecialchars($_POST['boxes'][$category['categoryId']] ?? ''); ?>">
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

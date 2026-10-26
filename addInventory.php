@@ -72,7 +72,10 @@
         19 => 'Peas', 20 => 'Ramen', 21 => 'Milk',
         22 => 'Diced Tomatoes', 23 => 'Rice', 24 => 'Flour (Masa)',
         25 => 'Flour (White)', 26 => 'Soup', 27 => 'Juice',
-        28 => 'Baking Goods', 29 => 'Macaroni & Cheese',
+        28 => 'Baking Goods', 29 => 'Macaroni & Cheese', 30 => 'Meal Helpers',
+        31 => 'Dark Beans', 32 => 'Snacks/Cookies', 33 => 'Canned Meat',
+        34 => 'Vegetable', 35 => 'Tomato Product', 36 => 'Tortilla',
+        37 => 'Bagged Dry Bean',
     ];
     
     //$LOCATIONS = ['Main'];
