@@ -9,19 +9,21 @@ include_once(dirname(__FILE__).'/../domain/FoodOrderItem.php');
     - $orderId: The ID of the food order to which the item belongs.
     - $itemCategoryId: The ID of the item category.
     - $quantityRequested: The quantity of the item requested in the order.
+    - $quantityDelivered: The quantity of the item delivered in the order.
     Returns:
     - true if the item was successfully added, false otherwise.
 */
 
-function addFoodOrderItem($orderId, $itemCategoryId, $quantityRequested) {
+function addFoodOrderItem($orderId, $itemCategoryId, $quantityRequested, $quantityDelivered) {
     $con = connect();
     $orderId = (int)$orderId;
     $itemCategoryId = (int)$itemCategoryId;
     $quantityRequested = (int)$quantityRequested;
+    $quantityDelivered = (int)$quantityDelivered;
 
     $query = "INSERT INTO dbfoodorderitem
-                (order_id, item_category_id, quantity_requested)
-            VALUES ($orderId, $itemCategoryId, $quantityRequested)";
+                (order_id, item_category_id, quantity_requested, quantity_delivered)
+            VALUES ($orderId, $itemCategoryId, $quantityRequested, $quantityDelivered)";
     $ok = mysqli_query($con, $query);
     mysqli_close($con);
     return $ok;
@@ -46,7 +48,8 @@ function getFoodOrderItemsByOrderId($orderId) {
             (int)$row['id'],
             (int)$row['order_id'],
             (int)$row['item_category_id'],
-            (int)$row['quantity_requested']
+            (int)$row['quantity_requested'],
+            (int)$row['quantity_delivered']
         );
     }
     
@@ -74,9 +77,28 @@ function getFoodOrderItemById($id) {
             (int)$row['id'],
             (int)$row['order_id'],
             (int)$row['item_category_id'],
-            (int)$row['quantity_requested']
+            (int)$row['quantity_requested'],
+            (int)$row['quantity_delivered']
         );
     } else {
         return null;
     }
+}
+
+/*
+    Update the quantity delivered for a specific food order item
+    Parameters:
+    - $id: The ID of the food order item to update.
+    - $quantityDelivered: The new quantity delivered for the item.
+    Returns:
+    - True if the update was successful, false otherwise.
+*/
+function updateFoodOrderItemQuantityDelivered($id, $quantityDelivered) {
+    $con = connect();
+    $id = (int)$id;
+    $quantityDelivered = (int)$quantityDelivered;
+    $query = "UPDATE dbfoodorderitem SET quantity_delivered = $quantityDelivered WHERE id = $id";
+    $ok = mysqli_query($con, $query);
+    mysqli_close($con);
+    return $ok;
 }
