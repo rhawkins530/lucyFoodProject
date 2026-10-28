@@ -76,7 +76,7 @@
                     $errors[] = "Category already exists";
 
                 } else {
-                    addItem($name, $minimum, $allocated);
+                    addCategory($name, $minimum, $allocated);
 
                     header("Location: viewItemCategories.php");
                     exit();

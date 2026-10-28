@@ -62,6 +62,8 @@
     $errors = [];
 
     // Categories with IDs
+	$categories = getAllInventoryItems();
+	/*
     $CATEGORIES = [ 
         1 => 'Cereal/Oatmeal', 2 => 'Cooking Oil', 3 => 'Peanut Butter',
         4 => 'Jelly', 5 => 'Dried Pasta', 6 => 'Pasta Sauce',
@@ -74,7 +76,7 @@
         25 => 'Flour (White)', 26 => 'Soup', 27 => 'Juice',
         28 => 'Baking Goods', 29 => 'Macaroni & Cheese',
     ];
-    
+    */
     //$LOCATIONS = ['Main'];
 
     //Crate types for unsorted inventory
@@ -93,19 +95,17 @@
             if ($foodStatus === 'Sorted') {
                 $qty = filter_var($_POST['box-quantity'] ?? '', FILTER_VALIDATE_INT,
                                   ['options' => ['min_range' => 1]]);
-                $sortedCategory = $_POST['category'] ?? '';
-                $catId = array_search($sortedCategory, $CATEGORIES, true);
+                $catId = $_POST['category'];
+				$categoryName = getCategoryName($catId);
                 if ($qty === false || $catId === false) {
                     throw new InvalidArgumentException('Please choose a category and a box quantity of 1 or more.');
                 }
 
-                $existingId = getInventoryIdByCategory($catId);
-
-                if ($existingId !== null) {
-                    changeInventoryQuantity($existingId, $qty);
+                if ($catId !== null) {
+                    changeInventoryQuantity($catId, $qty);
                 }
                 else{
-                    if (!addInventoryItem($catId, $sortedCategory, $qty)){
+                    if (!changeInventoryQuantity($catId, $qty)){
                         throw new InvalidArgumentException('Could not save to the database.');
                     }
                 }
@@ -625,7 +625,9 @@
         }
         .input-group{
             display: flex;
-            flex-direction: column;
+			flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 10px;
             margin-bottom: 5%;
         }
@@ -698,9 +700,9 @@
                     <div class="input-group">
                         <label for="category-options">Item Category:</label>
                         <select id="category-options" name="category">
-                            <?php foreach ($CATEGORIES as $name): ?>
-                                <option value="<?=  htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></option>
-                            <?php endforeach; ?>
+                            <?php foreach ($categories as $category) { 
+                                echo '<option value=' . $category->getId(). '>' . $category->getCategoryName() . ' </option> ';
+                            } ?>
                         </select>
                     </div>
 

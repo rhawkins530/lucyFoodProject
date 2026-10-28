@@ -19,6 +19,19 @@ function addInventoryItem($categoryId, $categoryName, $quantity, $minimum = 0, $
     return $ok;
 }
 
+function addToInventory($categoryId, $quantity) {
+    $con = connect();
+    $categoryId   = (int)$categoryId;
+    $quantity     = (int)$quantity;
+
+    $query = "INSERT INTO dbinventory
+                (id, current_quantity)
+            VALUES ($categoryId, $quantity))";
+    $ok = mysqli_query($con, $query);
+    mysqli_close($con);
+    return $ok;
+}
+
 function getInventoryIdByCategory($categoryId) {
     $con = connect();
     $categoryId = (int)$categoryId;
@@ -32,7 +45,7 @@ function getInventoryIdByCategory($categoryId) {
 /*
     Add a new item
 */
-function addItem($name, $minimum, $allocated) {
+function addCategory($name, $minimum, $allocated) {
     $con=connect();
     mysqli_query($con,'INSERT INTO dbinventory (category_name, current_quantity, minimum_quantity, allocated_quantity) VALUES("' .
             $name . '", 
