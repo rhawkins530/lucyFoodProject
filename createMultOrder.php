@@ -26,7 +26,7 @@
     }
     
     require_once('include/input-validation.php');
-    require_once('database/dbPersons.php');
+    require_once('database/dbFoodOrder.php');
 
     // Does the person exist?
     /*$thePerson = retrieve_person_by_personId($_GET['id']);
@@ -35,49 +35,192 @@
         die();
     }*/
 
+    // Categories from the St. Lucy order form, in the same order as the PDF.
+    // categoryId is the item_category_id in dbinventory.
+    $ORDER_CATEGORIES = [
+        ['location' => 'A3', 'name' => 'Canned Pasta', 'categoryId' => 17, 'highDemand' => false],
+        ['location' => 'A3/A4', 'name' => 'Soup', 'categoryId' => 26, 'highDemand' => false],
+        ['location' => 'A4', 'name' => 'Pasta Sauce', 'categoryId' => 6, 'highDemand' => false],
+        ['location' => 'A7', 'name' => 'Canned Fruit', 'categoryId' => 15, 'highDemand' => false],
+        ['location' => 'A7/A8', 'name' => 'Baking Goods', 'categoryId' => 28, 'highDemand' => false],
+        ['location' => 'A11', 'name' => 'Meal Helpers', 'categoryId' => 30, 'highDemand' => false],
+        ['location' => 'A11', 'name' => 'Mac & Cheese', 'categoryId' => 29, 'highDemand' => true],
+        ['location' => 'A12', 'name' => 'Dry Pasta', 'categoryId' => 5, 'highDemand' => false],
+        ['location' => 'A12', 'name' => 'Condiments', 'categoryId' => 9, 'highDemand' => false],
+        ['location' => 'A15', 'name' => 'Dark Beans', 'categoryId' => 31, 'highDemand' => false],
+        ['location' => 'A15/A16', 'name' => 'Snacks/Cookies', 'categoryId' => 32, 'highDemand' => false],
+        ['location' => 'B3/B4', 'name' => 'Cereal & Oatmeal', 'categoryId' => 1, 'highDemand' => false],
+        ['location' => 'B4', 'name' => 'Oil', 'categoryId' => 2, 'highDemand' => false],
+        ['location' => 'B7/B8', 'name' => 'Jelly', 'categoryId' => 4, 'highDemand' => false],
+        ['location' => 'B7', 'name' => 'Baked Beans', 'categoryId' => 13, 'highDemand' => false],
+        ['location' => 'B8', 'name' => 'Peanut Butter', 'categoryId' => 3, 'highDemand' => true],
+        ['location' => 'C3', 'name' => 'Canned Meat', 'categoryId' => 33, 'highDemand' => true],
+        ['location' => 'C4', 'name' => 'Juice & Beverage', 'categoryId' => 27, 'highDemand' => false],
+        ['location' => 'C4', 'name' => 'Tuna', 'categoryId' => 8, 'highDemand' => true],
+        ['location' => 'C7/C8', 'name' => 'Vegetable', 'categoryId' => 34, 'highDemand' => false],
+        ['location' => 'C11/C12', 'name' => 'Tomato Product', 'categoryId' => 35, 'highDemand' => false],
+        ['location' => 'Refrigerator', 'name' => 'Tortilla', 'categoryId' => 36, 'highDemand' => false],
+        ['location' => 'W-BARREL', 'name' => 'Bagged Rice', 'categoryId' => 23, 'highDemand' => false],
+        ['location' => 'R-BARREL', 'name' => 'Bagged Dry Bean', 'categoryId' => 37, 'highDemand' => false],
+    ];
+
     /* 
     * _POST is empty when the page is first loaded.
     *  Submitting the form on this page reloads the page with data in _POST
-    *  if _POST is not empty, process data from form
+    *  if _POST is not empty, save the order
     */
 
     $errors = [];
+    // Each order on the page is posted as orders[index][field]
+    $orders = $_POST['orders'] ?? [];
     if (!empty($_POST)) {
-        if(isset($_POST["cancel_button"])){
-            header('Location: index.php');
-            die();
-        }
-        if(isset($_POST["create_button"])){
-            $id = $_POST["id"];
-            $first_name = $_POST["fname"];
-            $last_name = $_POST["lname"];
-            $email = $_POST["email"];
-            $type = $_POST["role"] ?? '';
-            $password = $_POST["password"];
+        // Pantry and contact fields aren't saved yet; dbfoodorder has no columns for them.
+        $ordersToSave = [];
+        $orderNumber = 0;
+        foreach ($orders as $order) {
+            $orderNumber++;
+            $boxes = $order['boxes'] ?? [];
+            $foodOrderItems = [];
+            foreach ($ORDER_CATEGORIES as $category) {
+                $quantity = trim($boxes[$category['categoryId']] ?? '');
+                if ($quantity === '') {
+                    continue;
+                }
+                if (!ctype_digit($quantity)) {
+                    $errors[] = "Order " . $orderNumber . ": Number of boxes for " . $category['name'] . " must be a whole number";
+                    continue;
+                }
+                if ((int)$quantity === 0) {
+                    continue;
+                }
+                $foodOrderItems[] = [$category['categoryId'], (int)$quantity];
+            }
 
-            if(retrieve_person($_POST["id"])){
-                $errors[] = "Username already exists";
+            if (empty($foodOrderItems)) {
+                $errors[] = "Order " . $orderNumber . ": Request at least one box";
             }
-            if(retrieve_person_by_email($_POST["email"])){
-                $errors[] = "Email already exists";
-            }
-            if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-                $errors[] = "Invalid email";
-            }
-            if($accessLevel < 3 && $type == "superadmin"){
-                $errors[] = "Unable to change role";
-            }
-            if(empty($errors)){
-                if(create_person($id, $first_name, $last_name, $email, $type, $password)){
-                    header('Location: viewAuditUsers.php');
-                    die();
-                }
-                else{
-                    $errors[] = "Unable to create user";
-                }
-            }
-            
+            $ordersToSave[] = $foodOrderItems;
         }
+
+        if (empty($ordersToSave)) {
+            $errors[] = "Fill out at least one order";
+        }
+        if (empty($errors)) {
+            // Multiple orders are saved as pending for an admin to approve or reject
+            $orderNumber = 0;
+            foreach ($ordersToSave as $foodOrderItems) {
+                $orderNumber++;
+                if (!addFoodOrder($_SESSION['_personId'], $foodOrderItems)) {
+                    $errors[] = "Unable to create food order " . $orderNumber;
+                    break;
+                }
+            }
+            if (empty($errors)) {
+                header('Location: createOrder.php?created=success');
+                die();
+            }
+        }
+    }
+
+    // Show the submitted orders again after an error, or one empty order on first load
+    if (empty($orders)) {
+        $orders = [[]];
+    }
+
+    /*
+    * Print the fields for one order.
+    * $index is used in the field names (orders[$index][...]), and $order holds any values to fill back in.
+    */
+    function renderOrderEntry($index, $order, $categories) {
+        $value = function($field, $default = '') use ($order) {
+            return htmlspecialchars($order[$field] ?? $default);
+        };
+        $name = 'orders[' . $index . ']';
+        $id = $index;
+?>
+            <div class="order-entry" data-index="<?php echo $index; ?>">
+                <div class="order-entry-header">
+                    <h2 class="order-entry-title">Order</h2>
+                    <button type="button" class="modify-delete-btn remove-order-btn">Remove This Order</button>
+                </div>
+                <div class="report-section">
+                    <h2>Pantry Information</h2>
+                    <div class="updateInv-allRows">
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="submission_date_<?php echo $id; ?>">Submission Date</label>
+                            <input type="date" id="submission_date_<?php echo $id; ?>" name="<?php echo $name; ?>[submission_date]" value="<?php echo $value('submission_date', date('Y-m-d')); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="delivery_date_<?php echo $id; ?>">Requested Delivery Date</label>
+                            <input type="date" id="delivery_date_<?php echo $id; ?>" name="<?php echo $name; ?>[delivery_date]" value="<?php echo $value('delivery_date'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="delivery_time_<?php echo $id; ?>">Requested Delivery Time</label>
+                            <input type="time" id="delivery_time_<?php echo $id; ?>" name="<?php echo $name; ?>[delivery_time]" value="<?php echo $value('delivery_time'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="pantry_name_<?php echo $id; ?>">Pantry Name</label>
+                            <input type="text" id="pantry_name_<?php echo $id; ?>" name="<?php echo $name; ?>[pantry_name]" value="<?php echo $value('pantry_name'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="pantry_address_<?php echo $id; ?>">Pantry Address (Street, City)</label>
+                            <input type="text" id="pantry_address_<?php echo $id; ?>" name="<?php echo $name; ?>[pantry_address]" value="<?php echo $value('pantry_address'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="poc_name_<?php echo $id; ?>">Point of Contact (POC)</label>
+                            <input type="text" id="poc_name_<?php echo $id; ?>" name="<?php echo $name; ?>[poc_name]" value="<?php echo $value('poc_name'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="poc_phone_<?php echo $id; ?>">POC Phone Number</label>
+                            <input type="tel" id="poc_phone_<?php echo $id; ?>" name="<?php echo $name; ?>[poc_phone]" value="<?php echo $value('poc_phone'); ?>" required>
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="secondary_poc_name_<?php echo $id; ?>">Secondary POC</label>
+                            <input type="text" id="secondary_poc_name_<?php echo $id; ?>" name="<?php echo $name; ?>[secondary_poc_name]" value="<?php echo $value('secondary_poc_name'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="secondary_poc_phone_<?php echo $id; ?>">Secondary POC Phone Number</label>
+                            <input type="tel" id="secondary_poc_phone_<?php echo $id; ?>" name="<?php echo $name; ?>[secondary_poc_phone]" value="<?php echo $value('secondary_poc_phone'); ?>">
+                        </div>
+                        <div class="updateInv-row">
+                            <label class="updateInv-label" for="special_instructions_<?php echo $id; ?>">Special Instructions (Optional)</label>
+                            <textarea id="special_instructions_<?php echo $id; ?>" name="<?php echo $name; ?>[special_instructions]"><?php echo $value('special_instructions'); ?></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h2>SLP Food Categories</h2>
+                    <div class="table-wrapper">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Warehouse Location</th>
+                                    <th>Category</th>
+                                    <th># of Boxes Requested</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($categories as $i => $category): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($category['location']); ?></td>
+                                        <td>
+                                            <label for="boxes_<?php echo $id; ?>_<?php echo $i; ?>"><?php echo htmlspecialchars($category['name']); ?></label>
+                                            <?php if ($category['highDemand']): ?><span class="high-demand">*</span><?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <input type="number" id="boxes_<?php echo $id; ?>_<?php echo $i; ?>" name="<?php echo $name; ?>[boxes][<?php echo $category['categoryId']; ?>]" min="0" step="1" value="<?php echo htmlspecialchars($order['boxes'][$category['categoryId']] ?? ''); ?>">
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="form-note">Baking goods include flour, sugar, masa, and oil. "Vegetable" includes green beans, corn, dark beans, and mixed vegetables, based on availability.</p>
+                    <p class="form-note"><span class="high-demand">*</span> Items are in high demand, so there is a possibility of shortage.</p>
+                </div>
+            </div>
+<?php
     }
 ?>
     
@@ -109,7 +252,7 @@
             padding: 1rem;
         }
         .report-section {
-            background-color: white;
+            background-color: #D4E7F6;
             /* border: 1px solid var(--shadow-and-border-color); */
             border-radius: 15px;
             padding: 1.5rem;
@@ -339,94 +482,52 @@
             }
         }
 
-.form-display {
-        display: flex;
-        justify-content: center;
-		align-items: center;
-        text-align: center;
-		width: 100%;
-        margin: auto;
-
-}
-.form-display img {
-    width: 70%;
-    height: 100%;
-}
-
-.form-display a {
-    cursor: pointer;
-}
-
-.downloads {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-}
-
-.downloads form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 10px;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-}
-
-.downloads input[type="file"] {
-    width: 250px;
+.order-form input[type="text"],
+.order-form input[type="tel"],
+.order-form input[type="date"],
+.order-form input[type="time"],
+.order-form textarea {
+    width: 300px;
     max-width: 100%;
-
+    margin-right: 30%;
+    padding: 0.4rem 0.6rem;
 }
-
-.downloads a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.order-form textarea {
+    min-height: 5rem;
 }
-
-.downloads a:hover {
+.order-form .report-table input[type="number"] {
+    width: 100px;
+    padding: 0.4rem 0.6rem;
+}
+.order-form .high-demand {
+    color: darkred;
+    font-weight: 600;
+}
+.order-form .form-note {
+    font-size: 0.85rem;
+    margin-top: 1rem;
+}
+.report-container .error-toast {
+    background-color: #D4E7F6;
     color: red;
 }
-
-hr {
-    width: 80%;
-    border: none;
-    height: 2px;
-    background-color: #ccc;
-    margin: 20px auto;
+.order-entry + .order-entry {
+    border-top: 2px solid #ccc;
+    padding-top: 1rem;
 }
-
-br {
-    line-height: 1;
+.order-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
-
-.downloads form button {
-    align-self: flex-end;
-    margin-right: 20px;
+.order-entry-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--secondary-accent-color);
 }
-
-.downloads ol li {
-    width: 100%;
-    box-sizing: border-box; 
-}
-
-.downloads ol {
-    list-style: decimal !important;
-    padding-left: 40px !important;
-}
-
-.downloads li {
-    display: list-item !important;
-    list-style: decimal !important;
-    margin-bottom: 15px;
-}
-
-.reference-img {
-    width: 75px;
+.remove-order-btn {
+    width: auto;
 }
 
     </style>
@@ -436,25 +537,57 @@ br {
 </pageheader>
 <body>
     <?php require_once('header.php') ?>
-    <div class="downloads">
-        <br>
-        <ol>
-            <li><span>Download and fill out order form:</span>
-            
-            <a style="margin-top: 20px;" href="images/St. Lucy Blank Order Form-2026 1.pdf" download><u>Download Form PDF</u><img class="reference-img" src="images/StLucyBlankOrderFormPNG.png"></a>
-            </li>       
-            <li>
-                <div style="margin-bottom: 25px;">Upload order forms: </div>
-                <form action="createOrder.php" method="POST" enctype="multipart/form-data">
-                    <input type="file" name="form[]" accept=".pdf"multiple required><br>
-                    <button type="submit">Submit Order Forms</button>
-                </form>
-            </li>
-        </ol>
+    <div class="report-container">
+        <?php foreach ($errors as $error): ?>
+            <div class="error-toast"><?php echo htmlspecialchars($error); ?></div>
+        <?php endforeach; ?>
+        <form class="order-form" action="createMultOrder.php" method="POST">
+            <div id="order-entries">
+                <?php foreach ($orders as $index => $order) { renderOrderEntry((int)$index, $order, $ORDER_CATEGORIES); } ?>
+            </div>
 
-        <br>
-        <hr>
+            <div class="modifyUsers-formBtns">
+                <button type="button" id="add-order-btn" class="modify-save-btn">Add Another Order</button>
+                <button type="submit" class="modify-save-btn">Submit Order Forms</button>
+            </div>
+        </form>
+
+        <!-- Copied by the "Add Another Order" button; __INDEX__ is replaced with the new order's index -->
+        <template id="order-entry-template">
+            <?php renderOrderEntry('__INDEX__', [], $ORDER_CATEGORIES); ?>
+        </template>
     </div>
 
+    <script>
+        const orderEntries = document.getElementById('order-entries');
+        const orderTemplate = document.getElementById('order-entry-template');
+        let nextOrderIndex = Math.max(-1, ...[...orderEntries.children].map(entry => Number(entry.dataset.index))) + 1;
+
+        // Number the orders and only allow removing one when there's more than one
+        function updateOrderEntries() {
+            const entries = orderEntries.querySelectorAll('.order-entry');
+            entries.forEach((entry, i) => {
+                entry.querySelector('.order-entry-title').textContent = 'Order ' + (i + 1);
+                entry.querySelector('.remove-order-btn').style.display = entries.length > 1 ? '' : 'none';
+            });
+        }
+
+        document.getElementById('add-order-btn').addEventListener('click', function() {
+            const html = orderTemplate.innerHTML.replaceAll('__INDEX__', nextOrderIndex);
+            nextOrderIndex++;
+            orderEntries.insertAdjacentHTML('beforeend', html);
+            updateOrderEntries();
+            orderEntries.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        orderEntries.addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-order-btn')) {
+                event.target.closest('.order-entry').remove();
+                updateOrderEntries();
+            }
+        });
+
+        updateOrderEntries();
+    </script>
 </body>
 </html>
