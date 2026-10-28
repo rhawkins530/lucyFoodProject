@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 24, 2026 at 10:12 PM
+-- Generation Time: Oct 28, 2026 at 07:45 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1669,10 +1669,33 @@ CREATE TABLE `dbfoodorder` (
   `id` int(11) NOT NULL,
   `requestor_person_id` int(11) NOT NULL,
   `approver_person_id` int(11) DEFAULT NULL,
-  `order_status` text NOT NULL,
+  `order_status` varchar(20) NOT NULL,
   `submission_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `approval_date` timestamp NULL DEFAULT NULL,
-  `fulfillment_date` timestamp NULL DEFAULT NULL
+  `fulfillment_date` timestamp NULL DEFAULT NULL,
+  `pdf_submission_date` date DEFAULT NULL,
+  `pantry_name` varchar(100) DEFAULT NULL,
+  `pantry_address` varchar(300) DEFAULT NULL,
+  `point_of_contact` varchar(100) DEFAULT NULL,
+  `poc_ph_number` varchar(20) DEFAULT NULL,
+  `secondary_poc` varchar(100) DEFAULT NULL,
+  `secondary_poc_ph_num` varchar(20) DEFAULT NULL,
+  `requested_delivery_date` date DEFAULT NULL,
+  `requested_delivery_time` time DEFAULT NULL,
+  `special_instructions` varchar(300) DEFAULT NULL,
+  `non_pd_slp_box_wt` decimal(10,0) DEFAULT NULL,
+  `non_pd_produce_wt` decimal(10,0) DEFAULT NULL,
+  `non_pd_meat_wt` decimal(10,0) DEFAULT NULL,
+  `non_pd_bakery` decimal(10,0) DEFAULT NULL,
+  `non_pd_dairy` decimal(10,0) DEFAULT NULL,
+  `non_pd_other` decimal(10,0) DEFAULT NULL,
+  `pd_meat_wt` decimal(10,0) DEFAULT NULL,
+  `pd_dairy_wt` decimal(10,0) DEFAULT NULL,
+  `pd_deli_wt` decimal(10,0) DEFAULT NULL,
+  `pd_bakery_wt` decimal(10,0) DEFAULT NULL,
+  `pd_produce_wt` decimal(10,0) DEFAULT NULL,
+  `pd_non_perish_wt` decimal(10,0) DEFAULT NULL,
+  `pd_prep_deli_wt` decimal(10,0) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1685,7 +1708,8 @@ CREATE TABLE `dbfoodorderitem` (
   `id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
   `item_category_id` int(11) NOT NULL,
-  `quantity_requested` int(11) NOT NULL
+  `quantity_requested` int(11) NOT NULL,
+  `quantity_delivered` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1756,15 +1780,7 @@ INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_q
 (27, 27, 'Juice', 37, 9, 26),
 (28, 28, 'Baking Goods', 32, 8, 9),
 (29, 29, 'Macaroni and Cheese', 28, 8, 26),
-(32, 0, 'test', 0, 0, 0),
-(33, 30, 'Meal Helpers', 0, 0, 0),
-(34, 31, 'Dark Beans', 0, 0, 0),
-(35, 32, 'Snacks/Cookies', 0, 0, 0),
-(36, 33, 'Canned Meat', 0, 0, 0),
-(37, 34, 'Vegetable', 0, 0, 0),
-(38, 35, 'Tomato Product', 0, 0, 0),
-(39, 36, 'Tortilla', 0, 0, 0),
-(40, 37, 'Bagged Dry Bean', 0, 0, 0);
+(32, 0, 'test', 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -5074,7 +5090,7 @@ ALTER TABLE `dbfoodorderitem`
 -- AUTO_INCREMENT for table `dbinventory`
 --
 ALTER TABLE `dbinventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `dbinventoryevent`
