@@ -14,16 +14,23 @@ include_once(dirname(__FILE__).'/../domain/FoodOrderItem.php');
     - true if the item was successfully added, false otherwise.
 */
 
-function addFoodOrderItem($orderId, $itemCategoryId, $quantityRequested, $quantityDelivered) {
+function addFoodOrderItem($orderId, $itemCategoryId, $quantityRequested, $quantityDelivered = null) {
     $con = connect();
     $orderId = (int)$orderId;
     $itemCategoryId = (int)$itemCategoryId;
     $quantityRequested = (int)$quantityRequested;
-    $quantityDelivered = (int)$quantityDelivered;
+    $quantityDelivered = $quantityDelivered !== null ? (int)$quantityDelivered : null;
 
-    $query = "INSERT INTO dbfoodorderitem
+    if ($quantityDelivered === null) {
+        $query = "INSERT INTO dbfoodorderitem
+                (order_id, item_category_id, quantity_requested)
+            VALUES ($orderId, $itemCategoryId, $quantityRequested)";
+    } else {
+        $query = "INSERT INTO dbfoodorderitem
                 (order_id, item_category_id, quantity_requested, quantity_delivered)
             VALUES ($orderId, $itemCategoryId, $quantityRequested, $quantityDelivered)";
+    }
+    
     $ok = mysqli_query($con, $query);
     mysqli_close($con);
     return $ok;

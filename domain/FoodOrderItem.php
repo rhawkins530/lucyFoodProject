@@ -19,9 +19,9 @@ class FoodOrderItem {
         - $order_id: The ID of the food order to which this item belongs.
         - $item_category_id: The ID of the item category for this item.
         - $quantity_requested: The quantity of the item requested in the order.
-        - $quantity_delivered: The quantity of the item delivered in the order.
+        - $quantity_delivered: The quantity of the item delivered in the order. (Optional, defaults to null)
     */
-    function __construct($id, $order_id, $item_category_id, $quantity_requested, $quantity_delivered) {
+    function __construct($id, $order_id, $item_category_id, $quantity_requested, $quantity_delivered = null) {
         $this->id = $id;
         $this->order_id = $order_id;
         $this->item_category_id = $item_category_id;
