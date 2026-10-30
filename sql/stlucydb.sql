@@ -1794,7 +1794,15 @@ INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_q
 (27, 27, 'Juice', 37, 9, 26),
 (28, 28, 'Baking Goods', 32, 8, 9),
 (29, 29, 'Macaroni and Cheese', 28, 8, 26),
-(32, 0, 'test', 0, 0, 0);
+(32, 0, 'test', 0, 0, 0),
+(33, 30, 'Meal Helpers', 0, 0, 0),
+(34, 31, 'Dark Beans', 0, 0, 0),
+(35, 32, 'Snacks/Cookies', 0, 0, 0),
+(36, 33, 'Canned Meat', 0, 0, 0),
+(37, 34, 'Vegetable', 0, 0, 0),
+(38, 35, 'Tomato Product', 0, 0, 0),
+(39, 36, 'Tortilla', 0, 0, 0),
+(40, 37, 'Bagged Dry Bean', 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -5098,7 +5106,7 @@ ALTER TABLE `dbfoodorderitem`
 -- AUTO_INCREMENT for table `dbinventory`
 --
 ALTER TABLE `dbinventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `dbinventoryevent`
