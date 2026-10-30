@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Oct 28, 2026 at 07:45 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost
+-- Generation Time: Oct 29, 2026 at 06:25 PM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -1698,6 +1698,13 @@ CREATE TABLE `dbfoodorder` (
   `pd_prep_deli_wt` decimal(10,0) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `dbfoodorder`
+--
+
+INSERT INTO `dbfoodorder` (`id`, `requestor_person_id`, `approver_person_id`, `order_status`, `submission_date`, `approval_date`, `fulfillment_date`, `pdf_submission_date`, `pantry_name`, `pantry_address`, `point_of_contact`, `poc_ph_number`, `secondary_poc`, `secondary_poc_ph_num`, `requested_delivery_date`, `requested_delivery_time`, `special_instructions`, `non_pd_slp_box_wt`, `non_pd_produce_wt`, `non_pd_meat_wt`, `non_pd_bakery`, `non_pd_dairy`, `non_pd_other`, `pd_meat_wt`, `pd_dairy_wt`, `pd_deli_wt`, `pd_bakery_wt`, `pd_produce_wt`, `pd_non_perish_wt`, `pd_prep_deli_wt`) VALUES
+(2, 1, NULL, 'approved', '2026-10-29 16:52:28', NULL, '2026-10-29 16:52:28', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -1711,6 +1718,13 @@ CREATE TABLE `dbfoodorderitem` (
   `quantity_requested` int(11) NOT NULL,
   `quantity_delivered` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `dbfoodorderitem`
+--
+
+INSERT INTO `dbfoodorderitem` (`id`, `order_id`, `item_category_id`, `quantity_requested`, `quantity_delivered`) VALUES
+(1, 2, 17, 2, NULL);
 
 -- --------------------------------------------------------
 
@@ -1767,7 +1781,7 @@ INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_q
 (14, 14, 'Canned/Dried Beans', 17, 10, 38),
 (15, 15, 'Canned Fruit Mixed', 18, 7, 15),
 (16, 16, 'Canned Peaches', 27, 6, 2),
-(17, 17, 'Canned Pasta', 36, 3, 1),
+(17, 17, 'Canned Pasta', 34, 3, 1),
 (18, 18, 'Carrots', 36, 6, 15),
 (19, 19, 'Peas', 34, 1, 24),
 (20, 20, 'Ramen', 29, 6, 22),
@@ -1881,57 +1895,51 @@ INSERT INTO `dbinventoryevent` (`id`, `personId`, `location`, `date`) VALUES
 
 CREATE TABLE `dbitemcategory` (
   `id` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `bananaBox` tinyint(1) NOT NULL DEFAULT 0,
-  `itemsPerBox` int(11) NOT NULL DEFAULT 1,
-  `status` varchar(11) NOT NULL,
-  `shopOnly` tinyint(4) NOT NULL DEFAULT 0
+  `name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `dbitemcategory`
 --
 
-INSERT INTO `dbitemcategory` (`id`, `name`, `bananaBox`, `itemsPerBox`, `status`, `shopOnly`) VALUES
-(2, 'Beans - Canned', 0, 40, 'Active', 0),
-(3, 'Beans - Dry', 1, 35, 'Active', 0),
-(4, 'Canned Meals', 0, 40, 'Active', 0),
-(5, 'Cereal', 1, 12, 'Active', 0),
-(6, 'Chicken', 0, 85, 'Active', 0),
-(7, 'Corn', 0, 40, 'Active', 0),
-(8, 'Fruit', 0, 40, 'Active', 0),
-(9, 'Green Beans', 0, 40, 'Active', 0),
-(10, 'Jelly', 0, 24, 'Active', 0),
-(11, 'M&C', 1, 55, 'Active', 0),
-(12, 'Mixed Veg', 0, 40, 'Active', 0),
-(13, 'Oatmeal', 1, 12, 'Active', 0),
-(14, 'Oil', 0, 12, 'Active', 0),
-(15, 'Pancake', 1, 12, 'Active', 0),
-(16, 'Pasta', 1, 28, 'Active', 0),
-(17, 'Peanut Butter', 0, 24, 'Active', 0),
-(18, 'Ramen', 1, 96, 'Active', 0),
-(19, 'Snacks', 1, 40, 'Active', 0),
-(20, 'Soup', 0, 40, 'Active', 0),
-(21, 'Spaghetti', 0, 24, 'Active', 0),
-(22, 'Syrup', 0, 12, 'Active', 0),
-(23, 'Tomato Canned: Sauce (unflavored)', 0, 40, 'Active', 0),
-(24, 'Tomato - JARS', 0, 12, 'Active', 0),
-(25, 'Tuna', 0, 90, 'Active', 0),
-(26, 'Milk', 1, 2, 'Deleted', 0),
-(27, 'Rice', 0, 12, 'Active', 1),
-(28, 'Masa', 0, 10, 'Active', 0),
-(29, 'Flour (white)', 0, 10, 'Active', 0),
-(30, 'Toilet Paper', 0, 15, 'Deleted', 1),
-(31, 'Beef', 0, 5, 'Deleted', 0),
-(32, 'Other', 0, 0, 'Active', 1),
-(33, 'Baked Beans', 0, 0, 'Active', 1),
-(34, 'Other Meats', 0, 1, 'Active', 1),
-(35, 'Shelf Stable Milk', 0, 1, 'Active', 1),
-(36, 'Other 2', 0, 0, 'Deleted', 0),
-(37, 'Tomato Canned: Pasta/Spaghetti Sauce', 0, 40, 'Active', 0),
-(38, 'Tomato Canned: Diced', 0, 40, 'Active', 0),
-(39, 'Powdered Milk', 0, 12, 'Active', 0),
-(40, 'Broth', 0, 25, 'Active', 0);
+INSERT INTO `dbitemcategory` (`id`, `name`) VALUES
+(1, 'Cereal/Oatmeal'),
+(2, 'Cooking Oil'),
+(3, 'Peanut Butter'),
+(4, 'Jelly'),
+(5, 'Dried Pasta'),
+(6, 'Pasta Sauce'),
+(7, 'Canned Chicken'),
+(8, 'Canned Tuna'),
+(9, 'Condiments'),
+(10, 'Green Beans'),
+(11, 'Corn'),
+(12, 'Mixed Vegetables'),
+(13, 'Baked Beans'),
+(14, 'Canned/Dried Beans'),
+(15, 'Canned Fruit (Mixed)'),
+(16, 'Canned Peaches'),
+(17, 'Canned Pasta'),
+(18, 'Carrots'),
+(19, 'Peas'),
+(20, 'Ramen'),
+(21, 'Milk'),
+(22, 'Diced Tomatoes'),
+(23, 'Rice'),
+(24, 'Flour (Masa)'),
+(25, 'Flour (White)'),
+(26, 'Soup'),
+(27, 'Juice'),
+(28, 'Baking Goods'),
+(29, 'Macaroni & Cheese'),
+(30, 'Meal Helpers'),
+(31, 'Dark Beans'),
+(32, 'Snacks/Cookies'),
+(33, 'Canned Meat'),
+(34, 'Vegetable'),
+(35, 'Tomato Product'),
+(36, 'Tortilla'),
+(37, 'Bagged Dry Bean');
 
 -- --------------------------------------------------------
 
@@ -5078,13 +5086,13 @@ ALTER TABLE `dbevents`
 -- AUTO_INCREMENT for table `dbfoodorder`
 --
 ALTER TABLE `dbfoodorder`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `dbfoodorderitem`
 --
 ALTER TABLE `dbfoodorderitem`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `dbinventory`
@@ -5102,7 +5110,7 @@ ALTER TABLE `dbinventoryevent`
 -- AUTO_INCREMENT for table `dbitemcategory`
 --
 ALTER TABLE `dbitemcategory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `dbitemcounts`
