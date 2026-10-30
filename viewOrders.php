@@ -13,209 +13,60 @@ if(!isset($_SESSION['_id'])) {
 $accessLevel = $_SESSION['access_level'] ?? 0;
 
 require_once(__DIR__ . '/database/dbinfo.php');
-require_once(__DIR__ . '/database/dbInventoryEvent.php');
-require_once(__DIR__ . '/database/dbItemCategory.php');
-require_once(__DIR__ . '/database/dbItemCounts.php');
+require_once(__DIR__ . '/database/dbFoodOrder.php');
+require_once(__DIR__ . '/database/dbFoodOrderItem.php');
 
-// Get all inventory events sorted by date (newest first), then by ID (highest first)
-$allEventObjects = get_all_inventoryEvents();
-usort($allEventObjects, function($a, $b) {
-    $dateDiff = strtotime($b->getDate()) - strtotime($a->getDate());
-    if ($dateDiff != 0) {
-        return $dateDiff;
-    }
-    return $b->getId() - $a->getId();
-});
+$orders = getAllFoodOrders();
 
-// Build event triplets (warehouse + pantry + pallet)
-$eventPairs = array();
-foreach($allEventObjects as $event) {
-    if($event->getLocation() == 'Warehouse') {
-        $matches = get_matching_inventoryEvent($event);
-        $pantryEvent = $matches['Pantry'] ?? null;
-        $palletEvent = $matches['Pallet'] ?? null;
-        $eventPairs[] = array(
-            'warehouse' => $event,
-            'pantry' => $pantryEvent,
-            'pallet' => $palletEvent,
-            'date' => $event->getDate(),
-            'warehouseId' => $event->getId(),
-            'pantryId' => $pantryEvent ? $pantryEvent->getId() : null,
-            'palletId' => $palletEvent ? $palletEvent->getId() : null
-        );
+// Calls the specific FoodOrder getter
+function orderValue($o, $getter) {
+    return $o->$getter();
+}
+
+//
+$columns = [
+    'id'                  => ['label' => 'Order',            'type' => 'num',    'getter' => 'getId'],
+    'requestor_person_id' => ['label' => 'Requestor ID',     'type' => 'num',    'getter' => 'getRequestorPersonId'],
+    'approver_person_id'  => ['label' => 'Approver ID',      'type' => 'num',    'getter' => 'getApproverPersonId'],
+    'order_status'        => ['label' => 'Status',           'type' => 'status', 'getter' => 'getStatus'],
+    'submission_date'     => ['label' => 'Date Submitted',   'type' => 'date',   'getter' => 'getSubmissionDate'],
+    'approval_date'       => ['label' => 'Approval Date',    'type' => 'date',   'getter' => 'getApprovalDate'],
+    'fulfillment_date'    => ['label' => 'Fulfillment Date', 'type' => 'date',   'getter' => 'getFulfillmentDate'],
+];
+
+// Keeps only the columns where at least one order has a non-null value
+$visibleColumns = [];
+foreach ($columns as $key => $col) {
+    foreach ($orders as $o) {
+        $val = orderValue($o, $col['getter']);
+        if ($val !== null && $val !== '') {
+            $visibleColumns[$key] = $col;
+            break;
+        }
     }
 }
 
-// OLD CODE - orphan pantry logic (no longer needed with triplets)
-// foreach($allEventObjects as $event) {
-//     if($event->getLocation() == 'Pantry') {
-//         $warehouseEvent = get_matching_inventoryEvent($event);
-//         if($warehouseEvent === null) {
-//             $eventPairs[] = array(
-//                 'warehouse' => null,
-//                 'pantry' => $event,
-//                 'date' => $event->getDate(),
-//                 'warehouseId' => null,
-//                 'pantryId' => $event->getId()
-//             );
-//         }
-//     }
-// }
-
-// Re-sort pairs by date (newest first)
-usort($eventPairs, function($a, $b) {
-    $dateDiff = strtotime($b['date']) - strtotime($a['date']);
-    if ($dateDiff != 0) {
-        return $dateDiff;
+// Formats a cell for display
+function displayCell($type, $val) {
+    if ($val === null || $val === '') return '—';
+    if ($type === 'date') {
+        $t = strtotime($val);
+        return $t ? date('M j, Y g:i A', $t) : $val;
     }
-    $aId = $a['warehouseId'] ?? $a['pantryId'];
-    $bId = $b['warehouseId'] ?? $b['pantryId'];
-    return $bId - $aId;
-});
-
-// Get the selected week from query params, default to latest
-$selectedWeek = $_GET['week'] ?? (count($eventPairs) > 0 ? ($eventPairs[0]['warehouseId'] ?? $eventPairs[0]['pantryId']) : null);
-
-// Get the unique years from dates
-$uniqueYears = array();
-foreach($eventPairs as $index => $pair) {
-    $year = date('Y', strtotime($pair["date"]));
-    if(!in_array($year, $uniqueYears))
-        $uniqueYears[] = $year;
+    if ($type === 'status') return ucfirst(strtolower($val));
+    return $val;
 }
 
-// Default for filterEventList is 30 Most Recent inventories
-$filterEventList = 30;
-
-// Get the selected year from query params, if it exists
-if(isset($_GET['year'])){
-    if(in_array($_GET['year'], $uniqueYears)){
-        $filterEventList = $_GET['year'];
-        // if year and week are in params, make sure the week is in the selected year.
-        // otherwise, change week to be the most recent inventory in the year selected.
-        if($selectedWeek){
-            $currentEvent = retrieve_inventoryEvent($selectedWeek);
-            if($currentEvent){
-                $currentEventYear = date('Y', strtotime($currentEvent->getDate()));
-                if($currentEventYear != $filterEventList){
-                    //set current week to the most recent inventory with the year selected
-                    foreach($eventPairs as $index => $pair) {
-                        $year = date('Y', strtotime($pair["date"]));
-                        if($year == $filterEventList){
-                            $selectedWeek = $pair["warehouseId"];
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        
-    } 
-    else if($_GET['year'] < 100 && $_GET['year'] > 0)
-        $filterEventList = $_GET['year'];
-} 
-// If year is not set but week is set
-else if(isset($_GET['week'])){
-    $currentEvent = retrieve_inventoryEvent($selectedWeek);
-    if($currentEvent){
-        $filterEventList = date('Y', strtotime($currentEvent->getDate()));
+// Value used for sorting/filtering (dates become sortable timestamps)
+function sortCell($type, $val) {
+    if ($val === null || $val === '') return '';
+    if ($type === 'date') {
+        $t = strtotime($val);
+        return $t ? (string)$t : '';
     }
+    if ($type === 'status') return strtolower($val);
+    return (string)$val;
 }
-
-// Find the selected pair index
-$selectedPairIndex = null;
-foreach($eventPairs as $index => $pair) {
-    $pairId = $pair['warehouseId'] ?? $pair['pantryId'];
-    if($pairId == $selectedWeek) {
-        $selectedPairIndex = $index;
-        break;
-    }
-}
-
-// Fetch inventory items with box information for the selected pair
-$items = [];
-if ($selectedPairIndex !== null) {
-    $selectedPair = $eventPairs[$selectedPairIndex];
-    $sameDateEvents = [];
-    
-    // Collect warehouse, pantry, and pallet events from the triplet
-    if ($selectedPair['warehouse']) {
-        $sameDateEvents[] = $selectedPair['warehouse'];
-    }
-    if ($selectedPair['pantry']) {
-        $sameDateEvents[] = $selectedPair['pantry'];
-    }
-    if (isset($selectedPair['pallet']) && $selectedPair['pallet']) {
-        $sameDateEvents[] = $selectedPair['pallet'];
-    }
-
-    // Get all item categories (including inactive for historical data)
-    $allCategories = get_all_ItemCategory();
-
-    // Build set of categories with data in this inventory
-    $categoriesWithData = [];
-    foreach ($sameDateEvents as $event) {
-        $eventCounts = get_itemCounts_by_inventoryEvent($event->getId());
-        foreach ($eventCounts as $count) {
-            $categoriesWithData[$count->getItemCategory()] = true;
-        }
-    }
-
-    // Build items array with location-specific counts
-    foreach ($allCategories as $category) {
-        $categoryId = $category->getId();
-
-        // Skip shopping list only items
-        if ($category->getShopOnly() == 1) {
-            continue;
-        }
-
-        // Only show categories that have data in this inventory
-        if (!isset($categoriesWithData[$categoryId])) {
-            continue;
-        }
-
-        $warehouseBoxes = 0;
-        $pantryBoxes = 0;
-        $palletBoxes = 0;
-
-        // Check all events on the same date for this category
-        foreach ($sameDateEvents as $event) {
-            $eventCounts = get_itemCounts_by_inventoryEvent($event->getId());
-            foreach ($eventCounts as $count) {
-                if ($count->getItemCategory() === $categoryId) {
-                    if ($event->getLocation() === 'Warehouse') {
-                        $warehouseBoxes += $count->getQuantity();
-                    } elseif ($event->getLocation() === 'Pantry') {
-                        $pantryBoxes += $count->getQuantity();
-                    } elseif ($event->getLocation() === 'Pallet') {
-                        $palletBoxes += $count->getQuantity();
-                    }
-                }
-            }
-        }
-
-        $totalBoxes = $warehouseBoxes + $pantryBoxes + $palletBoxes;
-
-        $items[] = [
-            'id' => $categoryId,
-            'item_name' => $category->getName(),
-            'itemsPerBox' => $category->getItemsPerBox(),
-            'bananaBox' => $category->getBananaBox(),
-            'warehouse_boxes' => $warehouseBoxes,
-            'pantry_boxes' => $pantryBoxes,
-            'pallet_boxes' => $palletBoxes,
-            'total_boxes' => $totalBoxes
-        ];
-
-    }
-    
-    // Sort items by name
-    usort($items, function($a, $b) {
-        return strcmp($a['item_name'], $b['item_name']);
-    });
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -247,16 +98,9 @@ if ($selectedPairIndex !== null) {
         }
         .report-section {
             background-color: #D4E7F6;
-            /* border: 1px solid var(--shadow-and-border-color); */
             border-radius: 15px;
             padding: 1.5rem;
             margin-bottom: 2rem;
-        }
-        .report-section h1 {
-            font-size: 1.5rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            color: var(--secondary-accent-color);
         }
         .report-section h2 {
             font-size: 1.5rem;
@@ -274,7 +118,6 @@ if ($selectedPairIndex !== null) {
             text-align: left;
             border-bottom: 1px solid var(--shadow-and-border-color);
             color: var(--page-font-color);
-            text-align: left;
             vertical-align: middle;
         }
         .report-table th {
@@ -282,84 +125,33 @@ if ($selectedPairIndex !== null) {
             color: var(--button-font-color);
             font-weight: 500;
             position: sticky;
-            top: 100px; /* height of page header */
+            top: 100px;
         }
-        .report-table tr:hover {
-            background-color: rgba(255,255,255,0.05);
+        .report-table tbody tr.order-row { 
+            cursor: pointer; 
+        }
+        .report-table tbody tr.order-row:hover { 
+            background-color: rgba(255,255,255,0.6); 
+        }
+        .report-table td a { 
+            color: inherit; 
+            font-weight: 600; 
+            text-decoration: underline; 
         }
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
-            color: var(--inactive-font-color);
+            color: #658A9C;
         }
-        .mobile-text {
-            display: none;
-        }
-        @media only screen and (max-width: 768px) {
-            pageheader {
-                top: 100px;
-            }
-            .title {
-                border-radius: 0;
-                background-color: #ffffff;
-                width: 100%;
-            }
-            .report-table th,
-            .report-table td {
-                padding: 0.5rem;
-                font-size: 0.8rem;
-            }
-            .report-table th {
-                position: sticky;
-                top: 100px;
-            }
-            .report-container {
-                padding: 0.5rem;
-            }
-            div.table-wrapper {
-                overflow-x: visible;
-            }
-            .updateInv-optionRow {
-                display: flex;
-                align-items: right;
-                flex-direction: column;
-                justify-content: left;
-                gap: 1rem;
-            }
-            .updateInv-option {
-                display: flex;
-                align-items: center;
-                flex-direction: row;
-                width: auto;
-                gap: 1rem;
-            }
-            .updateInv-qty {
-                max-width: 7rem;
-                margin-right: 2rem !important;
-                
-            }
-            .desktop-text {
-                display: none;
-            }
-            .mobile-text {
-                display: inline;
-            }
-            .report-table th {
-                font-size: 0.85rem;
-                padding: 4px;
-            }
-            .report-table td {
-                padding: 4px;
-            }
-        }
-        .week-and-filter-section{
+        .week-and-filter-section {
             display: flex;
             flex-direction: row;
+            align-items: flex-end;
+            justify-content: space-between;
             gap: 2rem;
+            flex-wrap: wrap;
         }
-        .form-section {
-            margin-bottom: 1.5rem;
-        }
+        .form-section { margin-bottom: 1.5rem; }
         .form-section label {
             display: block;
             color: var(--page-font-color);
@@ -376,193 +168,87 @@ if ($selectedPairIndex !== null) {
             color: var(--page-font-color);
             cursor: pointer;
         }
-        .form-section select:hover {
-            background-color: rgba(0,0,0,0.3);
-        }
-        .inventory-selector-toolbar {
-            display: flex;
-            align-content: center;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            flex-direction: column;
-        }
-        .week-selector {
-            margin-bottom: .5rem;
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-        }
-        .week-selector label {
-            color: var(--page-font-color);
-        }
-        .week-selector select {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--shadow-and-border-color);
-            border-radius: 0.25rem;
-            background-color: rgba(0,0,0,0.2);
-            color: var(--page-font-color);
-            cursor: pointer;
-            min-width: 200px;
-        }
-        .week-selector select:hover {
-            background-color: rgba(0,0,0,0.3);
-        }
-        .table-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .toolbar-left {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .toolbar-select {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--shadow-and-border-color);
-            border-radius: 0.25rem;
-            background-color: rgba(0,0,0,0.2);
-            color: var(--page-font-color);
-            cursor: pointer;
-            min-width: 180px;
-        }
-        .toolbar-select:hover {
-            background-color: rgba(0,0,0,0.3);
-        }
-        .toolbar-search {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--shadow-and-border-color);
-            border-radius: 0.25rem;
-            background-color: rgba(0,0,0,0.2);
-            color: var(--page-font-color);
-            min-width: 200px;
-        }
-        .toolbar-search::placeholder {
-            color: var(--inactive-font-color);
-        }
-        .toolbar-btn-clear {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--shadow-and-border-color);
-            border-radius: 0.25rem;
-            background-color: rgba(0,0,0,0.2);
-            color: var(--page-font-color);
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .toolbar-btn-clear:hover {
-            background-color: rgba(0,0,0,0.3);
-        }
-        .modify-button {
-            padding: 0.5rem 1rem;
-            background-color: var(--accent-color);
-            color: var(--button-font-color);
-            border: none;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 500;
-            max-width: 500px;
-        }
-        .modify-button:hover {
-            opacity: 0.85;
-        }
-        @media only screen and (max-width: 768px) {
-            pageheader {
-                top: 100px;
-            }
-            .title {
-                border-radius: 0;
-                background-color: #ffffff;
-                width: 100%;
-            }
-            .report-table th,
-            .report-table td {
-                padding: 0.5rem;
-                font-size: 0.8rem;
-                position: static;
-
-            }
-            .report-container {
-                padding: 0.5rem;
-            }
-            div.table-wrapper {
-                overflow-x: visible;
-            }
-            .updateInv-optionRow {
-                display: flex;
-                align-items: right;
-                flex-direction: column;
-                justify-content: left;
-                gap: 1rem;
-            }
-            .updateInv-option {
-                display: flex;
-                align-items: center;
-                flex-direction: row;
-                width: auto;
-                gap: 1rem;
-            }
-            .updateInv-qty {
-                max-width: 7rem;
-                margin-right: 2rem !important;
-                
-            }
-            .desktop-text {
-                display: none;
-            }
-            .mobile-text {
-                display: inline;
-            }
-            .report-table th {
-                font-size: 0.85rem;
-                padding: 4px;
-            }
-            .report-table td {
-                padding: 4px;
-            }
-            .report-section{
-                padding: 0;
-            }
-        }
-        .order-list-section{
-            display: block; 
+        .order-list-section {
+            display: block;
             background-color: #D4E7F6;
-            padding: 10px; }
-
+            padding: 10px;
+        }
         th.sortable { 
             cursor: pointer; 
             user-select: none; 
-            white-space: nowrap;
+            white-space: nowrap; 
+        }
+        th.sortable:hover { 
+            opacity: 0.85; 
+        }
+        th.sortable .arrow { 
+            display: inline-block; 
+            width: 1em; 
         }
 
-        th.sortable:hover {
+        .button {
+            display: flex;
+            margin-left: auto;
+            width: 25%;
+            height: 5%;
+            margin-bottom: auto;
+        }
+        .button:hover { 
             opacity: 0.85;
         }
-    th.sortable .arrow { 
-        display: inline-block;
-        width: 1em; 
-    }
 
-    .button {
-        display: flex;
-        margin-left: auto;
-        width: 25%;
-        height: 5%;
-    }
+        .status-badge {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .status-badge.pending   {
+            background: #fef3c7; 
+            color: #92400e; 
+        }
+        .status-badge.approved  { 
+            background: #d1fae5;
+            color: #065f46; 
+        }
+        .status-badge.rejected  { 
+            background: #fee2e2; 
+            color: #991b1b; 
+        }
+        .status-badge.fulfilled { 
+            background: #dbeafe; 
+            color: #1e40af; 
+        }
+
+        @media only screen and (max-width: 768px) {
+            pageheader { 
+                top: 100px; 
+            }
+            .title { 
+                border-radius: 0; 
+                background-color: #ffffff; 
+                width: 100%; 
+            }
+            .report-container {
+                padding: 0.5rem; 
+            }
+            .report-section { 
+                padding: 0; 
+            }
+            .report-table th,
+            .report-table td { 
+                padding: 4px; 
+                font-size: 0.8rem; 
+                position: static; 
+            }
+        }
     </style>
 </head>
 <pageheader>
-    <h1 class="title">Food Orders</h1>
+    <h1 class="title">Food Order View</h1> <!-- Page title header --> 
 </pageheader>
 
 <body>
@@ -573,104 +259,117 @@ if ($selectedPairIndex !== null) {
                 <h2>Food Orders</h2>
                 <div class="week-and-filter-section">
                     <div class="form-section">
-                        <label for="typeSelect">Select Order Type:</label>
-                        <select id="typeSelect">
+                        <label for="statusSelect">Filter by Status:</label> 
+                        <select id="statusSelect">
                             <option value="all">Show All</option>
-                            <option value="Individual">Individual Orders</option>
-                            <option value="Multiple">Multiple Orders</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="fulfilled">Fulfilled</option>
                         </select>
                     </div>
-                    <a class="button" href="reviewOrders.php" >Approve/Reject Orders</a> <!-- Will link to a page that displays only pending orders and has approve/reject options -->
+                    <a class="button" href="reviewOrders.php">Approve/Reject Orders</a>
                 </div>
                 <hr>
-                <br>   
-                <?php
-                    // Placeholder data
-                    // Dates format YYYY-MM-DD so they sort correctly
-                    $orders = [
-                        ['name' => 'CharityPlaceholderOrder_1.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1.pdf', 'type' => 'Individual', 'date' => '2026-10-10', 'status' => 'Pending'],
-                        ['name' => 'CharityPlaceholderOrder_2.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1.pdf', 'type' => 'Individual', 'date' => '2026-10-03', 'status' => 'Completed'],
-                        ['name' => 'CharityPlaceholderOrder_3.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1.pdf', 'type' => 'Individual', 'date' => '2026-10-14', 'status' => 'Approved'],
-                        ['name' => 'CharityMultiPlaceholderOrder_1.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1_Multi.pdf', 'type' => 'Multiple', 'date' => '2026-10-16', 'status' => 'Pending'],
-                    ];
-                    ?>
-                    <div class="order-list-section">
-                        <table class="report-table" id="orderTable">
-                            <thead>
-                                <tr>
-                                    <th>Order Form</th>
-                                    <th class="sortable" data-sort="type">Type <span class="arrow"></span></th>
-                                    <th class="sortable" data-sort="date">Date Submitted <span class="arrow"></span></th>
-                                    <th class="sortable" data-sort="status">Status <span class="arrow"></span></th>
-                                </tr>
-                            </thead>
-                            <tbody id="orderBody">
-                                <?php foreach ($orders as $o): ?>
-                                    <tr data-type="<?= htmlspecialchars($o['type']) ?>"
-                                        data-date="<?= htmlspecialchars($o['date']) ?>"
-                                        data-status="<?= htmlspecialchars($o['status']) ?>">
-                                        <td>
-                                            <a href="<?= htmlspecialchars($o['file']) ?>" target="_blank" rel="noopener noreferrer">
-                                                <?= htmlspecialchars($o['name']) ?>
-                                            </a>
-                                        </td>
-                                        <td><?= htmlspecialchars($o['type']) ?></td>
-                                        <td><?= date('M j, Y', strtotime($o['date'])) ?></td>
-                                        <td><?= htmlspecialchars($o['status']) ?></td>
-                                    </tr>
+                <br>
+                <?php if (empty($orders)): ?>
+                    <div class="empty-state">No Orders Available</div>
+                <?php else: ?>
+                <div class="order-list-section">
+                    <table class="report-table" id="orderTable">
+                        <thead>
+                            <tr>
+                                <?php foreach ($visibleColumns as $key => $col): ?>
+                                    <th class="sortable" data-sort="<?= $key ?>" data-type="<?= $col['type'] ?>">
+                                        <?= htmlspecialchars($col['label']) ?> <span class="arrow"></span>
+                                    </th>
                                 <?php endforeach; ?>
-                                <tr id="noOrdersRow" style="display:none;">
-                                    <td colspan="4" class="empty-state">No orders match this selection.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                            </tr>
+                        </thead>
+                        <tbody id="orderBody">
+                            <?php foreach ($orders as $o):
+                                $orderId = (int)orderValue($o, $columns['id']['getter']);
+                                $status  = strtolower((string)orderValue($o, $columns['order_status']['getter']));
+                                $url     = 'viewOrderDetails.php?id=' . $orderId;
+                                $attrs = 'data-status="' . htmlspecialchars($status) . '"';
+                                foreach ($visibleColumns as $key => $col) {
+                                    $attrs .= ' data-' . $key . '="' . htmlspecialchars(sortCell($col['type'], orderValue($o, $col['getter']))) . '"';
+                                }
+                            ?>
+                            <tr class="order-row" <?= $attrs ?> data-href="<?= htmlspecialchars($url) ?>">
+                                <?php foreach ($visibleColumns as $key => $col):
+                                    $val  = orderValue($o, $col['getter']);
+                                    $text = displayCell($col['type'], $val);
+                                ?>
+                                    <td>
+                                        <?php if ($key === 'id'): ?>
+                                            <a href="<?= htmlspecialchars($url) ?>">#<?= htmlspecialchars((string)$text) ?></a>
+                                        <?php elseif ($col['type'] === 'status'): ?>
+                                            <span class="status-badge <?= htmlspecialchars($status) ?>"><?= htmlspecialchars((string)$text) ?></span>
+                                        <?php else: ?>
+                                            <?= htmlspecialchars((string)$text) ?>
+                                        <?php endif; ?>
+                                    </td>
+                                <?php endforeach; ?>
+                            </tr>
+                            <?php endforeach; ?>
+                            <tr id="noOrdersRow" style="display:none;">
+                                <td colspan="<?= max(1, count($visibleColumns)) ?>" class="empty-state">No orders match this filter</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </main>
 
     <script>
         (function () {
-            const typeSelect = document.getElementById('typeSelect');
             const body = document.getElementById('orderBody');
+            if (!body) return;                              // No orders 
             const noRow = document.getElementById('noOrdersRow');
+            const statusSelect = document.getElementById('statusSelect');
             const headers = document.querySelectorAll('th.sortable');
-            let sortKey = 'date';
-            let sortDir = 'desc'; // newest first by default
+            const statusRank = { pending: 1, approved: 2, rejected: 3, fulfilled: 4 };
 
-            function dataRows() {
-                return Array.from(body.querySelectorAll('tr[data-type]'));
-            }
+            let sortKey = document.querySelector('th[data-sort="submission_date"]') ? 'submission_date' : 'id';
+            let sortDir = 'desc';                           // Newest first
 
+            const dataRows = () => Array.from(body.querySelectorAll('tr.order-row'));
+
+            // Click anywhere on a row to open that order
+            dataRows().forEach(r => r.addEventListener('click', e => {
+                if (e.target.closest('a')) return;         
+                window.location.href = r.dataset.href;
+            }));
+ 
             function applyFilter() {
-                const selected = typeSelect.value;
+                const sel = statusSelect.value;
                 let visible = 0;
-                dataRows().forEach(row => {
-                    const show = selected === 'all' || row.dataset.type === selected;
-                    row.style.display = show ? '' : 'none';
+                dataRows().forEach(r => {
+                    const show = sel === 'all' || r.dataset.status === sel;
+                    r.style.display = show ? '' : 'none';
                     if (show) visible++;
                 });
                 noRow.style.display = visible === 0 ? '' : 'none';
             }
 
-            // Status order for sorting. Change the order here if you want a different one.
-            const statusRank = { Pending: 1, Approved: 2, Rejected: 3, Completed: 4 };
-
             function applySort() {
+                const type = document.querySelector('th[data-sort="' + sortKey + '"]').dataset.type;
                 const rows = dataRows();
                 rows.sort((a, b) => {
-                    const av = a.dataset[sortKey], bv = b.dataset[sortKey];
+                    const av = a.dataset[sortKey] ?? '', bv = b.dataset[sortKey] ?? '';
+                    if (av === '' && bv === '') return 0;
+                    if (av === '') return 1;                // Empty values always go last
+                    if (bv === '') return -1;
                     let cmp;
-                    if (sortKey === 'status') {
-                        cmp = (statusRank[av] ?? 99) - (statusRank[bv] ?? 99);
-                    } else {
-                        // YYYY-MM-DD strings sort correctly as text
-                        cmp = av.localeCompare(bv, undefined, { sensitivity: 'base' });
-                    }
+                    if (type === 'num' || type === 'date') cmp = Number(av) - Number(bv);
+                    else if (type === 'status')            cmp = (statusRank[av] ?? 99) - (statusRank[bv] ?? 99);
+                    else                                   cmp = av.localeCompare(bv);
                     return sortDir === 'asc' ? cmp : -cmp;
                 });
-                rows.forEach(r => body.insertBefore(r, noRow)); // keep the empty-state row last
-
+                rows.forEach(r => body.insertBefore(r, noRow));
                 headers.forEach(h => {
                     h.querySelector('.arrow').textContent =
                         h.dataset.sort === sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '';
@@ -683,21 +382,15 @@ if ($selectedPairIndex !== null) {
                     sortDir = sortDir === 'asc' ? 'desc' : 'asc';
                 } else {
                     sortKey = key;
-                    sortDir = key === 'date' ? 'desc' : 'asc';
+                    sortDir = (h.dataset.type === 'date' || key === 'id') ? 'desc' : 'asc';
                 }
                 applySort();
             }));
 
-            typeSelect.addEventListener('change', applyFilter);
-
+            statusSelect.addEventListener('change', applyFilter);
             applySort();
             applyFilter();
         })();
-        </script>
-                                
+    </script>
 </body>
 </html>
-
-
-
-
