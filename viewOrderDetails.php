@@ -77,6 +77,15 @@ foreach ($sections as $title => $fields) {
         }
     }
 }
+
+$fulfill = isset($_GET['fulfill']);
+if($fulfill){
+    fulfillFoodOrder($id);
+    header('Location: viewOrderDetails.php?id=' . $id);
+}
+
+
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -198,6 +207,31 @@ foreach ($sections as $title => $fields) {
             color: #1e40af; 
         }
 
+        .heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .fulfill-button {
+            margin-left: auto;
+            padding: 0.5rem 1.5rem;
+            background-color: var(--accent-color);
+            color: var(--button-font-color);
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            max-width: 500px;
+            text-align: center;
+            font-size:18px;
+        }
+
+        .fulfill-button:hover {
+            opacity: 0.75;
+        }
+
         @media only screen and (max-width: 768px) {
             pageheader { 
                 top: 100px;
@@ -228,9 +262,12 @@ foreach ($sections as $title => $fields) {
             <a class="back-link" href="viewOrders.php">&larr; Back to all orders</a> <!-- Back to orders list -->
 
             <div class="report-section">
-                <h2>
-                    Order Details
-                    <span class="status-badge <?= htmlspecialchars($status) ?>"><?= htmlspecialchars(ucfirst($status)) ?></span>
+                <h2 class="heading">
+                    <span>
+                        Order Details
+                        <span class="status-badge <?= htmlspecialchars($status) ?>"><?= htmlspecialchars(ucfirst($status)) ?></span>
+                    </span>
+                    <?php if($order->getStatus() == "approved") echo '<a class="fulfill-button" href="viewOrderDetails.php?id='. $id . '&fulfill=1">' . "Fulfill Order" . '</a>' ?> 
                 </h2>
                 <?php foreach ($resolved as $title => $rows): ?>
                     <h3 style="margin:1.25rem 0 .5rem; color: var(--secondary-accent-color);"><?= htmlspecialchars($title) ?></h3>

@@ -13,207 +13,29 @@ if(!isset($_SESSION['_id'])) {
 $accessLevel = $_SESSION['access_level'] ?? 0;
 
 require_once(__DIR__ . '/database/dbinfo.php');
-require_once(__DIR__ . '/database/dbInventoryEvent.php');
-require_once(__DIR__ . '/database/dbItemCategory.php');
-require_once(__DIR__ . '/database/dbItemCounts.php');
+require_once(__DIR__ . '/database/dbFoodOrder.php');
+require_once(__DIR__ . '/database/dbFoodOrderItem.php');
 
-// Get all inventory events sorted by date (newest first), then by ID (highest first)
-$allEventObjects = get_all_inventoryEvents();
-usort($allEventObjects, function($a, $b) {
-    $dateDiff = strtotime($b->getDate()) - strtotime($a->getDate());
-    if ($dateDiff != 0) {
-        return $dateDiff;
-    }
-    return $b->getId() - $a->getId();
-});
+$orders = getAllPendingOrders();
 
-// Build event triplets (warehouse + pantry + pallet)
-$eventPairs = array();
-foreach($allEventObjects as $event) {
-    if($event->getLocation() == 'Warehouse') {
-        $matches = get_matching_inventoryEvent($event);
-        $pantryEvent = $matches['Pantry'] ?? null;
-        $palletEvent = $matches['Pallet'] ?? null;
-        $eventPairs[] = array(
-            'warehouse' => $event,
-            'pantry' => $pantryEvent,
-            'pallet' => $palletEvent,
-            'date' => $event->getDate(),
-            'warehouseId' => $event->getId(),
-            'pantryId' => $pantryEvent ? $pantryEvent->getId() : null,
-            'palletId' => $palletEvent ? $palletEvent->getId() : null
-        );
-    }
-}
+if(!empty($_GET)) {
+    $id = $_GET['id'];
 
-// OLD CODE - orphan pantry logic (no longer needed with triplets)
-// foreach($allEventObjects as $event) {
-//     if($event->getLocation() == 'Pantry') {
-//         $warehouseEvent = get_matching_inventoryEvent($event);
-//         if($warehouseEvent === null) {
-//             $eventPairs[] = array(
-//                 'warehouse' => null,
-//                 'pantry' => $event,
-//                 'date' => $event->getDate(),
-//                 'warehouseId' => null,
-//                 'pantryId' => $event->getId()
-//             );
-//         }
-//     }
-// }
-
-// Re-sort pairs by date (newest first)
-usort($eventPairs, function($a, $b) {
-    $dateDiff = strtotime($b['date']) - strtotime($a['date']);
-    if ($dateDiff != 0) {
-        return $dateDiff;
-    }
-    $aId = $a['warehouseId'] ?? $a['pantryId'];
-    $bId = $b['warehouseId'] ?? $b['pantryId'];
-    return $bId - $aId;
-});
-
-// Get the selected week from query params, default to latest
-$selectedWeek = $_GET['week'] ?? (count($eventPairs) > 0 ? ($eventPairs[0]['warehouseId'] ?? $eventPairs[0]['pantryId']) : null);
-
-// Get the unique years from dates
-$uniqueYears = array();
-foreach($eventPairs as $index => $pair) {
-    $year = date('Y', strtotime($pair["date"]));
-    if(!in_array($year, $uniqueYears))
-        $uniqueYears[] = $year;
-}
-
-// Default for filterEventList is 30 Most Recent inventories
-$filterEventList = 30;
-
-// Get the selected year from query params, if it exists
-if(isset($_GET['year'])){
-    if(in_array($_GET['year'], $uniqueYears)){
-        $filterEventList = $_GET['year'];
-        // if year and week are in params, make sure the week is in the selected year.
-        // otherwise, change week to be the most recent inventory in the year selected.
-        if($selectedWeek){
-            $currentEvent = retrieve_inventoryEvent($selectedWeek);
-            if($currentEvent){
-                $currentEventYear = date('Y', strtotime($currentEvent->getDate()));
-                if($currentEventYear != $filterEventList){
-                    //set current week to the most recent inventory with the year selected
-                    foreach($eventPairs as $index => $pair) {
-                        $year = date('Y', strtotime($pair["date"]));
-                        if($year == $filterEventList){
-                            $selectedWeek = $pair["warehouseId"];
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+    if($_GET['verdict'] == "approve") {
+        approveFoodOrder($id, $_SESSION['_personId']);
+        $_SESSION['message'] = "Order Approved";
         
-    } 
-    else if($_GET['year'] < 100 && $_GET['year'] > 0)
-        $filterEventList = $_GET['year'];
-} 
-// If year is not set but week is set
-else if(isset($_GET['week'])){
-    $currentEvent = retrieve_inventoryEvent($selectedWeek);
-    if($currentEvent){
-        $filterEventList = date('Y', strtotime($currentEvent->getDate()));
-    }
-}
+        $orderItems = getFoodOrderItemsByOrderId($id);
 
-// Find the selected pair index
-$selectedPairIndex = null;
-foreach($eventPairs as $index => $pair) {
-    $pairId = $pair['warehouseId'] ?? $pair['pantryId'];
-    if($pairId == $selectedWeek) {
-        $selectedPairIndex = $index;
-        break;
-    }
-}
-
-// Fetch inventory items with box information for the selected pair
-$items = [];
-if ($selectedPairIndex !== null) {
-    $selectedPair = $eventPairs[$selectedPairIndex];
-    $sameDateEvents = [];
-    
-    // Collect warehouse, pantry, and pallet events from the triplet
-    if ($selectedPair['warehouse']) {
-        $sameDateEvents[] = $selectedPair['warehouse'];
-    }
-    if ($selectedPair['pantry']) {
-        $sameDateEvents[] = $selectedPair['pantry'];
-    }
-    if (isset($selectedPair['pallet']) && $selectedPair['pallet']) {
-        $sameDateEvents[] = $selectedPair['pallet'];
-    }
-
-    // Get all item categories (including inactive for historical data)
-    $allCategories = get_all_ItemCategory();
-
-    // Build set of categories with data in this inventory
-    $categoriesWithData = [];
-    foreach ($sameDateEvents as $event) {
-        $eventCounts = get_itemCounts_by_inventoryEvent($event->getId());
-        foreach ($eventCounts as $count) {
-            $categoriesWithData[$count->getItemCategory()] = true;
+        foreach($orderItems as $item) {
+            changeInventoryQuantity($item->getItem_category_id(),-$item->getQuantity_requested());
         }
     }
-
-    // Build items array with location-specific counts
-    foreach ($allCategories as $category) {
-        $categoryId = $category->getId();
-
-        // Skip shopping list only items
-        if ($category->getShopOnly() == 1) {
-            continue;
-        }
-
-        // Only show categories that have data in this inventory
-        if (!isset($categoriesWithData[$categoryId])) {
-            continue;
-        }
-
-        $warehouseBoxes = 0;
-        $pantryBoxes = 0;
-        $palletBoxes = 0;
-
-        // Check all events on the same date for this category
-        foreach ($sameDateEvents as $event) {
-            $eventCounts = get_itemCounts_by_inventoryEvent($event->getId());
-            foreach ($eventCounts as $count) {
-                if ($count->getItemCategory() === $categoryId) {
-                    if ($event->getLocation() === 'Warehouse') {
-                        $warehouseBoxes += $count->getQuantity();
-                    } elseif ($event->getLocation() === 'Pantry') {
-                        $pantryBoxes += $count->getQuantity();
-                    } elseif ($event->getLocation() === 'Pallet') {
-                        $palletBoxes += $count->getQuantity();
-                    }
-                }
-            }
-        }
-
-        $totalBoxes = $warehouseBoxes + $pantryBoxes + $palletBoxes;
-
-        $items[] = [
-            'id' => $categoryId,
-            'item_name' => $category->getName(),
-            'itemsPerBox' => $category->getItemsPerBox(),
-            'bananaBox' => $category->getBananaBox(),
-            'warehouse_boxes' => $warehouseBoxes,
-            'pantry_boxes' => $pantryBoxes,
-            'pallet_boxes' => $palletBoxes,
-            'total_boxes' => $totalBoxes
-        ];
-
+    else if($_GET['verdict'] == "reject") {
+        rejectFoodOrder($id, $_SESSION['_personId']);
+        $_SESSION['message'] = "Order Rejected";
     }
-    
-    // Sort items by name
-    usort($items, function($a, $b) {
-        return strcmp($a['item_name'], $b['item_name']);
-    });
+    header('Location: reviewOrders.php');
 }
 
 ?>
@@ -587,7 +409,12 @@ if ($selectedPairIndex !== null) {
     .verdict-button:hover{
         opacity: 0.75;
     }
-
+    #orderBody tr {
+        cursor: pointer;
+    }
+    #orderBody tr:hover {
+        background-color: rgba(255,255,255,0.6);
+    }
 
 
     </style>
@@ -600,6 +427,12 @@ if ($selectedPairIndex !== null) {
     <?php require_once('header.php'); ?>
     <main>
         <div class="report-container">
+            <?php
+            if (isset($_SESSION['message'])) {
+                echo '' . $_SESSION['message'] . '';
+            }
+            unset($_SESSION['message']);
+            ?>
             <div class="report-section">
                 <h2>Review Food Orders</h2>
                 <div class="week-and-filter-section">
@@ -611,50 +444,38 @@ if ($selectedPairIndex !== null) {
                             <option value="Multiple">Multiple Orders</option>
                         </select>
                     </div>
-                    <a class="button" href="viewOrders.php">↵ Back</a> <!-- Will link to a page that displays only pending orders and has approve/reject options -->
+                    <a class="button" href="viewOrders.php">↵ Back</a>
                 </div>
                 <hr>
                 <br>   
-                <?php
-                    // Placeholder data
-                    // Dates format YYYY-MM-DD so they sort correctly
-                    $orders = [
-                        ['name' => 'CharityPlaceholderOrder_1.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1.pdf', 'type' => 'Individual', 'date' => '2026-10-10'],
-                        ['name' => 'CharityMultiPlaceholderOrder_1.pdf', 'file' => 'images/St. Lucy Blank Order Form-2026 1_Multi.pdf', 'type' => 'Multiple', 'date' => '2026-10-16']
-                    ];
-                    ?>
                     <div class="order-list-section">
                         <table class="report-table" id="orderTable">
                             <thead>
                                 <tr>
-                                    <th>Order Form</th>
-                                    <th class="sortable" data-sort="type">Type <span class="arrow"></span></th>
+                                    <th>Order</th>
+                                    <th>Requestor ID</th>
                                     <th class="sortable" data-sort="date">Date Submitted <span class="arrow"></span></th>
                                     <th>Verdict</th>
                                 </tr>
                             </thead>
                             <tbody id="orderBody">
-                                <?php foreach ($orders as $o): ?>
-                                    <tr data-type="<?= htmlspecialchars($o['type']) ?>"
-                                        data-date="<?= htmlspecialchars($o['date']) ?>">
-                                        <td>
-                                            <a href="<?= htmlspecialchars($o['file']) ?>" target="_blank" rel="noopener noreferrer">
-                                                <?= htmlspecialchars($o['name']) ?>
-                                            </a>
+                                <?php foreach ($orders as $order) {
+                                    $id = $order->getId();
+                                    $requestorId = $order->getRequestorPersonId();
+                                    $date = date('M j, Y h:i A', strtotime($order->getSubmissionDate()));
+                                    echo '<tr data-id="' . $id . '">
+                                        <td>' . $id . '</td>
+                                        <td>' . $requestorId . '</td>
+                                        <td data-date="' . strtotime($order->getSubmissionDate()) . '">' . $date . '</td>';
+                                    echo '<td>
+                                        <div class="verdict-buttons"> 
+                                                <a class="verdict-button accept" href="reviewOrders.php?id=' . $order->getId() . '&verdict=approve">✓</a>
+                                                <a class="verdict-button reject" href="reviewOrders.php?id=' . $order->getId() . '&verdict=reject">✕</a>
+                                        </div>
                                         </td>
-                                        <td><?= htmlspecialchars($o['type']) ?></td>
-                                        <td><?= date('M j, Y', strtotime($o['date'])) ?></td>
-                                        <td>
-                                            <div class="verdict-buttons"> 
-                                                <a class="verdict-button accept" href="reviewOrders.php">✓</a>
-                                                <a class="verdict-button reject" href="reviewOrders.php">✕</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                <tr id="noOrdersRow" style="display:none;">
-                                    <td colspan="4" class="empty-state">No orders match this selection.</td>
-                                </tr>
+                                    </tr>';
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>
@@ -663,69 +484,42 @@ if ($selectedPairIndex !== null) {
     </main>
 
     <script>
-        (function () {
-            const typeSelect = document.getElementById('typeSelect');
-            const body = document.getElementById('orderBody');
-            const noRow = document.getElementById('noOrdersRow');
-            const headers = document.querySelectorAll('th.sortable');
-            let sortKey = 'date';
-            let sortDir = 'desc'; // newest first by default
+        document.addEventListener("DOMContentLoaded", function () {
+            const sortHeader = document.querySelector('[data-sort="date"]');
+            const tableBody = document.getElementById("orderBody");
+            let ascd = true;
 
-            function dataRows() {
-                return Array.from(body.querySelectorAll('tr[data-type]'));
+            function sortDate() {
+                const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+                rows.sort((a,b) => {
+                    const dateA = Number(a.cells[2].dataset.date);
+                    const dateB = Number(b.cells[2].dataset.date);
+                    return ascd ? dateA - dateB : dateB - dateA;
+                });
+
+                rows.forEach(row => tableBody.appendChild(row));
+
+                sortHeader.querySelector(".arrow").textContent = ascd ? " ▲" : " ▼";
             }
 
-            function applyFilter() {
-                const selected = typeSelect.value;
-                let visible = 0;
-                dataRows().forEach(row => {
-                    const show = selected === 'all' || row.dataset.type === selected;
-                    row.style.display = show ? '' : 'none';
-                    if (show) visible++;
-                });
-                noRow.style.display = visible === 0 ? '' : 'none';
-            }
+            sortDate();
 
-            // Status order for sorting. Change the order here if you want a different one.
-            const statusRank = { Pending: 1, Approved: 2, Rejected: 3, Completed: 4 };
+            sortHeader.addEventListener("click", function (){
+                ascd = !ascd;
 
-            function applySort() {
-                const rows = dataRows();
-                rows.sort((a, b) => {
-                    const av = a.dataset[sortKey], bv = b.dataset[sortKey];
-                    let cmp;
-                    if (sortKey === 'status') {
-                        cmp = (statusRank[av] ?? 99) - (statusRank[bv] ?? 99);
-                    } else {
-                        // YYYY-MM-DD strings sort correctly as text
-                        cmp = av.localeCompare(bv, undefined, { sensitivity: 'base' });
-                    }
-                    return sortDir === 'asc' ? cmp : -cmp;
-                });
-                rows.forEach(r => body.insertBefore(r, noRow)); // keep the empty-state row last
+                sortDate();
+            });
+        });
 
-                headers.forEach(h => {
-                    h.querySelector('.arrow').textContent =
-                        h.dataset.sort === sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '';
-                });
-            }
+        document.querySelectorAll("#orderBody tr").forEach(row => {
+            row.addEventListener("click", function(e) {
+                if (e.target.closest(".verdict-buttons")) return;
 
-            headers.forEach(h => h.addEventListener('click', () => {
-                const key = h.dataset.sort;
-                if (key === sortKey) {
-                    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-                } else {
-                    sortKey = key;
-                    sortDir = key === 'date' ? 'desc' : 'asc';
-                }
-                applySort();
-            }));
+                window.location.href = "viewOrderDetails.php?id=" + this.dataset.id;
+            });
+        });
 
-            typeSelect.addEventListener('change', applyFilter);
-
-            applySort();
-            applyFilter();
-        })();
         </script>
                                 
 </body>

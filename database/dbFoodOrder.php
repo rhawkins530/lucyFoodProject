@@ -290,6 +290,21 @@ function rejectFoodOrder($id, $approverId) {
     return $ok;
 }
 
+function finalizeFoodOrder($id) {
+    $con = connect();
+    $id = (int)$id;
+
+    // Update the order status to 'rejected', set the approver ID, and set the approval date to current timestamp
+    $query = "UPDATE dbfoodorder SET order_status = 'rejected', fulfillment_date = NOW() WHERE id = $id";
+
+    $ok = mysqli_query($con, $query);
+    mysqli_close($con);
+    return $ok;
+}
+
+
+
+
 /*
     Fulfill a food order by its ID
     Parameters:
@@ -317,6 +332,28 @@ function fulfillFoodOrder($id) {
 function getAllFoodOrders() {
     $con = connect();
     $query = "SELECT * FROM dbfoodorder";
+    $result = mysqli_query($con, $query);
+    $orders = [];
+    
+    while ($row = mysqli_fetch_assoc($result)) { // Create a FoodOrder object for each row and add it to the orders array
+        $orders[] = new FoodOrder(
+            (int)$row['id'],
+            (int)$row['requestor_person_id'],
+            is_null($row['approver_person_id']) ? null : (int)$row['approver_person_id'],
+            $row['order_status'],
+            $row['submission_date'],
+            $row['approval_date'],
+            $row['fulfillment_date']
+        );
+    }
+    
+    mysqli_close($con);
+    return $orders;
+}
+
+function getAllPendingOrders() {
+    $con = connect();
+    $query = "SELECT * FROM dbfoodorder WHERE order_status = 'pending'";
     $result = mysqli_query($con, $query);
     $orders = [];
     
