@@ -22,8 +22,6 @@
     require_once('database/dbInventoryEvent.php');
     require_once('database/dbItemCategory.php');
     require_once('database/dbItemCounts.php');
-    $con = connect();
-
 ?>
     
 <!DOCTYPE html>
@@ -279,11 +277,8 @@
                                 </thead>
                                 <tbody> ';
                             
-                                $num_active = 0;
                                 $items = getAllInventoryItems();
                                 foreach ($items as $item) {
-                                        $num_active += 1;
-
                                         $name = $item->getCategoryName();
                                         $minimum = $item->getMinimumQuantity();
                                         $allocated = $item->getAllocatedQuantity();
