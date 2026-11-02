@@ -203,7 +203,7 @@ if($fulfill){
             color: #991b1b; 
         }
         .status-badge.fulfilled { 
-            background: #dbeafe;
+            background: lightblue;
             color: #1e40af; 
         }
 
