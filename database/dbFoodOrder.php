@@ -4,6 +4,9 @@ include_once('dbinfo.php');
 include_once(dirname(__FILE__).'/../domain/FoodOrder.php');
 include_once(dirname(__FILE__).'/dbInventory.php');
 
+use PhpPdf\Reader\PdfDocumentReader;
+use PhpPdf\Reader\PdfAcroFormReader;
+use PhpPdf\Reader\PdfAcroFormFiller;
 
 /*
     Add a new food order
@@ -372,3 +375,57 @@ function getAllPendingOrders() {
     mysqli_close($con);
     return $orders;
 }
+
+/*
+    Generate a PDF for a food order by its ID
+    Parameters:
+    - $id: The ID of the food order for which to generate the PDF.
+    Returns:
+    - None. The PDF is generated and output directly to the browser.
+*/
+function generateFoodOrderPDF($id) {
+    $foodOrder = getFoodOrderById($id);
+    if (!$foodOrder) {
+        throw new Exception("Food order not found.");
+    }
+
+    // Load the PDF template
+    $doc = PdfDocumentReader::open(dirname(__FILE__).'/../images/St. Lucy Blank Order Form-2026-Fillable.pdf');
+    $reader = new PdfAcroFormReader($doc);
+    $fields = $reader->getFieldsByName();
+
+    $original_bytes = file_get_contents(dirname(__FILE__).'/../images/St. Lucy Blank Order Form-2026-Fillable.pdf');
+    $filler = new PdfAcroFormFiller($doc, $original_bytes);
+
+    // Fill in the fields with the food order data
+    $filler->setText($fields['pantry_name'], $foodOrder->getPantryName());
+    $filler->setText($fields['pantry_address'], $foodOrder->getPantryAddress());
+    $filler->setText($fields['point_of_contact'], $foodOrder->getPointOfContact());
+    $filler->setText($fields['poc_ph_number'], $foodOrder->getPocPhNumber());
+    $filler->setText($fields['secondary_poc'], $foodOrder->getSecondaryPoc());
+    $filler->setText($fields['secondary_poc_ph_num'], $foodOrder->getSecondaryPocPhNum());
+    $filler->setText($fields['requested_delivery_date'], $foodOrder->getRequestedDeliveryDate());
+    $filler->setText($fields['requested_delivery_time'], $foodOrder->getRequestedDeliveryTime());
+    $filler->setText($fields['special_instructions'], $foodOrder->getSpecialInstructions());
+    $filler->setText($fields['non_pd_slp_box_wt'], (string)$foodOrder->getNonPdSlpBoxWt());
+    $filler->setText($fields['non_pd_produce_wt'], (string)$foodOrder->getNonPdProduceWt());
+    $filler->setText($fields['non_pd_meat_wt'], (string)$foodOrder->getNonPdMeatWt());
+    $filler->setText($fields['non_pd_bakery'], (string)$foodOrder->getNonPdBakery());
+    $filler->setText($fields['non_pd_dairy'], (string)$foodOrder->getNonPdDairy());
+    $filler->setText($fields['non_pd_other'], (string)$foodOrder->getNonPdOther());
+    $filler->setText($fields['pd_meat_wt'], (string)$foodOrder->getPdMeatWt());
+    $filler->setText($fields['pd_dairy_wt'], (string)$foodOrder->getPdDairyWt());
+    $filler->setText($fields['pd_deli_wt'], (string)$foodOrder->getPdDeliWt());
+    $filler->setText($fields['pd_bakery_wt'], (string)$foodOrder->getPdBakeryWt());
+    $filler->setText($fields['pd_produce_wt'], (string)$foodOrder->getPdProduceWt());
+    $filler->setText($fields['pd_non_perish_wt'], (string)$foodOrder->getPdNonPerishWt());
+    $filler->setText($fields['pd_prep_deli_wt'], (string)$foodOrder->getPdPrepDeliWt());
+
+    // TODO: add the food order items to the PDF
+
+
+    $outputPath = dirname(__FILE__).'/../images/FoodOrder_'.$foodOrder->getId().'.pdf';
+    $filler->save($outputPath);
+
+}
+
