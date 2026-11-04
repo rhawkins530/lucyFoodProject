@@ -4165,6 +4165,22 @@ INSERT INTO `dbmessages` (`id`, `senderID`, `recipientID`, `title`, `body`, `tim
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dbnotifications`
+--
+
+CREATE TABLE `dbnotifications` (
+  `id` int(11) NOT NULL,
+  `recipient_id` varchar(256) NOT NULL,
+  `message` varchar(500) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `type` varchar(30) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dbpalletcounts`
 --
 
@@ -4945,6 +4961,14 @@ ALTER TABLE `dbmessages`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `dbnotifications`
+--
+ALTER TABLE `dbnotifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `recipient_read` (`recipient_id`,`is_read`),
+  ADD KEY `type_reference` (`type`,`reference_id`);
+
+--
 -- Indexes for table `dbpalletcounts`
 --
 ALTER TABLE `dbpalletcounts`
@@ -5131,6 +5155,12 @@ ALTER TABLE `dbitemcounts`
 --
 ALTER TABLE `dbmessages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=473;
+
+--
+-- AUTO_INCREMENT for table `dbnotifications`
+--
+ALTER TABLE `dbnotifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `dbpalletcounts`

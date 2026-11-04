@@ -73,8 +73,12 @@
     $errors = [];
     $shortItems = [];
     if (!empty($_POST)) {
-        // Pantry and contact fields aren't saved yet; dbfoodorder has no columns for them.
+        // Pantry, contact and delivery details
+        $orderDetails = readOrderDetails($_POST);
+        $errors = $orderDetails['errors'];
+
         $boxes = $_POST['boxes'] ?? [];
+        $errorsBeforeBoxes = count($errors);
         $foodOrderItems = [];
         foreach ($ORDER_CATEGORIES as $category) {
             $quantity = trim($boxes[$category['categoryId']] ?? '');
@@ -91,11 +95,12 @@
             $foodOrderItems[] = [$category['categoryId'], (int)$quantity];
         }
 
-        if (empty($foodOrderItems) && empty($errors)) {
+        // Skip this message if a box number was already invalid
+        if (empty($foodOrderItems) && count($errors) === $errorsBeforeBoxes) {
             $errors[] = "Request at least one box";
         }
         if (empty($errors)) {
-            $insufficient = addIndividualFoodOrder($_SESSION['_personId'], $foodOrderItems);
+            $insufficient = addIndividualFoodOrder($_SESSION['_personId'], $foodOrderItems, ...$orderDetails['details']);
             if ($insufficient === false) {
                 $errors[] = "Unable to create food order";
             }
