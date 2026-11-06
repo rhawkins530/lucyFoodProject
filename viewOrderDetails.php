@@ -267,6 +267,10 @@ if($fulfill){
                         Order Details
                         <span class="status-badge <?= htmlspecialchars($status) ?>"><?= htmlspecialchars(ucfirst($status)) ?></span>
                     </span>
+                    <form action="generateOrderPDF.php" method="post" style="display:inline;">
+                        <input type="hidden" name="order_id" value="<?= $id ?>">
+                        <button class="fulfill-button" type="submit">Generate PDF</button>
+                    </form>
                     <?php if($order->getStatus() == "approved") echo '<a class="fulfill-button" href="viewOrderDetails.php?id='. $id . '&fulfill=1">' . "Fulfill Order" . '</a>' ?> 
                 </h2>
                 <?php foreach ($resolved as $title => $rows): ?>
