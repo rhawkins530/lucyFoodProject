@@ -607,8 +607,13 @@ function generateFoodOrderPDF($id) {
     $filler->setText($fields['poc_ph_number'], $foodOrder->getPocPhNumber() ?? '');
     $filler->setText($fields['secondary_poc_ph_number'], $foodOrder->getSecondaryPocPhNum() ?? '');
 
-    $path = '\pdfs\FoodOrder_'.$foodOrder->getPantryName().Date('Y-m-d_H-i-s').'.pdf';
-    $savePath = __DIR__.'\..'.$path;
+    // Use forward slashes so the path works on Mac/Linux as well as Windows
+    $path = '/pdfs/FoodOrder_'.$foodOrder->getPantryName().Date('Y-m-d_H-i-s').'.pdf';
+    $savePath = __DIR__.'/..'.$path;
+    // Create the pdfs folder if it doesn't exist yet
+    if (!is_dir(dirname($savePath))) {
+        mkdir(dirname($savePath), 0755, true);
+    }
     $filler->save($savePath);
 
     return ".".$path; // Return path to the generated PDF for use as a URL
