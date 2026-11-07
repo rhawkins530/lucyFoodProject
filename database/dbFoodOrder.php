@@ -400,7 +400,6 @@ function generateFoodOrderPDF($id) {
 
     $original_bytes = file_get_contents(dirname(__FILE__).'/../images/St. Lucy Blank Order Form-2026-Fillable.pdf');
     $filler = new PdfAcroFormFiller($doc, $original_bytes);
-    //var_dump($fields);
 
     // Fill in the fields with the food order data if null, use empty string to avoid errors
     $filler->setText($fields['pantry_name'], $foodOrder->getPantryName() ?? '');
@@ -449,7 +448,7 @@ function generateFoodOrderPDF($id) {
         'Tomato Product' => 'box_request_tomato_product',
         'Tortilla' => 'box_request_tortilla',
         'Rice' => 'box_request_bagged_rice',
-        'Bagged_Dry_Bean' => 'box_request_bagged_dry_bean'
+        'Bagged Dry Bean' => 'box_request_bagged_dry_bean'
     ];
     // Associateve array of item category name => pdf field name for quantity delivered
     $quantityDeliveredFields = [
@@ -476,7 +475,7 @@ function generateFoodOrderPDF($id) {
         'Tomato Product' => 'box_deliver_tomato_product',
         'Tortilla' => 'box_deliver_tortilla',
         'Rice' => 'box_deliver_bagged_rice',
-        'Bagged Dry Bean' => 'box_deliver_bagged_dry_bean'
+        'Bagged Dry Bean' => 'box_deliver_dry_bean'
     ];
     // Note: If food category names change in the database the associative arrays need to be changed.
 
