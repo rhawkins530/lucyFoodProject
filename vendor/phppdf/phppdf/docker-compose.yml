@@ -1,0 +1,18 @@
+services:
+  examples-webserver:
+    image: ghcr.io/phppdf/docker-image-php-apache:dev
+    build:
+      context: .
+      dockerfile: .docker/webserver/Dockerfile
+    container_name: phppdf-examples
+    user: app
+    volumes:
+      - ./:/opt/app/
+
+  docs-webserver:
+    image: ghcr.io/phppdf/docker-image-hugo:dev
+    container_name: phppdf-docs
+    volumes:
+      - ./:/src
+    ports:
+      - "1300:1313"

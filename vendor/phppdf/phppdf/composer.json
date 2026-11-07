@@ -1,0 +1,74 @@
+{
+    "name": "phppdf/phppdf",
+    "description": "A pure PHP library for creating and processing PDF files.",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://phppdf.github.io/phppdf/",
+    "keywords": [
+        "pdf"
+    ],
+    "support": {
+        "issues": "https://github.com/phppdf/phppdf/issues",
+        "source": "https://github.com/phppdf/phppdf"
+    },
+    "bin": [
+        "bin/phppdf"
+    ],
+    "autoload": {
+        "psr-4": {
+            "PhpPdf\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpPdf\\": [
+                "tests/benchmarks/",
+                "tests/unit/"
+            ]
+        }
+    },
+    "require": {
+        "php": ">=8.4",
+        "ext-dom": "*",
+        "ext-gd": "*",
+        "ext-libxml": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-zlib": "*"
+    },
+    "require-dev": {
+        "phpbench/phpbench": "^1.6",
+        "phppdf/coding-standard": "^1.0",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^13.1"
+    },
+    "scripts": {
+        "phpbench": "php vendor/bin/phpbench run --report=default --output=html-report",
+        "phpcbf": "php vendor/bin/phpcbf",
+        "phpcs": "php vendor/bin/phpcs -s",
+        "phpstan": "php vendor/bin/phpstan --memory-limit=256M analyze",
+        "phpunit": "php vendor/bin/phpunit --display-deprecations",
+        "phpunit:coverage": "XDEBUG_MODE=coverage php vendor/bin/phpunit --coverage-html .phpunit-coverage --display-deprecations"
+    },
+    "suggest": {
+        "phppdf/html-converter": "Convert HTML/CSS markup into phppdf documents.",
+        "phppdf/markdown-converter": "Convert Markdown markup into phppdf documents.",
+        "phppdf/tex-hyphenation": "Knuth-Liang TeX hyphenation algorithm for phppdf"
+    },
+    "authors": [
+        {
+            "name": "Walter Tamboer",
+            "role": "Maintainer",
+            "homepage": "https://waltertamboer.nl"
+        }
+    ],
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true
+    }
+}
