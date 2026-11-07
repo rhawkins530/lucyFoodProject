@@ -84,7 +84,18 @@ if($fulfill){
     header('Location: viewOrderDetails.php?id=' . $id);
 }
 
-
+// Generate PDF if requested
+if (isset($_GET['generate_pdf'])) {
+    $pdfPath = generateFoodOrderPDF($id);
+    if ($pdfPath) {
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . basename($pdfPath) . '"');
+        readfile($pdfPath);
+        exit;
+    } else {
+        echo "Error generating PDF.";
+    }
+}
 
 ?>
 <!DOCTYPE html>

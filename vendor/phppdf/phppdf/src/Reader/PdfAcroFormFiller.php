@@ -13,6 +13,7 @@ use PhpPdf\Object\PdfInteger;
 use PhpPdf\Object\PdfName;
 use PhpPdf\Object\PdfObject;
 use PhpPdf\Object\PdfString;
+use PhpPdf\Object\PdfReal;
 use RuntimeException;
 
 /**
@@ -276,6 +277,7 @@ final class PdfAcroFormFiller
             $value instanceof PdfName => '/' . $this->escapeName($value->getValue()),
             $value instanceof PdfString => $this->serializeString($value->getValue(), $objNum, $gen),
             $value instanceof PdfInteger => (string) $value->getValue(),
+            $value instanceof PdfReal => $value->toPdfString(),
             $value instanceof PdfBoolean => $value->getValue() ? 'true' : 'false',
             $value instanceof PdfIndirectReference => "{$value->getObjectNumber()} {$value->getGenerationNumber()} R",
             $value instanceof PdfArray => $this->serializeArray($value, $objNum, $gen),

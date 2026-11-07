@@ -400,9 +400,10 @@ function generateFoodOrderPDF($id) {
 
     $original_bytes = file_get_contents(dirname(__FILE__).'/../images/St. Lucy Blank Order Form-2026-Fillable.pdf');
     $filler = new PdfAcroFormFiller($doc, $original_bytes);
+    //var_dump($fields);
 
     // Fill in the fields with the food order data if null, use empty string to avoid errors
-    $filler->setText($fields['pantry_name'], 'NAME');
+    $filler->setText($fields['pantry_name'], $foodOrder->getPantryName() ?? '');
     $filler->setText($fields['pantry_address'], $foodOrder->getPantryAddress() ?? '');
     $filler->setText($fields['point_of_contact'], $foodOrder->getPointOfContact() ?? '');
     $filler->setText($fields['secondary_poc'], $foodOrder->getSecondaryPoc() ?? '');
@@ -414,7 +415,7 @@ function generateFoodOrderPDF($id) {
     $filler->setText($fields['non_pd_dairy'], (string)$foodOrder->getNonPdDairy() ?? '');
     $filler->setText($fields['non_pd_other'], (string)$foodOrder->getNonPdOther() ?? '');
     $filler->setText($fields['pd_meat_wt'], (string)$foodOrder->getPdMeatWt() ?? '');
-    //$filler->setText($fields['pd_dairy_wt'], (string)$foodOrder->getPdDairyWt() ?? '');
+    $filler->setText($fields['pd_dairy_wt.'], (string)$foodOrder->getPdDairyWt() ?? ''); // I'm not sure why this one has a period at the end; it doesn't have one in the PDF
     $filler->setText($fields['pd_deli_wt'], (string)$foodOrder->getPdDeliWt() ?? '');
     $filler->setText($fields['pd_bakery_wt'], (string)$foodOrder->getPdBakeryWt() ?? '');
     $filler->setText($fields['pd_produce_wt'], (string)$foodOrder->getPdProduceWt() ?? '');
@@ -443,7 +444,7 @@ function generateFoodOrderPDF($id) {
         'Peanut Butter' => 'box_request_peanut_butter',
         'Canned Meat' => 'box_request_canned_meat',
         'Juice' => 'box_request_juice_and_beverage',
-        'Canned Tuna' => 'box_request_canned_tuna',
+        'Canned Tuna' => 'box_request_tuna',
         'Vegetable' => 'box_request_vegetable',
         'Tomato Product' => 'box_request_tomato_product',
         'Tortilla' => 'box_request_tortilla',
@@ -470,12 +471,12 @@ function generateFoodOrderPDF($id) {
         'Peanut Butter' => 'box_deliver_peanut_butter',
         'Canned Meat' => 'box_deliver_canned_meat',
         'Juice' => 'box_deliver_juice_and_beverage',
-        'Canned Tuna' => 'box_deliver_canned_tuna',
+        'Canned Tuna' => 'box_deliver_tuna',
         'Vegetable' => 'box_deliver_vegetable',
         'Tomato Product' => 'box_deliver_tomato_product',
         'Tortilla' => 'box_deliver_tortilla',
         'Rice' => 'box_deliver_bagged_rice',
-        'Bagged_Dry_Bean' => 'box_deliver_bagged_dry_bean'
+        'Bagged Dry Bean' => 'box_deliver_bagged_dry_bean'
     ];
     // Note: If food category names change in the database the associative arrays need to be changed.
 
@@ -485,39 +486,37 @@ function generateFoodOrderPDF($id) {
         $itemCategory = retrieve_ItemCategory($itemCategoryId);
         $quantityRequested = $item->getQuantity_requested();
         $quantityDelivered = $item->getQuantity_delivered();
+        $orderStatus = $foodOrder->getStatus();
 
         // Get the item category name from the item category ID
         $itemCategoryName = $itemCategory->getName();
 
         if (isset($quantityRequestedFields[$itemCategoryName])) {
             $filler->setText($fields[$quantityRequestedFields[$itemCategoryName]], (string)$quantityRequested);
-            echo (string)$quantityRequested;
         }
-
-        if (isset($quantityDeliveredFields[$itemCategoryName])) {
-            $filler->setText($fields[$quantityDeliveredFields[$itemCategoryName]], is_null($quantityDelivered) ? '' : (string)$quantityDelivered);
+        if ($orderStatus === 'fulfilled') {
+            if (isset($quantityDeliveredFields[$itemCategoryName])) {
+                $filler->setText($fields[$quantityDeliveredFields[$itemCategoryName]], is_null($quantityDelivered) ? '' : (string)$quantityDelivered);
+            }
         }
     }
 
-    $filler->setText($fields['box_deliver_soup'], (string)50);
-
     
-
-    // TODO: handle date, time, and phone number formatting
     //Dates
-    //$filler->setText($fields['requested_delivery_date_af_date'], $foodOrder->getRequestedDeliveryDate() ?? '');
-    //$filler->setText($fields['pdf_submision_date_af_date'], $foodOrder->getPdfSubmissionDate() ?? '');
+    $filler->setText($fields['requested_delivery_date_af_date'], $foodOrder->getRequestedDeliveryDate() ?? '');
+    $filler->setText($fields['pdf_submission_date_af_date'], $foodOrder->getPdfSubmissionDate() ?? '');
 
     //Times
-    //$filler->setText($fields['requested_delivery_time'], $foodOrder->getRequestedDeliveryTime() ?? '');
+    $filler->setText($fields['requested_delivery_time'], $foodOrder->getRequestedDeliveryTime() ?? '');
     
     //Phone Numbers
-    //$filler->setText($fields['poc_ph_number'], $foodOrder->getPocPhNumber() ?? '');
-    //$filler->setText($fields['secondary_poc_ph_num'], $foodOrder->getSecondaryPocPhNum() ?? '');
+    $filler->setText($fields['poc_ph_number'], $foodOrder->getPocPhNumber() ?? '');
+    $filler->setText($fields['secondary_poc_ph_number'], $foodOrder->getSecondaryPocPhNum() ?? '');
 
-    $outputPath = dirname(__FILE__).'/../images/FoodOrder_'.$foodOrder->getId().'.pdf';
-    $filler->save($outputPath);
+    $path = '\pdfs\FoodOrder_'.$foodOrder->getPantryName().Date('Y-m-d_H-i-s').'.pdf';
+    $savePath = __DIR__.'\..'.$path;
+    $filler->save($savePath);
 
-    return $outputPath; // Return the path to the generated PDF
+    return ".".$path; // Return path to the generated PDF for use as a URL
     
 }
