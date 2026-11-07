@@ -704,7 +704,7 @@
     </div> -->
 
     <div style="margin-top: 50px; padding: 0px 80px;">
-        <h2><b>Inventory Management Dashboard</h2>
+        <h2><b>Warehouse Management Dashboard</h2>
     </div>
     <div class="full-width-bar-sub">
 
@@ -741,10 +741,28 @@
     <!-- View Food Orders -->
      <div class="content-box-test" onclick="window.location.href='viewOrders.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
-            <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Inventory Icon">
+            <img style="border-radius: 5px;" src="images/clipboard-checklist.svg" alt="Inventory Icon">
         </div>
         <div class="large-text-sub" style="color:white;">View Food Orders</div>
         <div class="graph-text" style="color:white;">View current individual and multiple food orders.</div>
+    </div>
+
+     <!-- View Reports -->
+     <div class="content-box-test" onclick="window.location.href='viewReports.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+        <div class="icon-overlay">
+            <img style="border-radius: 5px;" src="images/document-report.svg" alt="Report Icon">
+        </div>
+        <div class="large-text-sub" style="color:white;">View Reports</div>
+        <div class="graph-text" style="color:white;">View reports of various types.</div>
+    </div>
+
+     <!-- Create Reports -->
+     <div class="content-box-test" onclick="window.location.href='createReports.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+        <div class="icon-overlay">
+            <img style="border-radius: 5px;" src="images/create-report.svg" alt="Report Icon">
+        </div>
+        <div class="large-text-sub" style="color:white;">Create Reports</div>
+        <div class="graph-text" style="color:white;">Create reports of various types.</div>
     </div>
 
     <!-- Weekly Inventory Report
