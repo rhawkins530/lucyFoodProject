@@ -3,7 +3,66 @@
 include_once('dbinfo.php');
 include_once(dirname(__FILE__).'/../domain/FoodOrder.php');
 include_once(dirname(__FILE__).'/dbInventory.php');
+include_once(dirname(__FILE__).'/dbNotifications.php');
 
+
+/*
+    Turn an optional value into something that can go straight into an SQL query
+    Parameters:
+    - $con: The database connection, used to escape the value.
+    - $value: The value to save.
+    Returns:
+    - NULL (unquoted) if the value is null or empty, so date, time and number columns accept it.
+    - Otherwise the escaped value in single quotes.
+*/
+function sqlValueOrNull($con, $value) {
+    if ($value === null || $value === '') {
+        return "NULL";
+    }
+    return "'" . mysqli_real_escape_string($con, $value) . "'";
+}
+
+/*
+    Read and check the pantry, contact and delivery details from an order form.
+    Used by both createIndivOrder.php and createMultOrder.php.
+    Parameters:
+    - $input: The submitted fields for one order ($_POST, or one entry of $_POST['orders']).
+    - $errorPrefix: Text put in front of each error message, e.g. "Order 2: ". (Optional, defaults to "")
+    Returns:
+    - ['details' => ..., 'errors' => [...]]
+      details uses the parameter names of addFoodOrder() and addIndividualFoodOrder(),
+      so it can be passed straight to them with ...$details
+*/
+function readOrderDetails($input, $errorPrefix = '') {
+    // Form field => parameter name, label for error messages,
+    // whether the form marks it required, and the column size in dbfoodorder
+    $fields = [
+        'submission_date'      => ['parameter' => 'pdfSubmissionDate', 'label' => 'Submission date', 'required' => true, 'maxLength' => null],
+        'delivery_date'        => ['parameter' => 'requested_delivery_date', 'label' => 'Requested delivery date', 'required' => false, 'maxLength' => null],
+        'delivery_time'        => ['parameter' => 'requested_delivery_time', 'label' => 'Requested delivery time', 'required' => false, 'maxLength' => null],
+        'pantry_name'          => ['parameter' => 'pantry_name', 'label' => 'Pantry name', 'required' => true, 'maxLength' => 100],
+        'pantry_address'       => ['parameter' => 'pantry_address', 'label' => 'Pantry address', 'required' => true, 'maxLength' => 300],
+        'poc_name'             => ['parameter' => 'point_of_contact', 'label' => 'Point of contact', 'required' => true, 'maxLength' => 100],
+        'poc_phone'            => ['parameter' => 'poc_ph_number', 'label' => 'Point of contact phone', 'required' => true, 'maxLength' => 20],
+        'secondary_poc_name'   => ['parameter' => 'secondary_poc', 'label' => 'Secondary point of contact', 'required' => false, 'maxLength' => 100],
+        'secondary_poc_phone'  => ['parameter' => 'secondary_poc_ph_num', 'label' => 'Secondary point of contact phone', 'required' => false, 'maxLength' => 20],
+        'special_instructions' => ['parameter' => 'special_instructions', 'label' => 'Special instructions', 'required' => false, 'maxLength' => 300],
+    ];
+
+    $details = [];
+    $errors = [];
+    foreach ($fields as $field => $rules) {
+        $value = trim($input[$field] ?? '');
+        if ($rules['required'] && $value === '') {
+            $errors[] = $errorPrefix . $rules['label'] . " is required";
+        }
+        else if ($rules['maxLength'] !== null && strlen($value) > $rules['maxLength']) {
+            $errors[] = $errorPrefix . $rules['label'] . " must be " . $rules['maxLength'] . " characters or fewer";
+        }
+        $details[$rules['parameter']] = $value;
+    }
+    return ['details' => $details, 'errors' => $errors];
+}
 
 /*
     Add a new food order
@@ -48,16 +107,20 @@ $pd_deli_wt = null, $pd_bakery_wt = null, $pd_produce_wt = null, $pd_non_perish_
         // Start a transaction
         $con->begin_transaction();
 
+        // Optional fields that weren't given are saved as NULL, and text is escaped
+        $optionalFields = [$pdfSubmissionDate, $pantry_name, $pantry_address, $point_of_contact, $poc_ph_number,
+            $secondary_poc, $secondary_poc_ph_num, $requested_delivery_date, $requested_delivery_time, $special_instructions, $non_pd_slp_box_wt,
+            $non_pd_produce_wt, $non_pd_meat_wt, $non_pd_bakery, $non_pd_dairy, $non_pd_other, $pd_meat_wt, $pd_dairy_wt,
+            $pd_deli_wt, $pd_bakery_wt, $pd_produce_wt, $pd_non_perish_wt, $pd_prep_deli_wt];
+        $optionalValues = implode(', ', array_map(fn($value) => sqlValueOrNull($con, $value), $optionalFields));
+
         // Insert the food order
         $query = "INSERT INTO dbfoodorder
                     (requestor_person_id, order_status, submission_date, pdf_submission_date, pantry_name, pantry_address, point_of_contact, poc_ph_number,
                     secondary_poc, secondary_poc_ph_num, requested_delivery_date, requested_delivery_time, special_instructions, non_pd_slp_box_wt,
                     non_pd_produce_wt, non_pd_meat_wt, non_pd_bakery, non_pd_dairy, non_pd_other, pd_meat_wt, pd_dairy_wt,
                     pd_deli_wt, pd_bakery_wt, pd_produce_wt, pd_non_perish_wt, pd_prep_deli_wt)
-                VALUES ($requestorId, '$order_status', NOW(), '$pdfSubmissionDate', '$pantry_name', '$pantry_address', '$point_of_contact', '$poc_ph_number',
-                    '$secondary_poc', '$secondary_poc_ph_num', '$requested_delivery_date', '$requested_delivery_time', '$special_instructions', '$non_pd_slp_box_wt',
-                    '$non_pd_produce_wt', '$non_pd_meat_wt', '$non_pd_bakery', '$non_pd_dairy', '$non_pd_other', '$pd_meat_wt', '$pd_dairy_wt',
-                    '$pd_deli_wt', '$pd_bakery_wt', '$pd_produce_wt', '$pd_non_perish_wt', '$pd_prep_deli_wt')";
+                VALUES ($requestorId, '$order_status', NOW(), $optionalValues)";
         $okOrder = mysqli_query($con, $query);
 
         if (!$okOrder) { // If inserting the order fails, rollback the transaction and return false
@@ -88,6 +151,12 @@ $pd_deli_wt = null, $pd_bakery_wt = null, $pd_produce_wt = null, $pd_non_perish_
         $okCommit = $con->commit();
         mysqli_close($con);
 
+        // Let every admin know there is a new order waiting for them to approve or reject
+        if ($okCommit) {
+            $from = $pantry_name ? ' from ' . $pantry_name : '';
+            notifyAllAdmins('New food order #' . $orderId . $from . ' is waiting for approval', 'pending_order', $orderId);
+        }
+
         return $okCommit; // Return true if the transaction was committed successfully, false otherwise
     }
     catch (Exception $e) {
@@ -106,13 +175,17 @@ $pd_deli_wt = null, $pd_bakery_wt = null, $pd_produce_wt = null, $pd_non_perish_
     Parameters:
     - $requestorId: The ID of the person requesting the food order.
     - $foodOrderItems: An array of tuples, where each tuple contains (item_category_id, quantity_requested) for each item in the order.
+    - $pdfSubmissionDate through $special_instructions: The pantry, contact and delivery details,
+      the same as addFoodOrder(). (Optional, default to null)
     Returns:
     - An empty array if the order was saved and the inventory was updated.
     - An array of item_category_id => quantity in inventory for each item without enough inventory.
       Nothing is saved in this case.
     - false if the order couldn't be saved.
 */
-function addIndividualFoodOrder($requestorId, $foodOrderItems = []) {
+function addIndividualFoodOrder($requestorId, $foodOrderItems = [], $pdfSubmissionDate = null, $pantry_name = null, $pantry_address = null,
+$point_of_contact = null, $poc_ph_number = null, $secondary_poc = null, $secondary_poc_ph_num = null, $requested_delivery_date = null,
+$requested_delivery_time = null, $special_instructions = null) {
     // Orders use item_category_id, but the inventory functions use the dbinventory row id
     $inventoryIds = [];
     foreach (getAllInventoryItems() as $inventoryItem) {
@@ -143,9 +216,16 @@ function addIndividualFoodOrder($requestorId, $foodOrderItems = []) {
         $con->begin_transaction();
 
         // Insert the food order
+        // Optional fields that weren't given are saved as NULL, and text is escaped
+        $optionalFields = [$pdfSubmissionDate, $pantry_name, $pantry_address, $point_of_contact, $poc_ph_number,
+            $secondary_poc, $secondary_poc_ph_num, $requested_delivery_date, $requested_delivery_time, $special_instructions];
+        $optionalValues = implode(', ', array_map(fn($value) => sqlValueOrNull($con, $value), $optionalFields));
+
         $query = "INSERT INTO dbfoodorder
-                    (requestor_person_id, order_status, submission_date, fulfillment_date)
-                VALUES ($requestorId, '$order_status', NOW(), NOW())";
+                    (requestor_person_id, order_status, submission_date, fulfillment_date, pdf_submission_date, pantry_name, pantry_address,
+                    point_of_contact, poc_ph_number, secondary_poc, secondary_poc_ph_num, requested_delivery_date, requested_delivery_time,
+                    special_instructions)
+                VALUES ($requestorId, '$order_status', NOW(), NOW(), $optionalValues)";
         $okOrder = mysqli_query($con, $query);
 
         if (!$okOrder) { // If inserting the order fails, rollback the transaction and return false
@@ -266,6 +346,11 @@ function approveFoodOrder($id, $approverId) {
 
     $ok = mysqli_query($con, $query);
     mysqli_close($con);
+
+    // The order no longer needs an admin, so remove its alert from every admin's bell
+    if ($ok) {
+        deleteNotifications('pending_order', $id);
+    }
     return $ok;
 }
 
@@ -287,6 +372,11 @@ function rejectFoodOrder($id, $approverId) {
 
     $ok = mysqli_query($con, $query);
     mysqli_close($con);
+
+    // The order no longer needs an admin, so remove its alert from every admin's bell
+    if ($ok) {
+        deleteNotifications('pending_order', $id);
+    }
     return $ok;
 }
 
@@ -299,6 +389,11 @@ function finalizeFoodOrder($id) {
 
     $ok = mysqli_query($con, $query);
     mysqli_close($con);
+
+    // The order no longer needs an admin, so remove its alert from every admin's bell
+    if ($ok) {
+        deleteNotifications('pending_order', $id);
+    }
     return $ok;
 }
 

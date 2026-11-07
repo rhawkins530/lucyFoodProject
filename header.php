@@ -623,6 +623,66 @@ if (date("H:i:s") > "18:19:59") {
             filter: invert(1);
         }
 
+        /* White dropdown under the admin bell icon */
+        .nav-links .notification-dropdown {
+            background-color: white;
+            color: #333333;
+            font-size: 16px;
+            font-weight: 400;
+            cursor: default;
+            /* Right edge meets the left edge of the bell's outline (1px outline + 7px offset) */
+            left: auto;
+            right: calc(100% + 8px);
+            /* 5px higher than the default top: 130% */
+            top: calc(130% - 5px);
+            /* Fixed width, and scroll when there are many notifications */
+            width: 280px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        /* One notification in the bell dropdown */
+        .nav-links .notification-item {
+            padding: 8px;
+            border-bottom: 1px solid #eeeeee;
+            white-space: normal;
+            color: #333333;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        /* Notifications that arrived since the bell was last opened */
+        .nav-links .notification-item.unread {
+            font-weight: 700;
+        }
+
+        .notification-time {
+            display: block;
+            margin-top: 2px;
+            color: #777777;
+            font-size: 12px;
+            font-weight: 400;
+        }
+
+        /* Red circle on the bell with the number of unread notifications */
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 5px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            background-color: #d93025;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 20px;
+            text-align: center;
+            pointer-events: none;
+        }
+
         .modal-close {
             background: transparent;
             border: none;
@@ -733,6 +793,17 @@ if (date("H:i:s") > "18:19:59") {
                     }
                 });
             });
+            // Opening the admin bell marks its notifications as read and removes the red badge
+            const bell = document.getElementById("notificationBell");
+            if (bell) {
+                bell.addEventListener("click", function() {
+                    const badge = bell.querySelector(".notification-badge");
+                    if (badge) {
+                        badge.remove();
+                        fetch("markNotificationsRead.php", { method: "POST" });
+                    }
+                });
+            }
         });
     </script>
 </head>
@@ -1031,6 +1102,13 @@ if (date("H:i:s") > "18:19:59") {
         </svg>
 </div>
 </a>-->
+');
+            // Bell button: admins and higher only (access level 2+)
+            if ($_SESSION['access_level'] >= 2) {
+                require_once(__DIR__ . '/database/dbNotifications.php');
+                echo (notificationBellHtml($_SESSION['_id']));
+            }
+            echo ('
             <div class="nav-links">
                 <div class="nav-item">
                     <div class="icon">
