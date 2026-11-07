@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1764854692e04363e13e59a255fe61d5",
+    "content-hash": "89476d67c322fef8ac2131cebc5cede6",
     "packages": [
         {
             "name": "composer/pcre",
@@ -462,6 +462,75 @@
             "time": "2026-04-10T03:00:03+00:00"
         },
         {
+            "name": "phppdf/phppdf",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phppdf/phppdf.git",
+                "reference": "39388cf0cc0575bab978a82c51a3e958d7e0c812"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phppdf/phppdf/zipball/39388cf0cc0575bab978a82c51a3e958d7e0c812",
+                "reference": "39388cf0cc0575bab978a82c51a3e958d7e0c812",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-gd": "*",
+                "ext-libxml": "*",
+                "ext-mbstring": "*",
+                "ext-openssl": "*",
+                "ext-zlib": "*",
+                "php": ">=8.4"
+            },
+            "require-dev": {
+                "phpbench/phpbench": "^1.6",
+                "phppdf/coding-standard": "^1.0",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^13.1"
+            },
+            "suggest": {
+                "phppdf/html-converter": "Convert HTML/CSS markup into phppdf documents.",
+                "phppdf/markdown-converter": "Convert Markdown markup into phppdf documents.",
+                "phppdf/tex-hyphenation": "Knuth-Liang TeX hyphenation algorithm for phppdf"
+            },
+            "bin": [
+                "bin/phppdf"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PhpPdf\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Walter Tamboer",
+                    "homepage": "https://waltertamboer.nl",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "A pure PHP library for creating and processing PDF files.",
+            "homepage": "https://phppdf.github.io/phppdf/",
+            "keywords": [
+                "pdf"
+            ],
+            "support": {
+                "issues": "https://github.com/phppdf/phppdf/issues",
+                "source": "https://github.com/phppdf/phppdf"
+            },
+            "time": "2026-07-13T21:34:57+00:00",
+            "published-time": "2026-07-13T21:38:47+00:00"
+        },
+        {
             "name": "psr/simple-cache",
             "version": "3.0.0",
             "source": {
@@ -521,5 +590,5 @@
     "prefer-lowest": false,
     "platform": {},
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
