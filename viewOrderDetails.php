@@ -84,7 +84,18 @@ if($fulfill){
     header('Location: viewOrderDetails.php?id=' . $id);
 }
 
-
+// Generate PDF if requested
+if (isset($_GET['generate_pdf'])) {
+    $pdfPath = generateFoodOrderPDF($id);
+    if ($pdfPath) {
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . basename($pdfPath) . '"');
+        readfile($pdfPath);
+        exit;
+    } else {
+        echo "Error generating PDF.";
+    }
+}
 
 ?>
 <!DOCTYPE html>
@@ -203,7 +214,7 @@ if($fulfill){
             color: #991b1b; 
         }
         .status-badge.fulfilled { 
-            background: #dbeafe;
+            background: lightblue;
             color: #1e40af; 
         }
 
@@ -267,6 +278,10 @@ if($fulfill){
                         Order Details
                         <span class="status-badge <?= htmlspecialchars($status) ?>"><?= htmlspecialchars(ucfirst($status)) ?></span>
                     </span>
+                    <form action="generateOrderPDF.php" method="post" style="display:inline;">
+                        <input type="hidden" name="order_id" value="<?= $id ?>">
+                        <button class="fulfill-button" type="submit">Generate PDF</button>
+                    </form>
                     <?php if($order->getStatus() == "approved") echo '<a class="fulfill-button" href="viewOrderDetails.php?id='. $id . '&fulfill=1">' . "Fulfill Order" . '</a>' ?> 
                 </h2>
                 <?php foreach ($resolved as $title => $rows): ?>

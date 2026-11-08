@@ -74,11 +74,16 @@
     // Each order on the page is posted as orders[index][field]
     $orders = $_POST['orders'] ?? [];
     if (!empty($_POST)) {
-        // Pantry and contact fields aren't saved yet; dbfoodorder has no columns for them.
         $ordersToSave = [];
         $orderNumber = 0;
         foreach ($orders as $order) {
             $orderNumber++;
+
+            // Pantry, contact and delivery details for this order
+            $orderDetails = readOrderDetails($order, "Order " . $orderNumber . ": ");
+            $errors = array_merge($errors, $orderDetails['errors']);
+            $details = $orderDetails['details'];
+
             $boxes = $order['boxes'] ?? [];
             $foodOrderItems = [];
             foreach ($ORDER_CATEGORIES as $category) {
@@ -99,7 +104,7 @@
             if (empty($foodOrderItems)) {
                 $errors[] = "Order " . $orderNumber . ": Request at least one box";
             }
-            $ordersToSave[] = $foodOrderItems;
+            $ordersToSave[] = ['details' => $details, 'items' => $foodOrderItems];
         }
 
         if (empty($ordersToSave)) {
@@ -108,9 +113,9 @@
         if (empty($errors)) {
             // Multiple orders are saved as pending for an admin to approve or reject
             $orderNumber = 0;
-            foreach ($ordersToSave as $foodOrderItems) {
+            foreach ($ordersToSave as $orderToSave) {
                 $orderNumber++;
-                if (!addFoodOrder($_SESSION['_personId'], $foodOrderItems)) {
+                if (!addFoodOrder($_SESSION['_personId'], ...$orderToSave['details'], foodOrderItems: $orderToSave['items'])) {
                     $errors[] = "Unable to create food order " . $orderNumber;
                     break;
                 }

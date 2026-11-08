@@ -2,6 +2,7 @@
 
 include_once('dbinfo.php');
 include_once(dirname(__FILE__).'/../domain/InventoryItem.php');
+include_once(dirname(__FILE__).'/dbNotifications.php');
 
 function addInventoryItem($categoryId, $categoryName, $quantity, $minimum = 0, $allocated = 0) {
     $con = connect();
@@ -130,9 +131,11 @@ function getInventoryQuantity($id) {
  */
 
 function changeInventoryQuantity($id, $quantity) {
+    $before = getStockLevel($id);
     $con = connect();
     mysqli_query($con, "UPDATE dbinventory SET current_quantity = current_quantity + $quantity WHERE id = $id");
     mysqli_close($con);
+    updateLowStockNotifications($id, $before);
     return true;
 }
 
@@ -141,10 +144,50 @@ function changeInventoryQuantity($id, $quantity) {
  */
 
 function setInventoryQuantity($id, $quantity) {
+    $before = getStockLevel($id);
     $con = connect();
     mysqli_query($con, "UPDATE dbinventory SET current_quantity = $quantity WHERE id = $id");
     mysqli_close($con);
+    updateLowStockNotifications($id, $before);
     return true;
+}
+
+/*
+ * get the name, current quantity and minimum quantity for the inventory item with the given id
+ * returns null if there is no item with that id
+ */
+
+function getStockLevel($id) {
+    $con = connect();
+    $id = (int)$id;
+    $result = mysqli_query($con, "SELECT category_name, current_quantity, minimum_quantity FROM dbinventory WHERE id = $id");
+    $row = mysqli_fetch_assoc($result);
+    mysqli_close($con);
+    return $row ?: null;
+}
+
+/*
+ * keep the low stock alerts for the inventory item with the given id up to date, after its
+ * quantity or minimum changed. $before is getStockLevel() from before the change.
+ * - if the item just dropped below its minimum, notify all admins (only once, not again while it stays low)
+ * - if the item is just back at or above its minimum, delete its low stock alert from every admin's bell
+ */
+
+function updateLowStockNotifications($id, $before) {
+    $after = getStockLevel($id);
+    if ($before === null || $after === null) {
+        return;
+    }
+    $minimum = (int)$after['minimum_quantity'];
+    $wasLow = (int)$before['current_quantity'] < (int)$before['minimum_quantity'];
+    $isLow = (int)$after['current_quantity'] < $minimum;
+    if (!$wasLow && $isLow) {
+        notifyAllAdmins('Low stock: ' . $after['category_name'] . ' has ' . (int)$after['current_quantity']
+            . ' boxes left (minimum ' . $minimum . ')', 'low_stock', $id);
+    }
+    else if ($wasLow && !$isLow) {
+        deleteNotifications('low_stock', $id);
+    }
 }
 
 /*
@@ -166,9 +209,11 @@ function getMinimumQuantity($id) {
  */
 
 function setMinimumQuantity($id, $quantity) {
+    $before = getStockLevel($id);
     $con = connect();
     mysqli_query($con, "UPDATE dbinventory SET minimum_quantity = $quantity WHERE id = $id");
     mysqli_close($con);
+    updateLowStockNotifications($id, $before);
     return true;
 }
 

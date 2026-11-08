@@ -80,6 +80,7 @@ function sortCell($type, $val) {
             margin-top: 3rem;
             display: flex; justify-content: center; align-items: center;
         }
+
         .title {
             text-align: center;
             height: 3.5rem;
@@ -91,58 +92,75 @@ function sortCell($type, $val) {
             border-radius: 10px;
             background-color: #ffffffee;
         }
+
         .report-container {
             max-width: 1100px;
             margin: 0 auto 4rem auto;
             padding: 1rem;
         }
+
         .report-section {
             background-color: #D4E7F6;
             border-radius: 15px;
             padding: 1.5rem;
             margin-bottom: 2rem;
+            min-width: 0;
+            box-sizing: border-box;
         }
+
         .report-section h2 {
             font-size: 1.5rem;
             font-weight: 500;
             margin-bottom: 1rem;
             color: var(--secondary-accent-color);
         }
+
         .report-table {
             width: 100%;
+            table-layout: auto;
             border-collapse: collapse;
         }
+        
         .report-table th,
         .report-table td {
             padding: 0.75rem 1rem;
             text-align: left;
+            vertical-align: middle;
             border-bottom: 1px solid var(--shadow-and-border-color);
             color: var(--page-font-color);
-            vertical-align: middle;
+            overflow-wrap: break-word;
         }
+
         .report-table th {
             background-color: var(--main-color);
             color: var(--button-font-color);
             font-weight: 500;
             position: sticky;
             top: 100px;
+            overflow-wrap: normal;
+            word-break: normal;
         }
+
         .report-table tbody tr.order-row { 
             cursor: pointer; 
         }
+
         .report-table tbody tr.order-row:hover { 
             background-color: rgba(255,255,255,0.6); 
         }
+
         .report-table td a { 
             color: inherit; 
             font-weight: 600; 
             text-decoration: underline; 
         }
+
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
             color: #658A9C;
         }
+
         .week-and-filter-section {
             display: flex;
             flex-direction: row;
@@ -151,6 +169,7 @@ function sortCell($type, $val) {
             gap: 2rem;
             flex-wrap: wrap;
         }
+
         .form-section { margin-bottom: 1.5rem; }
         .form-section label {
             display: block;
@@ -158,6 +177,7 @@ function sortCell($type, $val) {
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
+
         .form-section select {
             width: 100%;
             max-width: 300px;
@@ -168,19 +188,22 @@ function sortCell($type, $val) {
             color: var(--page-font-color);
             cursor: pointer;
         }
+
         .order-list-section {
             display: block;
             background-color: #D4E7F6;
             padding: 10px;
         }
+
         th.sortable { 
             cursor: pointer; 
             user-select: none; 
-            white-space: nowrap; 
         }
+
         th.sortable:hover { 
             opacity: 0.85; 
         }
+
         th.sortable .arrow { 
             display: inline-block; 
             width: 1em; 
@@ -193,6 +216,7 @@ function sortCell($type, $val) {
             height: 5%;
             margin-bottom: auto;
         }
+
         .button:hover { 
             opacity: 0.85;
         }
@@ -206,20 +230,24 @@ function sortCell($type, $val) {
             background: #e5e7eb;
             color: #374151;
         }
+
         .status-badge.pending   {
             background: #fef3c7; 
             color: #92400e; 
         }
+
         .status-badge.approved  { 
             background: #d1fae5;
             color: #065f46; 
         }
+
         .status-badge.rejected  { 
             background: #fee2e2; 
             color: #991b1b; 
         }
+
         .status-badge.fulfilled { 
-            background: #dbeafe; 
+            background: lightblue; 
             color: #1e40af; 
         }
 
@@ -227,22 +255,59 @@ function sortCell($type, $val) {
             pageheader { 
                 top: 100px; 
             }
+
             .title { 
                 border-radius: 0; 
                 background-color: #ffffff; 
                 width: 100%; 
             }
+
             .report-container {
                 padding: 0.5rem; 
             }
+
             .report-section { 
                 padding: 0; 
             }
+
             .report-table th,
             .report-table td { 
                 padding: 4px; 
                 font-size: 0.8rem; 
                 position: static; 
+            }
+
+            .order-list-section {
+                overflow-x: auto;
+                padding: 4px;
+            }
+
+            .report-table th {
+                white-space: nowrap;
+            }
+
+            .week-and-filter-section {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+
+            .form-section {
+                margin-bottom: 0.5rem;
+            }
+
+            .form-section select {
+                max-width: 100%;
+            }
+
+            .button {
+                width: 100%;
+                height: auto;
+                margin: 0 0 0.75rem 0;
+                box-sizing: border-box;
+                justify-content: center;
+                text-align: center;
+                white-space: normal;
             }
         }
     </style>
