@@ -128,7 +128,7 @@
                 if (isset($_FILES['user_file']) && $_FILES['user_file']['error'] === UPLOAD_ERR_OK) { // file was successfully uploaded.
                     
                     $tmpName = $_FILES['user_file']['tmp_name'];
-                    echo $tmpName;
+                    addIndividualFoodOrderFromPDF($_SESSION['_personId'], $tmpName);
                 } else { // No file was uploaded, or an error occurred.
                     if (isset($_FILES['user_file']) && $_FILES['user_file']['error'] === UPLOAD_ERR_NO_FILE) { 
                         echo "No file was selected.";

@@ -281,6 +281,23 @@ $requested_delivery_time = null, $special_instructions = null) {
     return [];
 }
 
+function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
+    //Open the PDF document
+    $doc = PdfDocumentReader::open($pdfpath);
+
+    //Set up Acroform reader for the document
+    $reader = new PdfAcroFormReader($doc);
+
+    //Get the fields in the PDF form
+    $fields = $reader->getFieldsByName();
+
+    foreach ($fields as $field) {
+        echo $field->fullName . ': ' . $field->value ?? 'NULL' . PHP_EOL;
+    }
+
+
+}
+
 /*
     Get a food order by its ID
     Parameters:
