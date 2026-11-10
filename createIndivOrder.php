@@ -72,51 +72,70 @@
 
     $errors = [];
     $shortItems = [];
-    if (!empty($_POST)) {
-        // Pantry, contact and delivery details
-        $orderDetails = readOrderDetails($_POST);
-        $errors = $orderDetails['errors'];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['form_type'])) {
+            if ($_POST['form_type'] === 'order_submit') {
+                // Pantry, contact and delivery details
+                $orderDetails = readOrderDetails($_POST);
+                $errors = $orderDetails['errors'];
 
-        $boxes = $_POST['boxes'] ?? [];
-        $errorsBeforeBoxes = count($errors);
-        $foodOrderItems = [];
-        foreach ($ORDER_CATEGORIES as $category) {
-            $quantity = trim($boxes[$category['categoryId']] ?? '');
-            if ($quantity === '') {
-                continue;
-            }
-            if (!ctype_digit($quantity)) {
-                $errors[] = "Number of boxes for " . $category['name'] . " must be a whole number";
-                continue;
-            }
-            if ((int)$quantity === 0) {
-                continue;
-            }
-            $foodOrderItems[] = [$category['categoryId'], (int)$quantity];
-        }
-
-        // Skip this message if a box number was already invalid
-        if (empty($foodOrderItems) && count($errors) === $errorsBeforeBoxes) {
-            $errors[] = "Request at least one box";
-        }
-        if (empty($errors)) {
-            $insufficient = addIndividualFoodOrder($_SESSION['_personId'], $foodOrderItems, ...$orderDetails['details']);
-            if ($insufficient === false) {
-                $errors[] = "Unable to create food order";
-            }
-            else if (empty($insufficient)) {
-                header('Location: createOrder.php?created=success');
-                die();
-            }
-            else {
-                // Not enough inventory, so list each short item using the names on this form
+                $boxes = $_POST['boxes'] ?? [];
+                $errorsBeforeBoxes = count($errors);
+                $foodOrderItems = [];
                 foreach ($ORDER_CATEGORIES as $category) {
-                    if (isset($insufficient[$category['categoryId']])) {
-                        $shortItems[] = [
-                            'name' => $category['name'],
-                            'requested' => (int)$boxes[$category['categoryId']],
-                            'available' => $insufficient[$category['categoryId']],
-                        ];
+                    $quantity = trim($boxes[$category['categoryId']] ?? '');
+                    if ($quantity === '') {
+                        continue;
+                    }
+                    if (!ctype_digit($quantity)) {
+                        $errors[] = "Number of boxes for " . $category['name'] . " must be a whole number";
+                        continue;
+                    }
+                    if ((int)$quantity === 0) {
+                        continue;
+                    }
+                    $foodOrderItems[] = [$category['categoryId'], (int)$quantity];
+                }
+
+                // Skip this message if a box number was already invalid
+                if (empty($foodOrderItems) && count($errors) === $errorsBeforeBoxes) {
+                    $errors[] = "Request at least one box";
+                }
+                if (empty($errors)) {
+                    $insufficient = addIndividualFoodOrder($_SESSION['_personId'], $foodOrderItems, ...$orderDetails['details']);
+                    if ($insufficient === false) {
+                        $errors[] = "Unable to create food order";
+                    }
+                    else if (empty($insufficient)) {
+                        header('Location: createOrder.php?created=success');
+                        die();
+                    }
+                    else {
+                        // Not enough inventory, so list each short item using the names on this form
+                        foreach ($ORDER_CATEGORIES as $category) {
+                            if (isset($insufficient[$category['categoryId']])) {
+                                $shortItems[] = [
+                                    'name' => $category['name'],
+                                    'requested' => (int)$boxes[$category['categoryId']],
+                                    'available' => $insufficient[$category['categoryId']],
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+            elseif ($_POST['form_type'] === 'pdf_submit') {
+                if (isset($_FILES['user_file']) && $_FILES['user_file']['error'] === UPLOAD_ERR_OK) { // file was successfully uploaded.
+                    
+                    $tmpName = $_FILES['user_file']['tmp_name'];
+                    echo $tmpName;
+                } else { // No file was uploaded, or an error occurred.
+                    if (isset($_FILES['user_file']) && $_FILES['user_file']['error'] === UPLOAD_ERR_NO_FILE) { 
+                        echo "No file was selected.";
+                    } else {
+                        echo "An upload error occurred.";
+                        var_dump($_FILES);
+                        var_dump($_POST);
                     }
                 }
             }
@@ -439,7 +458,14 @@
                 </ul>
             </div>
         <?php endif; ?>
+        <form action="createIndivOrder.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="form_type" value="pdf_submit">
+            <label for="file_upload">Upload PDF</label>
+            <input type="file" id="file_upload" name="user_file" accept=".pdf">
+            <button type="submit">Upload PDF</button>
+        </form>
         <form class="order-form" action="createIndivOrder.php" method="POST">
+            <input type="hidden" name="form_type" value="order_submit">
             <div class="report-section">
                 <h2>Pantry Information</h2>
                 <div class="updateInv-allRows">
