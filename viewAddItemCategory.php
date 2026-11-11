@@ -19,7 +19,7 @@
 
     require_once('database/dbinfo.php');
     require_once('database/dbPersons.php');
-    require_once('database/dbinventory.php');
+    require_once('database/dbInventory.php');
     $con = connect();
 
     //New Categorys

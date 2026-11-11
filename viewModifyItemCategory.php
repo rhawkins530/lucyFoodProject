@@ -26,7 +26,7 @@
     }
     
     require_once('include/input-validation.php');
-    require_once('database/dbinventory.php');
+    require_once('database/dbInventory.php');
     require_once('database/dbPalletCounts.php');
     require_once('database/dbShoppingCount.php');
 
