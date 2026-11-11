@@ -67,11 +67,11 @@ table, td, tr, th, form, fieldset, em, button, a {
 
     --shadow-and-border-color: #e8e8e8;
 
-    --main-color: #2A435A; 
+    --main-color: #207BC1; 
 
-    --accent-color: #ffc20e;
+    --accent-color: #EABD3C;
  
-    --secondary-accent-color: #00395E;
+    --secondary-accent-color: #163561;
 
     /* Accessibility / WV theme variables */
 --wv-accent-color: #111111; /* black */

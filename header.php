@@ -71,14 +71,14 @@ if (date("H:i:s") > "18:19:59") {
         }
 
         .content-box-test:hover {
-            border: 4px solid #fdd05eff;
+            border: 4px solid #EABD3C;
         }
 
         /*END STYLE TEST*/
 
         .full-width-bar {
             width: 100%;
-            background: #4d98f3;
+            background: #207BC1;
             padding: 17px 5%;
             display: flex;
             flex-wrap: wrap;
@@ -200,7 +200,7 @@ if (date("H:i:s") > "18:19:59") {
         /* seperate nav background from nav link to allow for header text to  
          * scroll onto nav bar without the text being covered by the background */
         .navbar-background {
-            background: #4d98f3;
+            background: #207BC1;
             z-index: 5;
         }
 
@@ -214,7 +214,7 @@ if (date("H:i:s") > "18:19:59") {
 
         /* Logo */
         .logo-container {
-            background: #4d98f3;
+            background: #207BC1;
             padding: 5px 20px;
             border-radius: 50px;
             box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25) inset;
@@ -262,8 +262,8 @@ if (date("H:i:s") > "18:19:59") {
             position: absolute;
             top: 150%;
             left: -2.5%;
-            background-color: #4d98f3;
-            border: 2px solid #f5ce7aff;
+            background-color: #207BC1;
+            border: 2px solid #EABD3C;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             border-radius: 5px;
             min-width: 150px;
@@ -283,8 +283,8 @@ if (date("H:i:s") > "18:19:59") {
 
         .nav-item:hover,
         .nav-item.active {
-            color: #f5ce7aff;
-            outline: 1px solid #f5d07aff;
+            color: #EABD3C;
+            outline: 1px solid #EABD3C;
             outline-offset: 7px;
         }
 
@@ -394,7 +394,7 @@ if (date("H:i:s") > "18:19:59") {
         /* Footer */
         .footer {
             width: 100%;
-            background: #4d98f3;
+            background: #207BC1;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -428,7 +428,7 @@ if (date("H:i:s") > "18:19:59") {
         }
 
         .social-icons a:hover {
-            color: #4d98f3;
+            color: #207BC1;
         }
 
         /* Right Section */
@@ -478,7 +478,7 @@ if (date("H:i:s") > "18:19:59") {
             /* Adjust as needed */
             left: 50%;
             transform: translateX(-50%);
-            background: #4d98f3;
+            background: #207BC1;
             /* Optional background for better visibility */
             padding: 10px;
             border-radius: 50%;

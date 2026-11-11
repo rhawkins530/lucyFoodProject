@@ -158,10 +158,10 @@
           <input class="w-full p-3 border border-gray-300 rounded-lg bg-blue-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" type="password" name="password" placeholder="Enter your password" required>
         </div>
         <div class="flex justify-between items-center mb-4">
-          <a href="forgotPassword.php" class="text-[#22654D] text-sm hover:underline">Forgot password?</a>
+          <a href="forgotPassword.php" class="text-[#007A48] text-sm hover:underline">Forgot password?</a>
           <!--<a href="https://whiskeyvalor.org" class="text-[#22654D] text-sm hover:underline">Whiskey Valor Website</a> -->
         </div>
-        <button class="cursor-pointer w-full bg-[#ffc20e] hover:bg-[#4d98f3] text-white font-semibold py-3 rounded-lg transition duration-300" style="background-color: --accent-color;">Login</button>
+        <button class="cursor-pointer w-full bg-[#163561] hover:bg-[#207BC1] text-white font-semibold py-3 rounded-lg transition duration-300" style="background-color: --accent-color;">Login</button>
       </form>
 
       <!-- Divider -->
