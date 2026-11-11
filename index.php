@@ -55,7 +55,7 @@
 
         .full-width-bar {
             width: 100%;
-            background: #4d98f3;
+            background: #207BC1;
             padding: 17px 5%;
             display: flex;
             flex-wrap: wrap;
@@ -147,7 +147,7 @@
             left: 10%;
             font-size: 14px;
             font-weight: 700;
-            color: #4d98f3;
+            color: #207BC1;
             max-width: 90%;
             margin-top: 20px;
         }
@@ -159,7 +159,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            background: #4d98f3;
+            background: #207BC1;
             box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.25);
             display: flex;
             align-items: center;
@@ -176,7 +176,7 @@
 
         /* Logo */
         .logo-container {
-            background: #4d98f3;
+            background: #207BC1;
             padding: 10px 20px;
             border-radius: 50px;
             box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25) inset;
@@ -210,7 +210,7 @@
         }
 
         .date-box {
-            background: #4d98f3;
+            background: #207BC1;
             padding: 10px 30px;
             border-radius: 50px;
             box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.25) inset;
@@ -265,7 +265,7 @@
                     width: 30px;
                     height: 30px;
                     /*background-color:; /* Blue color */
-                    background-color: #4d98f3;
+                    background-color: #207BC1;
                     color: white;
                     border-radius: 50%;
                     display: flex;
@@ -284,7 +284,7 @@
                 }
             .colored-box {
                 display: inline-block; /* Ensures it wraps tightly around the text */
-                background-color: #4d98f3; /* Change to any color */
+                background-color: #207BC1; /* Change to any color */
                 color: white; /* Text color */
                 padding: 1px 5px; /* Adds space inside the box */
                 border-radius: 5px; /* Optional: Rounds the corners */
@@ -295,7 +295,7 @@
                     /* Footer */
                     .footer {
                         width: 100%;
-                        background: #4d98f3;
+                        background: #207BC1;
                         display: flex;
                         justify-content: space-between;
                         align-items: flex-start;
@@ -344,7 +344,7 @@
                         flex-direction: column;
                         justify-content: center;
                         gap: 10px;
-                        color: #4d98f3;
+                        color: #207BC1;
                         font-family: Inter, sans-serif;
                         font-size: 16px;
                         font-weight: 500;
@@ -404,7 +404,7 @@
                 
                     .content-box-test {
                         position: relative;
-                        background-color: #4d98f3;   /* tan background */
+                        background-color: #207BC1;   /* tan background */
                         border-radius: 12px;
                         padding: 20px;
                         color: white;                 /* default text color */
@@ -480,7 +480,7 @@
     <h2><b>Admin Control Panel</b></h2>
 </div>
 <div class="full-width-bar-sub">
- <div class="content-box-test" onclick="window.location.href='viewAuditUsers.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+ <div class="content-box-test" onclick="window.location.href='viewAuditUsers.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/user_group_icon.svg" alt="User Icon">
         </div>
@@ -488,7 +488,7 @@
         <div class="large-text-sub" style="color:white;">Audit Users</div>
         <div class="graph-text" style="color:white;">Add, edit, and remove user accounts and permissions.</div>
     </div>
- <div class="content-box-test" onclick="window.location.href='createUser.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+ <div class="content-box-test" onclick="window.location.href='createUser.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/user_group_icon.svg" alt="User Icon">
         </div>
@@ -496,7 +496,7 @@
         <div class="large-text-sub" style="color:white;">Add User</div>
         <div class="graph-text" style="color:white;">Add user and set permissions.</div>
     </div>
-    <div class="content-box-test" onclick="window.location.href='viewItemCategories.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+    <div class="content-box-test" onclick="window.location.href='viewItemCategories.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/list-solid.svg" alt="Categories Icon">
         </div>
@@ -709,7 +709,7 @@
     <div class="full-width-bar-sub">
 
     <!-- Add to Inventory -->
-    <div class="content-box-test" onclick="window.location.href='addInventory.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+    <div class="content-box-test" onclick="window.location.href='addInventory.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/clipboard-checklist.svg" alt="Inventory Icon">
         </div>
@@ -719,7 +719,7 @@
     </div>
 
     <!-- View Inventory -->
-    <div class="content-box-test" onclick="window.location.href='inventory.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+    <div class="content-box-test" onclick="window.location.href='inventory.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Inventory Icon">
         </div>
@@ -730,7 +730,7 @@
 
 
     <!-- Create Food Order -->
-    <div class="content-box-test" onclick="window.location.href='createOrder.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+    <div class="content-box-test" onclick="window.location.href='createOrder.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/clipboard-list-alt.svg" alt="Order Icon">
         </div>
@@ -739,7 +739,7 @@
     </div>
 
     <!-- View Food Orders -->
-     <div class="content-box-test" onclick="window.location.href='viewOrders.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+     <div class="content-box-test" onclick="window.location.href='viewOrders.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/clipboard-checklist.svg" alt="Inventory Icon">
         </div>
@@ -748,7 +748,7 @@
     </div>
 
      <!-- View Reports -->
-     <div class="content-box-test" onclick="window.location.href='viewReports.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+     <div class="content-box-test" onclick="window.location.href='viewReports.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/document-report.svg" alt="Report Icon">
         </div>
@@ -757,7 +757,7 @@
     </div>
 
      <!-- Create Reports -->
-     <div class="content-box-test" onclick="window.location.href='createReports.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
+     <div class="content-box-test" onclick="window.location.href='createReports.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
         <div class="icon-overlay">
             <img style="border-radius: 5px;" src="images/create-report.svg" alt="Report Icon">
         </div>

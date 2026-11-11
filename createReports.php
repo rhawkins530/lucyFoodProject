@@ -294,27 +294,54 @@
             }
         }
 
-.report-type-options button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    margin-left: 15%;
-    margin-bottom: 2%;
-    max-width: 75%;
-}
-.report-message {
-    display: flex;
-    max-width: fit-content;
-    margin-left: 15%;
-    margin-bottom: 0.75%;
-    border-radius: 0.5rem;
-    background-color: #D4E7F6;
-    padding: 0.5rem;
-    color: green;
-    text-align: center;
-}
-
+    .report-type-options button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin-left: 15%;
+        margin-bottom: 2%;
+        max-width: 75%;
+    }
+    .report-message {
+        display: flex;
+        max-width: fit-content;
+        margin-left: 15%;
+        margin-bottom: 0.75%;
+        border-radius: 0.5rem;
+        background-color: #D4E7F6;
+        padding: 0.5rem;
+        color: green;
+        text-align: center;
+    }
+    .report-container {
+        width: fit-content;
+        background-color: #D4E7F6;
+        /* border: 1px solid var(--shadow-and-border-color); */
+        border-radius: 15px;
+        padding: 15px 25px;
+        margin-bottom: 2rem;
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .report-container h1,
+    .report-container h2 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        color: var(--secondary-accent-color);
+    }
+    .button {
+        width: fit-content;
+        box-sizing: border-box;
+        align-self: center;
+        padding: 12px 20px;
+        margin: 0;
+        white-space: nowrap;
+    }
     </style>
 </head>
 <pageheader>
@@ -322,13 +349,15 @@
 </pageheader>
 <body>
     <?php require_once('header.php') ?>
-    <div class="report-message" id="report-message" style="display:none;">Your report has been generated.</div>
-    <div class="report-type-options">
-        <button type="button" class="report-btn">Generate End of Year Report</button>
-        <button type="button" class="report-btn">Generate Quarterly Report</button>
-        <button type="button" class="report-btn">Generate Container Date Entered Report</button>
-        <button type="button" class="report-btn">Generate Total Available Inventory Report</button>
-    </div>
+    <div class="report-container">
+        <div class="report-message" id="report-message" style="display:none;">Your report has been generated.</div>
+        <div class="report-type-options">
+            <button type="button" class="report-btn">Generate End of Year Report</button>
+            <button type="button" class="report-btn">Generate Quarterly Report</button>
+            <button type="button" class="report-btn">Generate Container Date Entered Report</button>
+            <button type="button" class="report-btn">Generate Total Available Inventory Report</button>
+        </div>
+</div>
 
     <script>
         let hideTimer;

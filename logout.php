@@ -22,7 +22,7 @@ session_write_close();
             </span>
         </nav>
         <main>
-            <p class="centered" style="background-color: #4d98f3; color: white; padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; text-align: center;">You have        
+            <p class="centered" style="background-color: #207BC1; color: white; padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; text-align: center;">You have        
   been logged out.</p>
         </main>
     </body>
