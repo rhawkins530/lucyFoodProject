@@ -656,7 +656,7 @@ function generateFoodOrderPDF($id) {
     $filler->setText($fields['pdf_submission_date_af_date'], $foodOrder->getPdfSubmissionDate() ?? '');
 
     //Times
-    $filler->setText($fields['requested_delivery_time'], $foodOrder->getRequestedDeliveryTime() ?? '');
+    $filler->setText($fields['requested_delivery_time'], date('g:i A', strtotime($foodOrder->getRequestedDeliveryTime() ?? '')));
     
     //Phone Numbers
     $filler->setText($fields['poc_ph_number'], $foodOrder->getPocPhNumber() ?? '');
