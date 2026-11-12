@@ -183,6 +183,36 @@ function retrieve_ItemCategory_by_name($name) {
     return new ItemCategory($row['id'], $row['name']);
 }
 
+/*
+ * Retrieve the ID of an item category from dbItemCategories table matching a particular category name.
+ * If not in table, return false.
+*/
+
+function getItemCategoryIdByName($name) {
+    $con = connect();
+    $query = "SELECT id FROM dbitemcategory WHERE name = ?";
+    $stmt = mysqli_prepare($con, $query);
+
+    // If the statement preparation fails, close the connection and return false
+    if (!$stmt) {
+        mysqli_close($con);
+        return false;
+    }
+
+    // Bind the parameter and execute the statement
+    mysqli_stmt_bind_param($stmt, "s", $name);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = $result ? mysqli_fetch_assoc($result) : null;
+
+    // Close the statement and the connection
+    mysqli_stmt_close($stmt);
+    mysqli_close($con);
+
+    // Return the ID if found, false otherwise
+    return $row ? $row['id'] : false;
+}
+
 
 // function retrieve_ItemCategoryStatus($name) {
 //     $con = connect();
