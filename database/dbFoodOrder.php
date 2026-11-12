@@ -347,23 +347,25 @@ function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
     //Get the fields in the PDF form
     $fields = $reader->getFieldsByName();
 
-    $pdfSubmissionDate = null;
-    $pantry_name = null;
-    $pantry_address = null;
-    $point_of_contact = null;
-    $poc_ph_number = null;
-    $secondary_poc = null;
-    $secondary_poc_ph_num = null;
-    $requested_delivery_date = null;
-    $requested_delivery_time = null;
-    $special_instructions = null;
+    $pdfSubmissionDate = date('Y-m-d', strtotime($fields['pdf_submission_date_af_date']->value)) ?? null;
+    $pantry_name = $fields['pantry_name']->value ?? null;
+    $pantry_address = $fields['pantry_address']->value ?? null;
+    $point_of_contact = $fields['point_of_contact']->value ?? null;
+    $poc_ph_number = $fields['poc_ph_number']->value ?? null;
+    $secondary_poc = $fields['secondary_poc']->value ?? null;
+    $secondary_poc_ph_number = $fields['secondary_poc_ph_number']->value ?? null;
+    $requested_delivery_date = date('Y-m-d', strtotime($fields['requested_delivery_date_af_date']->value)) ?? null;
+    $requested_delivery_time = date('H:i:s', strtotime($fields['requested_delivery_time']->value)) ?? null;
+    $special_instructions = $fields['special_instructions']->value ?? null;
 
     $foodOrderItems = [];
     foreach ($fields as $field) {
         if (in_array($field->fullName, QUANTITYREQUESTEDFIELDS)) {
-            $name = array_search($field->fullName, QUANTITYREQUESTEDFIELDS);
-            $itemCategoryId = getItemCategoryIdByName($name);
-            $foodOrderItems[] = [$itemCategoryId, (int)$field->value];
+            if ((int)$field->value > 0) {
+                $name = array_search($field->fullName, QUANTITYREQUESTEDFIELDS);
+                $itemCategoryId = getItemCategoryIdByName($name);
+                $foodOrderItems[] = [$itemCategoryId, (int)$field->value];
+            }
         }
     }
 
@@ -373,17 +375,17 @@ function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
     }
 
     $returnValues = addIndividualFoodOrder($requestorId, $foodOrderItems, $pdfSubmissionDate, $pantry_name, $pantry_address,
-        $point_of_contact, $poc_ph_number, $secondary_poc, $secondary_poc_ph_num, $requested_delivery_date,
+        $point_of_contact, $poc_ph_number, $secondary_poc, $secondary_poc_ph_number, $requested_delivery_date,
         $requested_delivery_time, $special_instructions);
 
-    //Is the ITEM CATEGORY ID THE INDEX???
-    echo $returnValues[30];
     // Add requested quantity to return values if needed
     $insufficient = [];
     if (!empty($returnValues) && $returnValues !== false) {
-        foreach ($insufficient as $item) {
-            array_push($insufficient, ['', $item, '']);
+        foreach ($returnValues as $id => $stock) {
+            $requested = $foodOrderItems[array_search(array_column($foodOrderItems, 0), $foodOrderItems)][1];
+            array_push($insufficient, [getItemCategoryNameById($id), $requested, $stock]);
         }
+        return $insufficient;
     }
     
     return $returnValues;
