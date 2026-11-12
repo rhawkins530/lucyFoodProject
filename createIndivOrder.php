@@ -128,7 +128,29 @@
                 if (isset($_FILES['user_file']) && $_FILES['user_file']['error'] === UPLOAD_ERR_OK) { // file was successfully uploaded.
                     
                     $tmpName = $_FILES['user_file']['tmp_name'];
-                    addIndividualFoodOrderFromPDF($_SESSION['_personId'], $tmpName);
+                    $insufficient = addIndividualFoodOrderFromPDF($_SESSION['_personId'], $tmpName);
+                    //var_dump($insufficient);
+
+                    if ($insufficient === false) {
+                        $errors[] = "Unable to create food order";
+                    }
+                    else if (empty($insufficient)) {
+                        //header('Location: createOrder.php?created=success');
+                        //die();
+                    }
+                    else {
+                        // Not enough inventory, so list each short item using the names on this form
+                        foreach ($ORDER_CATEGORIES as $category) {
+                            if (isset($insufficient[$category['categoryId']])) {
+                                $shortItems[] = [
+                                    'name' => $category['name'],
+                                    'requested' => (int)$insufficient[$category['categoryId'][2]],
+                                    'available' => $insufficient[$category['categoryId'][1]],
+                                ];
+                            }
+                        }
+                    }
+                    
                 } else { // No file was uploaded, or an error occurred.
                     if (isset($_FILES['user_file']) && $_FILES['user_file']['error'] === UPLOAD_ERR_NO_FILE) { 
                         echo "No file was selected.";

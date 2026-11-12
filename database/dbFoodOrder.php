@@ -358,11 +358,35 @@ function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
     $requested_delivery_time = null;
     $special_instructions = null;
 
+    $foodOrderItems = [];
     foreach ($fields as $field) {
-        echo $field->fullName . ': ' . $field->value ?? 'NULL' . PHP_EOL;
+        if (in_array($field->fullName, QUANTITYREQUESTEDFIELDS)) {
+            $name = array_search($field->fullName, QUANTITYREQUESTEDFIELDS);
+            $itemCategoryId = getItemCategoryIdByName($name);
+            $foodOrderItems[] = [$itemCategoryId, (int)$field->value];
+        }
     }
 
+    // If no items in food order return false
+    if (empty($foodOrderItems)) {
+        return false;
+    }
 
+    $returnValues = addIndividualFoodOrder($requestorId, $foodOrderItems, $pdfSubmissionDate, $pantry_name, $pantry_address,
+        $point_of_contact, $poc_ph_number, $secondary_poc, $secondary_poc_ph_num, $requested_delivery_date,
+        $requested_delivery_time, $special_instructions);
+
+    //Is the ITEM CATEGORY ID THE INDEX???
+    echo $returnValues[30];
+    // Add requested quantity to return values if needed
+    $insufficient = [];
+    if (!empty($returnValues) && $returnValues !== false) {
+        foreach ($insufficient as $item) {
+            array_push($insufficient, ['', $item, '']);
+        }
+    }
+    
+    return $returnValues;
 }
 
 /*
