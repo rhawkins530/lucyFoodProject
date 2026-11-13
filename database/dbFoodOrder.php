@@ -383,15 +383,15 @@ function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
     //Get the fields in the PDF form
     $fields = $reader->getFieldsByName();
 
-    $pdfSubmissionDate = date('Y-m-d', strtotime($fields['pdf_submission_date_af_date']->value ?? '')) ?? null;
+    $pdfSubmissionDate = date('Y-m-d', strtotime(str_replace('-', '/', $fields['pdf_submission_date_af_date']->value ?? ''))) ?? null;
     $pantry_name = $fields['pantry_name']->value ?? null;
     $pantry_address = $fields['pantry_address']->value ?? null;
     $point_of_contact = $fields['point_of_contact']->value ?? null;
     $poc_ph_number = $fields['poc_ph_number']->value ?? null;
     $secondary_poc = $fields['secondary_poc']->value ?? null;
     $secondary_poc_ph_number = $fields['secondary_poc_ph_number']->value ?? null;
-    $requested_delivery_date = date('Y-m-d', strtotime($fields['requested_delivery_date_af_date']->value ?? '')) ?? null;
-    $requested_delivery_time = date('H:i:s', strtotime($fields['requested_delivery_time']->value ?? '')) ?? null;
+    $requested_delivery_date = date('Y-m-d', strtotime(str_replace('-', '/', $fields['requested_delivery_date_af_date']->value ?? ''))) ?? null;
+    $requested_delivery_time = date('H:i:s', strtotime(str_replace('-', '/', $fields['requested_delivery_time']->value ?? ''))) ?? null;
     $special_instructions = $fields['special_instructions']->value ?? null;
 
     $foodOrderItems = [];
