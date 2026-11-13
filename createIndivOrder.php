@@ -128,24 +128,29 @@
                 if (isset($_FILES['user_file']) && $_FILES['user_file']['error'] === UPLOAD_ERR_OK) { // file was successfully uploaded.
                     
                     $tmpName = $_FILES['user_file']['tmp_name'];
-                    $insufficient = addIndividualFoodOrderFromPDF($_SESSION['_personId'], $tmpName);
+                    try {
+                        $insufficient = addIndividualFoodOrderFromPDF($_SESSION['_personId'], $tmpName);
 
-                    if ($insufficient === false) {
+                        if ($insufficient === false) {
                         $errors[] = "Unable to create food order";
-                    }
-                    else if (empty($insufficient)) {
-                        header('Location: createOrder.php?created=success');
-                        die();
-                    }
-                    else {
-                        // Not enough inventory, so list each short item using the names on this form
-                        foreach ($insufficient as [$name, $requested, $available]) {
-                            $shortItems[] = [
-                                'name' => $name,
-                                'requested' => (int)$requested,
-                                'available' => $available,
-                            ];
                         }
+                        else if (empty($insufficient)) {
+                            header('Location: createOrder.php?created=success');
+                            die();
+                        }
+                        else {
+                            // Not enough inventory, so list each short item using the names on this form
+                            foreach ($insufficient as [$name, $requested, $available]) {
+                                $shortItems[] = [
+                                    'name' => $name,
+                                    'requested' => (int)$requested,
+                                    'available' => $available,
+                                ];
+                            }
+                        }
+                    }
+                    catch(Exception $e) {
+                        $errors[] = $e->getMessage();
                     }
                     
                 } else { // No file was uploaded, or an error occurred.
