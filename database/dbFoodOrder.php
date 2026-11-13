@@ -15,7 +15,7 @@ use PhpPdf\Reader\PdfAcroFormFiller;
 const ALLFOODORDERFIELDS = [
     'pdf_submission_date_af_date', 'requested_delivery_date_af_date', 'requested_delivery_time', 'pantry_name', 'pantry_address', 'point_of_contact',
     'poc_ph_number', 'secondary_poc', 'secondary_poc_ph_number', 'special_instructions', 'non_pd_slp_box_wt', 'non_pd_produce_wt', 'non_pd_meat_wt',
-    'non_pd_bakery', 'non_pd_dairy', 'non_pd_other', 'pd_meat_wt', 'pd_dairy_wt', 'pd_deli_wt', 'pd_bakery_wt', 'pd_produce_wt', 'pd_non_perish_wt',
+    'non_pd_bakery', 'non_pd_dairy', 'non_pd_other', 'pd_meat_wt', 'pd_dairy_wt.', 'pd_deli_wt', 'pd_bakery_wt', 'pd_produce_wt', 'pd_non_perish_wt',
     'pd_prep_deli_wt', 'box_request_canned_pasta', 'box_request_soup', 'box_request_pasta_sauce', 'box_request_canned_fruit', 'box_request_baking_good',
     'box_request_meal_helpers', 'box_request_mac_and_cheese', 'box_request_dry_pasta', 'box_request_condiments', 'box_request_dark_beans',
     'box_request_snack_cookies', 'box_request_cereal_and_oatmeal', 'box_request_oil', 'box_request_jelly', 'box_request_baked_beans',
@@ -25,7 +25,7 @@ const ALLFOODORDERFIELDS = [
     'box_deliver_mac_and_cheese', 'box_deliver_dry_pasta', 'box_deliver_condiments', 'box_deliver_dark_beans', 'box_deliver_snack_cookies',
     'box_deliver_cereal_and_oatmeal', 'box_deliver_oil', 'box_deliver_jelly', 'box_deliver_baked_beans', 'box_deliver_peanut_butter',
     'box_deliver_canned_meat', 'box_deliver_juice_and_beverage', 'box_deliver_tuna', 'box_deliver_vegetable', 'box_deliver_tomato_product',
-    'box_deliver_tortilla', 'box_deliver_bagged_rice', 'box_deliver_bagged_dry_bean',
+    'box_deliver_tortilla', 'box_deliver_bagged_rice', 'box_deliver_dry_bean',
 ];
 
 // Associative array of item category name => pdf field name for quantity requested
@@ -151,6 +151,7 @@ function validatePDF($pdfPath) {
     // Check that all required fields are present in the PDF
     foreach (ALLFOODORDERFIELDS as $fieldName) {
         if (!isset($fields[$fieldName])) {
+            echo $fieldName;
             return false; // Missing required field
         }
     }
