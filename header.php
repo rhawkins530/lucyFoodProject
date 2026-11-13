@@ -782,6 +782,11 @@ if (date("H:i:s") > "18:19:59") {
                 font-size: 16px;
             }
 
+            .logo-container {
+                border-radius: 8px;
+                border: 2px groove #EABD3C;
+            }
+
         }
     </style>
 
