@@ -151,7 +151,6 @@ function validatePDF($pdfPath) {
     // Check that all required fields are present in the PDF
     foreach (ALLFOODORDERFIELDS as $fieldName) {
         if (!isset($fields[$fieldName])) {
-            echo $fieldName;
             return false; // Missing required field
         }
     }
