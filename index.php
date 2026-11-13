@@ -848,6 +848,13 @@
         <div class="large-text-sub" style="color:white;">Create Reports</div>
         <div class="graph-text" style="color:white;">Create reports of various types.</div>
     </div>
+    <div class="content-box-test" onclick="window.location.href='viewHistory.php'" style="background-color: #207BC1; border-radius: 12px; padding: 20px; color: white;">
+        <div class="icon-overlay">
+            <img style="border-radius: 5px;" src="images/create-report.svg" alt="Report Icon">
+        </div>
+        <div class="large-text-sub" style="color:white;">View Inventory History</div>
+        <div class="graph-text" style="color:white;">View an log of all changes to inventory.</div>
+    </div>
 
     <!-- Weekly Inventory Report
     <div class="content-box-test" onclick="window.location.href='viewWeeklyReport.php'" style="background-color: #4d98f3; border-radius: 12px; padding: 20px; color: white;">
