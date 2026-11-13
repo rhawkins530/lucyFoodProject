@@ -407,12 +407,16 @@ function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
 
     // If no items in food order return false
     if (empty($foodOrderItems)) {
-        return false;
+        throw new Exception("No items in food order");
     }
 
     $returnValues = addIndividualFoodOrder($requestorId, $foodOrderItems, $pdfSubmissionDate, $pantry_name, $pantry_address,
         $point_of_contact, $poc_ph_number, $secondary_poc, $secondary_poc_ph_number, $requested_delivery_date,
         $requested_delivery_time, $special_instructions);
+
+    if ($returnValues === false) {
+        throw new Exception("Failed to save food order");
+    }
 
     // Add requested quantity to return values if needed
     $insufficient = [];
