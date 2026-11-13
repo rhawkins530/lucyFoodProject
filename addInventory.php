@@ -15,6 +15,7 @@
 
     require_once('database/dbinfo.php');
     require_once('database/dbInventory.php');
+    require_once('database/dbInventoryHistory.php');
 
     /*
     require_once('database/dbPersons.php');
@@ -105,6 +106,7 @@
                 }
 
                 if ($catId !== null) {
+                    addHistory($catId, $qty, $_SESSION['_personId']);
                     changeInventoryQuantity($catId, $qty);
                 }
                 else{

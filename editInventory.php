@@ -22,6 +22,7 @@
     require_once('database/dbItemCounts.php');
     require_once('database/dbItemCategory.php');
     require_once('database/dbInventory.php');
+    require_once('database/dbInventoryHistory.php');
 
     /* Get all inventory items (same rows as the inventory.php table) */
     $items = getAllInventoryItems();
@@ -55,6 +56,9 @@
                     continue;
                 }
                 if($item->getCurrentQuantity() != $newQty) {
+
+                    $change_amount = $newQty - $item->getCurrentQuantity();
+                    addHistory($item->getId(), $change_amount, $_SESSION['_personId']);
                     setInventoryQuantity($item->getId(), $newQty);
                 }
             }

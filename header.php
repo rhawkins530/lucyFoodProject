@@ -66,19 +66,26 @@ if (date("H:i:s") > "18:19:59") {
             cursor: pointer;
             border: 0.1px solid black;
             transition: border 0.3s;
+            background-color: #207BC1;
             border-radius: 10px;
             border-bottom-right-radius: 50px;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
 
-        .content-box-test:hover {
+        .content-box-test:hover{
+            background-color: #163561 !important; 
             border: 4px solid #EABD3C;
+        }
+
+        .content-box-test:hover .icon-overlay{
+            background-color: #163561 !important; 
         }
 
         /*END STYLE TEST*/
 
         .full-width-bar {
             width: 100%;
-            background: #207BC1;
+            background: #163561;
             padding: 17px 5%;
             display: flex;
             flex-wrap: wrap;
@@ -200,7 +207,7 @@ if (date("H:i:s") > "18:19:59") {
         /* seperate nav background from nav link to allow for header text to  
          * scroll onto nav bar without the text being covered by the background */
         .navbar-background {
-            background: #207BC1;
+            background: #163561;
             z-index: 5;
         }
 
@@ -214,10 +221,16 @@ if (date("H:i:s") > "18:19:59") {
 
         /* Logo */
         .logo-container {
-            background: #207BC1;
+            background: #163561;
             padding: 5px 20px;
             border-radius: 50px;
-            box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25) inset;
+        }
+
+        .logo-container:hover{
+            border-radius: 15px;
+            border: 2px solid #EABD3C;
+            outline: 2px solid #D4E7F6;
+            outline-offset: 4px;
         }
 
         .logo-container img {
@@ -254,6 +267,7 @@ if (date("H:i:s") > "18:19:59") {
             cursor: pointer;
             padding: 0px;
             transition: color 0.3s, outline 0.3s;
+            border-radius: 5px;
         }
 
 
@@ -262,13 +276,14 @@ if (date("H:i:s") > "18:19:59") {
             position: absolute;
             top: 150%;
             left: -2.5%;
-            background-color: #207BC1;
+            background-color: #163561;
             border: 2px solid #EABD3C;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             border-radius: 5px;
             min-width: 150px;
             padding: 10px;
             color: white;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
 
         .dropdown div {
@@ -278,7 +293,7 @@ if (date("H:i:s") > "18:19:59") {
         }
 
         .dropdown div:hover {
-            background: rgba(0, 0, 0, 0.1);
+            border: 2px solid #EABD3C;
         }
 
         .nav-item:hover,
@@ -304,7 +319,6 @@ if (date("H:i:s") > "18:19:59") {
             height: 47px;
             /*background: #292D32;*/
             border-radius: 50%;
-
         }
 
         .nav-buttons {
@@ -394,7 +408,7 @@ if (date("H:i:s") > "18:19:59") {
         /* Footer */
         .footer {
             width: 100%;
-            background: #207BC1;
+            background: #163561;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -485,6 +499,7 @@ if (date("H:i:s") > "18:19:59") {
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
 
         .icon-overlay img {
@@ -513,6 +528,7 @@ if (date("H:i:s") > "18:19:59") {
         .in-nav {
             display: flex;
             align-items: center;
+            border-radius: 10px;
             gap: 8px;
         }
 
@@ -748,7 +764,7 @@ if (date("H:i:s") > "18:19:59") {
             }
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 768px) {
             .footer {
                 flex-direction: column;
                 align-items: center;
@@ -760,6 +776,15 @@ if (date("H:i:s") > "18:19:59") {
                 align-items: center;
                 gap: 30px;
                 margin-top: 20px;
+            }
+
+            .nav-links div {
+                font-size: 16px;
+            }
+
+            .logo-container {
+                border-radius: 8px;
+                border: 2px groove #EABD3C;
             }
 
         }
