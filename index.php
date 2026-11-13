@@ -55,7 +55,7 @@
 
         .full-width-bar {
             width: 100%;
-            background: #207BC1;
+            background: #163561;
             padding: 17px 5%;
             display: flex;
             flex-wrap: wrap;
@@ -159,7 +159,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            background: #207BC1;
+            background: #163561;
             box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.25);
             display: flex;
             align-items: center;
@@ -176,10 +176,9 @@
 
         /* Logo */
         .logo-container {
-            background: #207BC1;
+            background: #163561;
             padding: 10px 20px;
             border-radius: 50px;
-            box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25) inset;
         }
 
         .logo-container img {
@@ -244,194 +243,278 @@
         .arrow-button:hover {
             transform: translateX(5px); /* Moves the arrow slightly on hover */
         }
-                .circle-arrow-button {
-                    position: absolute;
-                    bottom: 30px;
-                    right: 18px;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    background: transparent;
-                    border: none;
-                    font-size: 20px;
-                    font-family: Quicksand, sans-serif;
-                    font-weight: bold;
-                    color: white;
-                    cursor: pointer;
-                    transition: transform 0.3s ease;
-                }
+        .circle-arrow-button {
+            position: absolute;
+            bottom: 30px;
+            right: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            font-family: Quicksand, sans-serif;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
 
-                .circle {
-                    width: 30px;
-                    height: 30px;
-                    /*background-color:; /* Blue color */
-                    background-color: #207BC1;
-                    color: white;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 22px;
-                    transition: transform 0.3s ease;
-                }
+        .circle {
+            width: 30px;
+            height: 30px;
+            /*background-color:; /* Blue color */
+            background-color: #207BC1;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: transform 0.3s ease;
+        }
 
-                .circle-arrow-button:hover {
-                    background-color:transparent !important;
-                }
+        .circle-arrow-button:hover {
+            background-color:transparent !important;
+        }
 
-                .circle-arrow-button:hover .circle {
-                    transform: translateX(5px); /* Moves the circle slightly on hover */
-                }
-            .colored-box {
-                display: inline-block; /* Ensures it wraps tightly around the text */
-                background-color: #207BC1; /* Change to any color */
-                color: white; /* Text color */
-                padding: 1px 5px; /* Adds space inside the box */
-                border-radius: 5px; /* Optional: Rounds the corners */
-                font-weight: bold; /* Optional: Makes text bold */
-            }
-
-
-                    /* Footer */
-                    .footer {
-                        width: 100%;
-                        background: #207BC1;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
-                        padding: 30px 50px;
-                        flex-wrap: wrap;
-                    }
-
-                    /* Left Section */
-                    .footer-left {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                    }
-
-                    .footer-logo {
-                        width: 150px; /* Adjust logo size */
-                        margin-bottom: 15px;
-                    }
-
-                    /* Social Media Icons */
-                    .social-icons {
-                        display: flex;
-                        gap: 15px;
-                    }
-
-                    .social-icons a {
-                        color: white;
-                        font-size: 20px;
-                        transition: color 0.3s ease;
-                    }
-
-                    .social-icons a:hover {
-                        color: #dcdcdc;
-                    }
-
-                    /* Right Section */
-                    .footer-right {
-                        display: flex;
-                        gap: 50px;
-                        flex-wrap: wrap;
-                        align-items: flex-start;
-                    }
-
-                    .footer-section {
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        gap: 10px;
-                        color: #207BC1;
-                        font-family: Inter, sans-serif;
-                        font-size: 16px;
-                        font-weight: 500;
-                    }
-
-                    .footer-topic {
-                        font-size: 18px;
-                        font-weight: bold;
-                    }
-
-                    .footer a {
-                        color: white;
-                        text-decoration: none;
-                        transition: background 0.2s ease, color 0.2s ease;
-                        padding: 5px 10px;
-                        border-radius: 5px;
-                    }
-
-                    .footer a:hover {
-                        background: rgba(255, 255, 255, 0.1);
-                        color: #dcdcdc;
-                    }
-
-                    /* Icon Overlay */
-                    .background-image {
-                        width: 100%;
-                        border-radius: 10px;
-                    }
-
-                    .icon-overlay {
-                        position: absolute;
-                        top: 40px; /* Adjust as needed */
-                        left: 50%;
-                        transform: translateX(-50%);
-                        background: rgba(255, 255, 255, 0.8); /* Optional background for better visibility */
-                        padding: 10px;
-                        border-radius: 50%;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                    }
-
-                    .icon-overlay img {
-                        width: 40px; /* Adjust size as needed */
-                        height: 40px;
-                        opacity: 0.9;
-                    }
-
-                    .content-box-test:hover .icon-overlay img {
-                        transform: scale(1.1) rotate(5deg);
-                        transition: transform 0.5s ease, fill 0.5s ease;
-                    }
-
-                    
-                    
-
-                
-                    .content-box-test {
-                        position: relative;
-                        background-color: #207BC1;   /* tan background */
-                        border-radius: 12px;
-                        padding: 20px;
-                        color: white;                 /* default text color */
-                        flex: 1 1 280px;
-                        max-width: 375px;
-                        min-height: 250px;            /* keeps all boxes same height even without bg image */
-                        }
+        .circle-arrow-button:hover .circle {
+            transform: translateX(5px); /* Moves the circle slightly on hover */
+        }
+    .colored-box {
+        display: inline-block; /* Ensures it wraps tightly around the text */
+        background-color: #207BC1; /* Change to any color */
+        color: white; /* Text color */
+        padding: 1px 5px; /* Adds space inside the box */
+        border-radius: 5px; /* Optional: Rounds the corners */
+        font-weight: bold; /* Optional: Makes text bold */
+    }
 
 
-                    .content-box-test .large-text-sub,
-                    .content-box-test .graph-text {
-                        color: rgb(47, 51, 61);
-                        }
+    /* Footer */
+    .footer {
+        width: 100%;
+        background: #163561;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 30px 50px;
+        flex-wrap: wrap;
+    }
+
+    /* Left Section */
+    .footer-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .footer-logo {
+        width: 150px; /* Adjust logo size */
+        margin-bottom: 15px;
+    }
+
+    /* Social Media Icons */
+    .social-icons {
+        display: flex;
+        gap: 15px;
+    }
+
+    .social-icons a {
+        color: white;
+        font-size: 20px;
+        transition: color 0.3s ease;
+    }
+
+    .social-icons a:hover {
+        color: #dcdcdc;
+    }
+
+    /* Right Section */
+    .footer-right {
+        display: flex;
+        gap: 50px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .footer-section {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        color: #207BC1;
+        font-family: Inter, sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .footer-topic {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .footer a {
+        color: white;
+        text-decoration: none;
+        transition: background 0.2s ease, color 0.2s ease;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+
+    .footer a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #dcdcdc;
+    }
+
+    /* Icon Overlay */
+    .background-image {
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    .icon-overlay {
+        position: absolute;
+        top: 40px; /* Adjust as needed */
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.8); /* Optional background for better visibility */
+        padding: 10px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .icon-overlay img {
+        width: 40px; /* Adjust size as needed */
+        height: 40px;
+        opacity: 0.9;
+    }
+
+    .content-box-test:hover .icon-overlay img {
+        transform: scale(1.1) rotate(5deg);
+        transition: transform 0.5s ease, fill 0.5s ease;
+    }
+
+    .content-box-test {
+        position: relative;
+        background-color: #207BC1;   /* tan background */
+        border-radius: 12px;
+        padding: 20px;
+        color: white;                 /* default text color */
+        flex: 1 1 280px;
+        max-width: 375px;
+        min-height: 250px;            /* keeps all boxes same height even without bg image */
+        }
 
 
-                    .background-image {
-                    display: none;
-                    }
-
-                    
-                    .full-width-bar-sub{
-                        background-color:rgb(255, 255, 255) !important;
-                        }
+    .content-box-test .large-text-sub,
+    .content-box-test .graph-text {
+        color: rgb(47, 51, 61);
+        }
 
 
+    .background-image {
+    display: none;
+    }
+
+    
+    .full-width-bar-sub{
+        background-color:rgb(255, 255, 255) !important;
+    }
+
+    .welcome-heading {
+        margin-top: 0;
+        padding: 30px 20px;
+    }
+
+    .control-heading{
+        margin-top: 25px;
+        padding: 0px 80px;
+    }
+
+    .dashboard-heading {
+        margin-top: 25px;
+        padding: 0px 80px;
+    }
+
+    @media only screen and (max-width: 768px) {
+        .navbar {
+        height: 55px;
+        padding: 5px 10px;
+        gap: 6px;
+        }
+
+        .left-section {
+            gap: 8px;
+        }
+
+        .logo-container {
+            padding: 3px;
+        }
+
+        .logo-container img {
+            width: auto;
+            height: auto;
+        }
+
+        h2 {
+            font-size: 19px !important;
+        }
+
+        .full-width-bar-sub {
+            padding: 12px 15px;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .content-box-test {
+            flex: 1 1 100%;
+            max-width: 100%;
+            min-height: 190px;
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .large-text-sub {
+            font-size: 16px !important;
+            top: 57%;
+            left: 8%;
+            max-width: 84%;
+        }
+
+        .graph-text {
+            font-size: 11px !important;
+            top: 76%;
+            left: 8%;
+            max-width: 84%;
+            margin-top: 5px;
+        }
+
+        .footer {
+            padding: 20px 15px;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .welcome-heading {
+            margin-top: 25px;
+            padding: 8px 15px 0;
+        }
+
+        .control-heading {
+            margin-top: 10px;
+            padding: 5px 15px;
+        }
+
+        .dashboard-heading {
+            margin-top: 5px;
+            padding: 5px 15px;
+        }
+    }
         /* Responsive Design */
-   </style>
+</style>
 <!--BEGIN TEST, UPLOAD AND NOTIFICATIONS CHANGED-->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -456,7 +539,7 @@
 <body>
 
     <!-- Dummy content to enable scrolling -->
-    <div style="margin-top: 0px; padding: 30px 20px;">
+    <div class="welcome-heading">
         <h2><b>Welcome back <?php echo $person->get_first_name() ?>!</b></h2>
     </div>
 
@@ -476,7 +559,7 @@
                 <div class="happy-toast">Volunteer registered successfully!</div>
             <?php endif ?> -->
 
-<div style="margin-top: 50px; padding: 0px 80px;">
+<div class="control-heading">
     <h2><b>Admin Control Panel</b></h2>
 </div>
 <div class="full-width-bar-sub">
@@ -703,7 +786,8 @@
         </div>
     </div> -->
 
-    <div style="margin-top: 50px; padding: 0px 80px;">
+
+    <div class="dashboard-heading">
         <h2><b>Warehouse Management Dashboard</h2>
     </div>
     <div class="full-width-bar-sub">
