@@ -635,8 +635,21 @@ if (date("H:i:s") > "18:19:59") {
             display: block;
         }
 
-        .icon-img {
-            filter: invert(1);
+        /* Header icons (bell, user). The SVG in --icon is used as a mask, so the icon shows
+           the background color: white, fading to gold on hover like the navigation menu */
+        .header-icon {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            -webkit-mask: var(--icon) center / contain no-repeat;
+            mask: var(--icon) center / contain no-repeat;
+            transition: background-color 0.3s;
+        }
+
+        .nav-item:hover .header-icon,
+        .nav-item.active .header-icon {
+            background-color: #EABD3C;
         }
 
         /* White dropdown under the admin bell icon */
@@ -861,7 +874,7 @@ if (date("H:i:s") > "18:19:59") {
             <div class="nav-links">
                 <div class="nav-item">
                     <div class="icon">
-                        <img src="images/user-square.svg" alt="User Icon" class="icon-img in-nav-img">
+                        <span class="header-icon" role="img" aria-label="User Icon" style="--icon: url(images/user-square.svg)"></span>
                         <div class="dropdown">
                             <a href="signup.php" class="dropdown-link"><div>Create Account</div></a>
                             <a href="login.php" class="dropdown-link"><div>Log in</div></a>
@@ -1087,6 +1100,24 @@ if (date("H:i:s") > "18:19:59") {
                         <span>View Food Orders</span>
                       </div>
                     </a>
+                    <a href="viewReports.php" style="text-decoration: none;">
+                      <div class="in-nav">
+                        <img src="images/document-report.svg" alt="Report Icon">
+                        <span>View Reports</span>
+                      </div>
+                    </a>
+                    <a href="createReports.php" style="text-decoration: none;">
+                      <div class="in-nav">
+                        <img src="images/create-report.svg" alt="Report Icon">
+                        <span>Create Reports</span>
+                      </div>
+                    </a>
+                    <a href="viewHistory.php" style="text-decoration: none;">
+                      <div class="in-nav">
+                        <img src="images/create-report.svg" alt="Report Icon">
+                        <span>View Inventory History</span>
+                      </div>
+                    </a>
                     </div>
                 </div>
                 <div class="nav-item">
@@ -1137,7 +1168,7 @@ if (date("H:i:s") > "18:19:59") {
             <div class="nav-links">
                 <div class="nav-item">
                     <div class="icon">
-                        <img src="images/user-square.svg" alt="User Icon" class="icon-img in-nav-img">
+                        <span class="header-icon" role="img" aria-label="User Icon" style="--icon: url(images/user-square.svg)"></span>
                         <div class="dropdown">
                             <a href="changePassword.php" class="dropdown-link"><div>Change Password</div></a>
                             <a href="logout.php" class="dropdown-link"><div>Log Out</div></a>
