@@ -12,6 +12,78 @@ use PhpPdf\Reader\PdfDocumentReader;
 use PhpPdf\Reader\PdfAcroFormReader;
 use PhpPdf\Reader\PdfAcroFormFiller;
 
+const ALLFOODORDERFIELDS = [
+    'pdf_submission_date_af_date', 'requested_delivery_date_af_date', 'requested_delivery_time', 'pantry_name', 'pantry_address', 'point_of_contact',
+    'poc_ph_number', 'secondary_poc', 'secondary_poc_ph_number', 'special_instructions', 'non_pd_slp_box_wt', 'non_pd_produce_wt', 'non_pd_meat_wt',
+    'non_pd_bakery', 'non_pd_dairy', 'non_pd_other', 'pd_meat_wt', 'pd_dairy_wt.', 'pd_deli_wt', 'pd_bakery_wt', 'pd_produce_wt', 'pd_non_perish_wt',
+    'pd_prep_deli_wt', 'box_request_canned_pasta', 'box_request_soup', 'box_request_pasta_sauce', 'box_request_canned_fruit', 'box_request_baking_good',
+    'box_request_meal_helpers', 'box_request_mac_and_cheese', 'box_request_dry_pasta', 'box_request_condiments', 'box_request_dark_beans',
+    'box_request_snack_cookies', 'box_request_cereal_and_oatmeal', 'box_request_oil', 'box_request_jelly', 'box_request_baked_beans',
+    'box_request_peanut_butter', 'box_request_canned_meat', 'box_request_juice_and_beverage', 'box_request_tuna', 'box_request_vegetable',
+    'box_request_tomato_product', 'box_request_tortilla', 'box_request_bagged_rice', 'box_request_bagged_dry_bean',  'box_deliver_canned_pasta',
+    'box_deliver_soup', 'box_deliver_pasta_sauce', 'box_deliver_canned_fruit', 'box_deliver_baking_good', 'box_deliver_meal_helpers',
+    'box_deliver_mac_and_cheese', 'box_deliver_dry_pasta', 'box_deliver_condiments', 'box_deliver_dark_beans', 'box_deliver_snack_cookies',
+    'box_deliver_cereal_and_oatmeal', 'box_deliver_oil', 'box_deliver_jelly', 'box_deliver_baked_beans', 'box_deliver_peanut_butter',
+    'box_deliver_canned_meat', 'box_deliver_juice_and_beverage', 'box_deliver_tuna', 'box_deliver_vegetable', 'box_deliver_tomato_product',
+    'box_deliver_tortilla', 'box_deliver_bagged_rice', 'box_deliver_dry_bean',
+];
+
+// Associative array of item category name => pdf field name for quantity requested
+const QUANTITYREQUESTEDFIELDS = [
+    'Canned Pasta' => 'box_request_canned_pasta',
+    'Soup' => 'box_request_soup',
+    'Pasta Sauce' => 'box_request_pasta_sauce',
+    'Canned Fruit (Mixed)' => 'box_request_canned_fruit',
+    'Baking Goods' => 'box_request_baking_good',
+    'Meal Helpers' => 'box_request_meal_helpers',
+    'Macaroni & Cheese' => 'box_request_mac_and_cheese',
+    'Dried Pasta' => 'box_request_dry_pasta',
+    'Condiments' => 'box_request_condiments',
+    'Dark Beans' => 'box_request_dark_beans',
+    'Snacks/Cookies' => 'box_request_snack_cookies',
+    'Cereal/Oatmeal' => 'box_request_cereal_and_oatmeal',
+    'Cooking Oil' => 'box_request_oil',
+    'Jelly' => 'box_request_jelly',
+    'Baked Beans' => 'box_request_baked_beans',
+    'Peanut Butter' => 'box_request_peanut_butter',
+    'Canned Meat' => 'box_request_canned_meat',
+    'Juice' => 'box_request_juice_and_beverage',
+    'Canned Tuna' => 'box_request_tuna',
+    'Vegetable' => 'box_request_vegetable',
+    'Tomato Product' => 'box_request_tomato_product',
+    'Tortilla' => 'box_request_tortilla',
+    'Rice' => 'box_request_bagged_rice',
+    'Bagged Dry Bean' => 'box_request_bagged_dry_bean'
+    ];
+    // Associateve array of item category name => pdf field name for quantity delivered
+const QUANTITYDELIVEREDFIELDS = [
+    'Canned Pasta' => 'box_deliver_canned_pasta',
+    'Soup' => 'box_deliver_soup',
+    'Pasta Sauce' => 'box_deliver_pasta_sauce',
+    'Canned Fruit (Mixed)' => 'box_deliver_canned_fruit',
+    'Baking Goods' => 'box_deliver_baking_good',
+    'Meal Helpers' => 'box_deliver_meal_helpers',
+    'Macaroni & Cheese' => 'box_deliver_mac_and_cheese',
+    'Dried Pasta' => 'box_deliver_dry_pasta',
+    'Condiments' => 'box_deliver_condiments',
+    'Dark Beans' => 'box_deliver_dark_beans',
+    'Snacks/Cookies' => 'box_deliver_snack_cookies',
+    'Cereal/Oatmeal' => 'box_deliver_cereal_and_oatmeal',
+    'Cooking Oil' => 'box_deliver_oil',
+    'Jelly' => 'box_deliver_jelly',
+    'Baked Beans' => 'box_deliver_baked_beans',
+    'Peanut Butter' => 'box_deliver_peanut_butter',
+    'Canned Meat' => 'box_deliver_canned_meat',
+    'Juice' => 'box_deliver_juice_and_beverage',
+    'Canned Tuna' => 'box_deliver_tuna',
+    'Vegetable' => 'box_deliver_vegetable',
+    'Tomato Product' => 'box_deliver_tomato_product',
+    'Tortilla' => 'box_deliver_tortilla',
+    'Rice' => 'box_deliver_bagged_rice',
+    'Bagged Dry Bean' => 'box_deliver_dry_bean'
+];
+    // Note: If food category names change in the database the associative arrays need to be changed.
+
 /*
     Turn an optional value into something that can go straight into an SQL query
     Parameters:
@@ -68,6 +140,21 @@ function readOrderDetails($input, $errorPrefix = '') {
         $details[$rules['parameter']] = $value;
     }
     return ['details' => $details, 'errors' => $errors];
+}
+
+function validatePDF($pdfPath) {
+    $doc = PdfDocumentReader::open($pdfPath);
+    $reader = new PdfAcroFormReader($doc);
+
+    $fields = $reader->getFieldsByName();
+
+    // Check that all required fields are present in the PDF
+    foreach (ALLFOODORDERFIELDS as $fieldName) {
+        if (!isset($fields[$fieldName])) {
+            return false; // Missing required field
+        }
+    }
+    return true; // All required fields are present
 }
 
 /*
@@ -279,6 +366,69 @@ $requested_delivery_time = null, $special_instructions = null) {
         changeInventoryQuantity($inventoryIds[(int)$item[0]], -(int)$item[1]);
     }
     return [];
+}
+
+function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
+    // Validate the PDF to ensure all required fields are present
+    if (!validatePDF($pdfpath)) {
+        throw new Exception("Invalid PDF Form");
+    }
+
+    //Open the PDF document
+    $doc = PdfDocumentReader::open($pdfpath);
+
+    //Set up Acroform reader for the document
+    $reader = new PdfAcroFormReader($doc);
+
+    //Get the fields in the PDF form
+    $fields = $reader->getFieldsByName();
+
+    $pdfSubmissionDate = date('Y-m-d', strtotime(str_replace('-', '/', $fields['pdf_submission_date_af_date']->value ?? ''))) ?? null;
+    $pantry_name = $fields['pantry_name']->value ?? null;
+    $pantry_address = $fields['pantry_address']->value ?? null;
+    $point_of_contact = $fields['point_of_contact']->value ?? null;
+    $poc_ph_number = $fields['poc_ph_number']->value ?? null;
+    $secondary_poc = $fields['secondary_poc']->value ?? null;
+    $secondary_poc_ph_number = $fields['secondary_poc_ph_number']->value ?? null;
+    $requested_delivery_date = date('Y-m-d', strtotime(str_replace('-', '/', $fields['requested_delivery_date_af_date']->value ?? ''))) ?? null;
+    $requested_delivery_time = date('H:i:s', strtotime(str_replace('-', '/', $fields['requested_delivery_time']->value ?? ''))) ?? null;
+    $special_instructions = $fields['special_instructions']->value ?? null;
+
+    $foodOrderItems = [];
+    foreach ($fields as $field) {
+        if (in_array($field->fullName, QUANTITYREQUESTEDFIELDS)) {
+            if ((int)$field->value > 0) {
+                $name = array_search($field->fullName, QUANTITYREQUESTEDFIELDS);
+                $itemCategoryId = getItemCategoryIdByName($name);
+                $foodOrderItems[] = [$itemCategoryId, (int)$field->value];
+            }
+        }
+    }
+
+    // If no items in food order return false
+    if (empty($foodOrderItems)) {
+        throw new Exception("No items in food order");
+    }
+
+    $returnValues = addIndividualFoodOrder($requestorId, $foodOrderItems, $pdfSubmissionDate, $pantry_name, $pantry_address,
+        $point_of_contact, $poc_ph_number, $secondary_poc, $secondary_poc_ph_number, $requested_delivery_date,
+        $requested_delivery_time, $special_instructions);
+
+    if ($returnValues === false) {
+        throw new Exception("Failed to save food order");
+    }
+
+    // Add requested quantity to return values if needed
+    $insufficient = [];
+    if (!empty($returnValues) && $returnValues !== false) {
+        foreach ($returnValues as $id => $stock) {
+            $requested = $foodOrderItems[array_search(array_column($foodOrderItems, 0), $foodOrderItems)][1];
+            array_push($insufficient, [getItemCategoryNameById($id), $requested, $stock]);
+        }
+        return $insufficient;
+    }
+    
+    return $returnValues;
 }
 
 /*
@@ -518,61 +668,6 @@ function generateFoodOrderPDF($id) {
 
     // Fill in the food order items in the PDF and leave item fields blank if ther is no item for that row
     $items = getFoodOrderItemsByOrderId($id); // Get all food order items for the order
-    // Associative array of item category name => pdf field name for quantity requested
-    $quantityRequestedFields = [
-        'Canned Pasta' => 'box_request_canned_pasta',
-        'Soup' => 'box_request_soup',
-        'Pasta Sauce' => 'box_request_pasta_sauce',
-        'Canned Fruit (Mixed)' => 'box_request_canned_fruit',
-        'Baking Goods' => 'box_request_baking_good',
-        'Meal Helpers' => 'box_request_meal_helpers',
-        'Macaroni & Cheese' => 'box_request_mac_and_cheese',
-        'Dried Pasta' => 'box_request_dry_pasta',
-        'Condiments' => 'box_request_condiments',
-        'Dark Beans' => 'box_request_dark_beans',
-        'Snacks/Cookies' => 'box_request_snack_cookies',
-        'Cereal/Oatmeal' => 'box_request_cereal_and_oatmeal',
-        'Cooking Oil' => 'box_request_oil',
-        'Jelly' => 'box_request_jelly',
-        'Baked Beans' => 'box_request_baked_beans',
-        'Peanut Butter' => 'box_request_peanut_butter',
-        'Canned Meat' => 'box_request_canned_meat',
-        'Juice' => 'box_request_juice_and_beverage',
-        'Canned Tuna' => 'box_request_tuna',
-        'Vegetable' => 'box_request_vegetable',
-        'Tomato Product' => 'box_request_tomato_product',
-        'Tortilla' => 'box_request_tortilla',
-        'Rice' => 'box_request_bagged_rice',
-        'Bagged Dry Bean' => 'box_request_bagged_dry_bean'
-    ];
-    // Associateve array of item category name => pdf field name for quantity delivered
-    $quantityDeliveredFields = [
-        'Canned Pasta' => 'box_deliver_canned_pasta',
-        'Soup' => 'box_deliver_soup',
-        'Pasta Sauce' => 'box_deliver_pasta_sauce',
-        'Canned Fruit (Mixed)' => 'box_deliver_canned_fruit',
-        'Baking Goods' => 'box_deliver_baking_good',
-        'Meal Helpers' => 'box_deliver_meal_helpers',
-        'Macaroni & Cheese' => 'box_deliver_mac_and_cheese',
-        'Dried Pasta' => 'box_deliver_dry_pasta',
-        'Condiments' => 'box_deliver_condiments',
-        'Dark Beans' => 'box_deliver_dark_beans',
-        'Snacks/Cookies' => 'box_deliver_snack_cookies',
-        'Cereal/Oatmeal' => 'box_deliver_cereal_and_oatmeal',
-        'Cooking Oil' => 'box_deliver_oil',
-        'Jelly' => 'box_deliver_jelly',
-        'Baked Beans' => 'box_deliver_baked_beans',
-        'Peanut Butter' => 'box_deliver_peanut_butter',
-        'Canned Meat' => 'box_deliver_canned_meat',
-        'Juice' => 'box_deliver_juice_and_beverage',
-        'Canned Tuna' => 'box_deliver_tuna',
-        'Vegetable' => 'box_deliver_vegetable',
-        'Tomato Product' => 'box_deliver_tomato_product',
-        'Tortilla' => 'box_deliver_tortilla',
-        'Rice' => 'box_deliver_bagged_rice',
-        'Bagged Dry Bean' => 'box_deliver_dry_bean'
-    ];
-    // Note: If food category names change in the database the associative arrays need to be changed.
 
     // Loop through each food order item and fill in the corresponding fields in the PDF
     foreach ($items as $item) {
@@ -585,12 +680,12 @@ function generateFoodOrderPDF($id) {
         // Get the item category name from the item category ID
         $itemCategoryName = $itemCategory->getName();
 
-        if (isset($quantityRequestedFields[$itemCategoryName])) {
-            $filler->setText($fields[$quantityRequestedFields[$itemCategoryName]], (string)$quantityRequested);
+        if (isset(QUANTITYREQUESTEDFIELDS[$itemCategoryName])) {
+            $filler->setText($fields[QUANTITYREQUESTEDFIELDS[$itemCategoryName]], (string)$quantityRequested);
         }
         if ($orderStatus === 'fulfilled') {
-            if (isset($quantityDeliveredFields[$itemCategoryName])) {
-                $filler->setText($fields[$quantityDeliveredFields[$itemCategoryName]], is_null($quantityDelivered) ? '' : (string)$quantityDelivered);
+            if (isset(QUANTITYDELIVEREDFIELDS[$itemCategoryName])) {
+                $filler->setText($fields[QUANTITYDELIVEREDFIELDS[$itemCategoryName]], is_null($quantityDelivered) ? '' : (string)$quantityDelivered);
             }
         }
     }
@@ -601,7 +696,7 @@ function generateFoodOrderPDF($id) {
     $filler->setText($fields['pdf_submission_date_af_date'], $foodOrder->getPdfSubmissionDate() ?? '');
 
     //Times
-    $filler->setText($fields['requested_delivery_time'], $foodOrder->getRequestedDeliveryTime() ?? '');
+    $filler->setText($fields['requested_delivery_time'], date('g:i A', strtotime($foodOrder->getRequestedDeliveryTime() ?? '')));
     
     //Phone Numbers
     $filler->setText($fields['poc_ph_number'], $foodOrder->getPocPhNumber() ?? '');

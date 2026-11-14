@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Oct 29, 2026 at 06:25 PM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Host: 127.0.0.1
+-- Generation Time: Nov 13, 2026 at 11:31 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.4.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -1765,17 +1765,17 @@ CREATE TABLE `dbinventory` (
 --
 
 INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_quantity`, `minimum_quantity`, `allocated_quantity`) VALUES
-(1, 1, 'Cereal/Oatmeal', 26, 6, 20),
-(2, 2, 'Cooking Oil', 5, 9, 4),
-(3, 3, 'Peanut Butter', 16, 1, 23),
-(4, 4, 'Jelly', 15, 4, 24),
+(1, 1, 'Cereal/Oatmeal', 16, 6, 20),
+(2, 2, 'Cooking Oil', 2, 9, 4),
+(3, 3, 'Peanut Butter', 3, 1, 23),
+(4, 4, 'Jelly', 25, 4, 24),
 (5, 5, 'Dried Pasta', 35, 4, 35),
 (6, 6, 'Pasta Sauce', 39, 10, 10),
 (7, 7, 'Canned Chicken', 3, 10, 30),
 (8, 8, 'Canned Tuna', 4, 9, 16),
 (9, 9, 'Condiments', 9, 10, 32),
 (10, 10, 'Green Beans', 28, 2, 38),
-(11, 11, 'Corn', 15, 10, 39),
+(11, 11, 'Corn', 6, 10, 39),
 (12, 12, 'Mixed Vegetables', 27, 1, 32),
 (13, 13, 'Baked Beans', 2, 10, 27),
 (14, 14, 'Canned/Dried Beans', 17, 10, 38),
@@ -1795,8 +1795,8 @@ INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_q
 (28, 28, 'Baking Goods', 32, 8, 9),
 (29, 29, 'Macaroni and Cheese', 28, 8, 26),
 (32, 0, 'test', 0, 0, 0),
-(33, 30, 'Meal Helpers', 0, 0, 0),
-(34, 31, 'Dark Beans', 0, 0, 0),
+(33, 30, 'Meal Helpers', 6, 0, 0),
+(34, 31, 'Dark Beans', 5, 0, 0),
 (35, 32, 'Snacks/Cookies', 0, 0, 0),
 (36, 33, 'Canned Meat', 0, 0, 0),
 (37, 34, 'Vegetable', 0, 0, 0),
@@ -1894,6 +1894,27 @@ INSERT INTO `dbinventoryevent` (`id`, `personId`, `location`, `date`) VALUES
 (1084, '13', 'Warehouse', '2026-09-11'),
 (1085, '13', 'Pantry', '2026-09-11'),
 (1086, '13', 'Pallet', '2026-09-11');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dbinventoryhistory`
+--
+
+CREATE TABLE `dbinventoryhistory` (
+  `id` int(11) NOT NULL,
+  `inventory_id` int(11) NOT NULL,
+  `change_amount` int(11) NOT NULL,
+  `change_date` date NOT NULL,
+  `changer_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `dbinventoryhistory`
+--
+
+INSERT INTO `dbinventoryhistory` (`id`, `inventory_id`, `change_amount`, `change_date`, `changer_id`) VALUES
+(65, 1, 6, '2026-11-13', 1);
 
 -- --------------------------------------------------------
 
@@ -4178,6 +4199,24 @@ CREATE TABLE `dbnotifications` (
   `reference_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `dbnotifications`
+--
+
+INSERT INTO `dbnotifications` (`id`, `recipient_id`, `message`, `created_at`, `is_read`, `type`, `reference_id`) VALUES
+(14, 'vmsroot', 'Low stock: Corn has 6 boxes left (minimum 10)', '2026-11-11 00:20:37', 1, 'low_stock', 11),
+(15, 'admin', 'Low stock: Corn has 6 boxes left (minimum 10)', '2026-11-11 00:20:37', 0, 'low_stock', 11),
+(16, 'vmsroot2', 'Low stock: Corn has 6 boxes left (minimum 10)', '2026-11-11 00:20:37', 0, 'low_stock', 11),
+(17, 'ccda_admin', 'Low stock: Corn has 6 boxes left (minimum 10)', '2026-11-11 00:20:37', 0, 'low_stock', 11),
+(18, 'aconsuegra', 'Low stock: Corn has 6 boxes left (minimum 10)', '2026-11-11 00:20:37', 0, 'low_stock', 11),
+(19, 'jazmyne.bartlett@ccda.net', 'Low stock: Corn has 6 boxes left (minimum 10)', '2026-11-11 00:20:37', 0, 'low_stock', 11),
+(55, 'vmsroot', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 1, 'low_stock', 13),
+(56, 'admin', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
+(57, 'vmsroot2', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
+(58, 'ccda_admin', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
+(59, 'aconsuegra', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
+(60, 'jazmyne.bartlett@ccda.net', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13);
+
 -- --------------------------------------------------------
 
 --
@@ -4943,6 +4982,12 @@ ALTER TABLE `dbinventoryevent`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `dbinventoryhistory`
+--
+ALTER TABLE `dbinventoryhistory`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `dbitemcategory`
 --
 ALTER TABLE `dbitemcategory`
@@ -5139,6 +5184,12 @@ ALTER TABLE `dbinventoryevent`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1087;
 
 --
+-- AUTO_INCREMENT for table `dbinventoryhistory`
+--
+ALTER TABLE `dbinventoryhistory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+
+--
 -- AUTO_INCREMENT for table `dbitemcategory`
 --
 ALTER TABLE `dbitemcategory`
@@ -5160,7 +5211,7 @@ ALTER TABLE `dbmessages`
 -- AUTO_INCREMENT for table `dbnotifications`
 --
 ALTER TABLE `dbnotifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
 -- AUTO_INCREMENT for table `dbpalletcounts`
