@@ -1100,6 +1100,24 @@ if (date("H:i:s") > "18:19:59") {
                         <span>View Food Orders</span>
                       </div>
                     </a>
+                    <a href="viewReports.php" style="text-decoration: none;">
+                      <div class="in-nav">
+                        <img src="images/document-report.svg" alt="Report Icon">
+                        <span>View Reports</span>
+                      </div>
+                    </a>
+                    <a href="createReports.php" style="text-decoration: none;">
+                      <div class="in-nav">
+                        <img src="images/create-report.svg" alt="Report Icon">
+                        <span>Create Reports</span>
+                      </div>
+                    </a>
+                    <a href="viewHistory.php" style="text-decoration: none;">
+                      <div class="in-nav">
+                        <img src="images/create-report.svg" alt="Report Icon">
+                        <span>View Inventory History</span>
+                      </div>
+                    </a>
                     </div>
                 </div>
                 <div class="nav-item">
