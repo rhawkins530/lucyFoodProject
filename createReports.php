@@ -12,7 +12,28 @@
     }
 
     require_once('database/dbinfo.php');
+    require_once('database/dbInventory.php');
     //add more databases when needed for connection.
+
+    // Total Available Inventory Report: for now the report is only printed on this page.
+    // $reportDate is when the report was generated (when the button was clicked). Category comes
+    // from dbinventory; the other fields aren't tracked yet, so they show "--".
+    $inventoryReportRows = null;
+    $reportDate = null;
+    if (isset($_POST['report-type']) && $_POST['report-type'] === 'Total Available Inventory Report') {
+        date_default_timezone_set("America/New_York");
+        $reportDate = date('m/d/Y');
+        $inventoryReportRows = [];
+        foreach (getAllInventoryItems() as $inventoryItem) {
+            $inventoryReportRows[] = [
+                'category' => $inventoryItem->getCategoryName(),
+                'location' => '--',
+                'container' => '--',
+                'status' => '--',
+                'weight' => '--'
+            ];
+        }
+    }
 
     //may use later
     // $submit_success = false; 
@@ -334,6 +355,13 @@
         margin-bottom: 1rem;
         color: var(--secondary-accent-color);
     }
+    .inventory-report {
+        max-width: 1100px;
+        margin: 0 auto 2rem auto;
+    }
+    .report-date {
+        margin-bottom: 1rem;
+    }
     .button {
         width: fit-content;
         box-sizing: border-box;
@@ -350,14 +378,52 @@
 <body>
     <?php require_once('header.php') ?>
     <div class="report-container">
-        <div class="report-message" id="report-message" style="display:none;">Your report has been generated.</div>
+        <div class="report-message" id="report-message" style="<?= $inventoryReportRows === null ? 'display:none;' : '' ?>">Your report has been generated.</div>
         <div class="report-type-options">
             <button type="button" class="report-btn">Generate End of Year Report</button>
             <button type="button" class="report-btn">Generate Quarterly Report</button>
             <button type="button" class="report-btn">Generate Container Date Entered Report</button>
-            <button type="button" class="report-btn">Generate Total Available Inventory Report</button>
+            <form method="post" action="createReports.php">
+                <input type="hidden" name="report-type" value="Total Available Inventory Report">
+                <button type="submit" class="report-btn">Generate Total Available Inventory Report</button>
+            </form>
         </div>
 </div>
+
+    <?php if ($inventoryReportRows !== null): ?>
+    <div class="report-section inventory-report">
+        <h2>Total Available Inventory Report</h2>
+        <p class="report-date"><strong>Date:</strong> <?= htmlspecialchars($reportDate) ?></p>
+        <?php if (empty($inventoryReportRows)): ?>
+            <p class="empty-state">There are no inventory items.</p>
+        <?php else: ?>
+        <div class="table-wrapper">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Container</th>
+                        <th>Status</th>
+                        <th>Weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($inventoryReportRows as $row): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['category']) ?></td>
+                        <td><?= htmlspecialchars($row['location']) ?></td>
+                        <td><?= htmlspecialchars($row['container']) ?></td>
+                        <td><?= htmlspecialchars($row['status']) ?></td>
+                        <td><?= htmlspecialchars($row['weight']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <script>
         let hideTimer;
