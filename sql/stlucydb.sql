@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 18, 2026 at 08:45 PM
+-- Generation Time: Nov 18, 2026 at 09:32 PM
 -- Server version: 10.11.16-MariaDB
 -- PHP Version: 8.5.12
 
@@ -4793,7 +4793,7 @@ CREATE TABLE `dbunsorted` (
   `id` int(11) NOT NULL,
   `weight` decimal(10,0) NOT NULL,
   `crate_type` varchar(30) NOT NULL,
-  `status` varchar(30) NOT NULL
+  `state` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
