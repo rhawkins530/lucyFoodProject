@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 13, 2026 at 11:31 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.4.27
+-- Generation Time: Nov 18, 2026 at 08:45 PM
+-- Server version: 10.11.16-MariaDB
+-- PHP Version: 8.5.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -4384,21 +4384,6 @@ INSERT INTO `dbpersons` (`personId`, `id`, `first_name`, `last_name`, `email`, `
 (13, 'jazmyne.bartlett@ccda.net', 'Jazmyne', 'Bartlett', 'Jazmyne.bartlett@ccda.net', 'Admin', 'Active', '$2y$10$udcW6zeb/C1MRGNGRXiy/.Ia4noOL0ZvHL33TiuJ2ociuaSVPrLzC', 0);
 
 -- --------------------------------------------------------
---
--- Table structure for table `dbreports`
---
-
-CREATE TABLE `dbreports` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `report_type` varchar(100) NOT NULL,
-  `date_created` datetime NOT NULL,
-  `creator_id` varchar(256) NOT NULL,
-  `file_path` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
 
 --
 -- Table structure for table `dbscheduledemails`
@@ -4801,6 +4786,31 @@ INSERT INTO `dbsuggestions` (`id`, `user_id`, `title`, `body`, `created_at`) VAL
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dbunsorted`
+--
+
+CREATE TABLE `dbunsorted` (
+  `id` int(11) NOT NULL,
+  `weight` decimal(10,0) NOT NULL,
+  `crate_type` varchar(30) NOT NULL,
+  `status` varchar(30) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dbunsortedcategories`
+--
+
+CREATE TABLE `dbunsortedcategories` (
+  `id` int(11) NOT NULL,
+  `unsorted_id` int(11) NOT NULL,
+  `item_category_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `discussion_replies`
 --
 
@@ -5095,6 +5105,20 @@ ALTER TABLE `dbsuggestions`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `dbunsorted`
+--
+ALTER TABLE `dbunsorted`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `dbunsortedcategories`
+--
+ALTER TABLE `dbunsortedcategories`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `unsorted_id_fk` (`unsorted_id`),
+  ADD KEY `item_category_id_fk` (`item_category_id`);
+
+--
 -- Indexes for table `discussion_replies`
 --
 ALTER TABLE `discussion_replies`
@@ -5202,7 +5226,7 @@ ALTER TABLE `dbinventoryevent`
 -- AUTO_INCREMENT for table `dbinventoryhistory`
 --
 ALTER TABLE `dbinventoryhistory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `dbitemcategory`
@@ -5283,6 +5307,18 @@ ALTER TABLE `dbsuggestions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `dbunsorted`
+--
+ALTER TABLE `dbunsorted`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `dbunsortedcategories`
+--
+ALTER TABLE `dbunsortedcategories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `discussion_replies`
 --
 ALTER TABLE `discussion_replies`
@@ -5309,6 +5345,13 @@ ALTER TABLE `user_verified_ids`
 --
 ALTER TABLE `dbfoodorderitem`
   ADD CONSTRAINT `fk_food_order` FOREIGN KEY (`order_id`) REFERENCES `dbfoodorder` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `dbunsortedcategories`
+--
+ALTER TABLE `dbunsortedcategories`
+  ADD CONSTRAINT `item_category_id_fk` FOREIGN KEY (`item_category_id`) REFERENCES `dbitemcategory` (`id`),
+  ADD CONSTRAINT `unsorted_id_fk` FOREIGN KEY (`unsorted_id`) REFERENCES `dbunsorted` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
