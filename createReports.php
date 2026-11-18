@@ -12,50 +12,24 @@
     }
 
     require_once('database/dbinfo.php');
-    require_once('database/dbInventory.php');
+    require_once('database/dbReports.php');
     //add more databases when needed for connection.
 
-    // End of Year, Quarterly, and Total Available Inventory Reports: for now the report is only
-    // printed on this page. They all list the inventory items the same way.
-    // $reportDate is when the report was generated (when the button was clicked). Category comes
-    // from dbinventory; the other fields aren't tracked yet, so they show "--".
-    $inventoryReportTypes = ['End of Year Report', 'Quarterly Report', 'Total Available Inventory Report'];
-    // Report types that also show the Total Inventory Weight line under the date
-    $reportTypesWithTotalWeight = ['End of Year Report', 'Quarterly Report'];
-    $reportType = null;
-    $inventoryReportRows = null;
-    $reportDate = null;
-    if (isset($_POST['report-type']) && in_array($_POST['report-type'], $inventoryReportTypes, true)) {
-        $reportType = $_POST['report-type'];
+    // Generating a report saves it to dbreports, then redirects to View Reports to show it.
+    // Redirecting means refreshing the page afterwards doesn't save the report again.
+    $reportTypes = ['End of Year Report', 'Quarterly Report', 'Container Date Entered Report', 'Total Available Inventory Report'];
+    $reportSaveFailed = false;
+    if (isset($_POST['report-type']) && in_array($_POST['report-type'], $reportTypes, true)) {
+        // When the button was clicked, this is when the report was generated
         date_default_timezone_set("America/New_York");
-        $reportDate = date('m/d/Y');
-        $inventoryReportRows = [];
-        foreach (getAllInventoryItems() as $inventoryItem) {
-            $inventoryReportRows[] = [
-                'category' => $inventoryItem->getCategoryName(),
-                'location' => '--',
-                'container' => '--',
-                'status' => '--',
-                'weight' => '--'
-            ];
-        }
-    }
+        $dateCreated = date('Y-m-d H:i:s');
 
-    // Container Date Entered Report: every container's date entered and type, oldest date first.
-    // Containers aren't stored in the database yet, so the list is empty for now. Each container
-    // should be added as ['date_entered' => 'YYYY-MM-DD', 'type' => '...'].
-    $containerReportRows = null;
-    if (isset($_POST['report-type']) && $_POST['report-type'] === 'Container Date Entered Report') {
-        $reportType = $_POST['report-type'];
-        date_default_timezone_set("America/New_York");
-        $reportDate = date('m/d/Y');
-        $containerReportRows = [];
-        // Oldest date first; containers without a date entered go at the bottom
-        usort($containerReportRows, function ($a, $b) {
-            $aTime = empty($a['date_entered']) ? PHP_INT_MAX : strtotime($a['date_entered']);
-            $bTime = empty($b['date_entered']) ? PHP_INT_MAX : strtotime($b['date_entered']);
-            return $aTime <=> $bTime;
-        });
+        $reportId = addReport($_POST['report-type'], $userID, $dateCreated);
+        if ($reportId !== false) {
+            header('Location: viewReports.php?id=' . $reportId . '&generated=1');
+            die();
+        }
+        $reportSaveFailed = true;
     }
 
     //may use later
@@ -360,6 +334,9 @@
         color: green;
         text-align: center;
     }
+    .report-error {
+        color: red;
+    }
     .report-container {
         width: fit-content;
         background-color: #D4E7F6;
@@ -380,16 +357,6 @@
         margin-bottom: 1rem;
         color: var(--secondary-accent-color);
     }
-    .inventory-report {
-        max-width: 1100px;
-        margin: 0 auto 2rem auto;
-    }
-    .report-info {
-        margin-bottom: 1rem;
-    }
-    .report-info p {
-        margin: 0 0 0.25rem 0;
-    }
     .button {
         width: fit-content;
         box-sizing: border-box;
@@ -406,7 +373,9 @@
 <body>
     <?php require_once('header.php') ?>
     <div class="report-container">
-        <div class="report-message" id="report-message" style="<?= $reportType === null ? 'display:none;' : '' ?>">Your report has been generated.</div>
+        <?php if ($reportSaveFailed): ?>
+            <div class="report-message report-error">Your report couldn't be generated.</div>
+        <?php endif; ?>
         <div class="report-type-options">
             <!-- The clicked button's value tells the page which report to generate -->
             <form method="post" action="createReports.php">
@@ -418,97 +387,5 @@
         </div>
 </div>
 
-    <?php if ($inventoryReportRows !== null): ?>
-    <div class="report-section inventory-report">
-        <h2><?= htmlspecialchars($reportType) ?></h2>
-        <div class="report-info">
-            <p><strong>Date:</strong> <?= htmlspecialchars($reportDate) ?></p>
-            <?php if (in_array($reportType, $reportTypesWithTotalWeight, true)): ?>
-                <!-- Weights aren't tracked yet, so the total can't be calculated -->
-                <p><strong>Total Inventory Weight:</strong> --</p>
-            <?php endif; ?>
-        </div>
-        <?php if (empty($inventoryReportRows)): ?>
-            <p class="empty-state">There are no inventory items.</p>
-        <?php else: ?>
-        <div class="table-wrapper">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>Location</th>
-                        <th>Container</th>
-                        <th>Status</th>
-                        <th>Weight</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($inventoryReportRows as $row): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($row['category']) ?></td>
-                        <td><?= htmlspecialchars($row['location']) ?></td>
-                        <td><?= htmlspecialchars($row['container']) ?></td>
-                        <td><?= htmlspecialchars($row['status']) ?></td>
-                        <td><?= htmlspecialchars($row['weight']) ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-    <?php if ($containerReportRows !== null): ?>
-    <div class="report-section inventory-report">
-        <h2><?= htmlspecialchars($reportType) ?></h2>
-        <div class="report-info">
-            <p><strong>Date:</strong> <?= htmlspecialchars($reportDate) ?></p>
-        </div>
-        <div class="table-wrapper">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th>Container Date Entered</th>
-                        <th>Container Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($containerReportRows)): ?>
-                    <tr>
-                        <td>--</td>
-                        <td>--</td>
-                    </tr>
-                    <?php endif; ?>
-                    <?php foreach ($containerReportRows as $row): ?>
-                    <tr>
-                        <!-- Missing info shows as "--" -->
-                        <td><?= empty($row['date_entered']) ? '--' : htmlspecialchars(date('m/d/Y', strtotime($row['date_entered']))) ?></td>
-                        <td><?= empty($row['type']) ? '--' : htmlspecialchars($row['type']) ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <script>
-        let hideTimer;
-        document.querySelectorAll('.report-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                const msg = document.getElementById('report-message');
-                clearTimeout(hideTimer);
-                msg.style.transition = 'none';
-                msg.style.opacity = '1';
-                msg.style.display = 'flex';
-                hideTimer = setTimeout(function () {
-                    msg.style.transition = 'opacity 0.5s';
-                    msg.style.opacity = '0';
-                    setTimeout(function () { msg.style.display = 'none'; }, 500);
-                }, 1500);
-        });
-});
-</script>
 </body>
 </html>

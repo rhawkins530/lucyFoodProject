@@ -4384,6 +4384,21 @@ INSERT INTO `dbpersons` (`personId`, `id`, `first_name`, `last_name`, `email`, `
 (13, 'jazmyne.bartlett@ccda.net', 'Jazmyne', 'Bartlett', 'Jazmyne.bartlett@ccda.net', 'Admin', 'Active', '$2y$10$udcW6zeb/C1MRGNGRXiy/.Ia4noOL0ZvHL33TiuJ2ociuaSVPrLzC', 0);
 
 -- --------------------------------------------------------
+--
+-- Table structure for table `dbreports`
+--
+
+CREATE TABLE `dbreports` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `report_type` varchar(100) NOT NULL,
+  `date_created` datetime NOT NULL,
+  `creator_id` varchar(256) NOT NULL,
+  `file_path` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `dbscheduledemails`
