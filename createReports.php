@@ -12,7 +12,25 @@
     }
 
     require_once('database/dbinfo.php');
+    require_once('database/dbReports.php');
     //add more databases when needed for connection.
+
+    // Generating a report saves it to dbreports, then redirects to View Reports to show it.
+    // Redirecting means refreshing the page afterwards doesn't save the report again.
+    $reportTypes = ['End of Year Report', 'Quarterly Report', 'Container Date Entered Report', 'Total Available Inventory Report'];
+    $reportSaveFailed = false;
+    if (isset($_POST['report-type']) && in_array($_POST['report-type'], $reportTypes, true)) {
+        // When the button was clicked, this is when the report was generated
+        date_default_timezone_set("America/New_York");
+        $dateCreated = date('Y-m-d H:i:s');
+
+        $reportId = addReport($_POST['report-type'], $userID, $dateCreated);
+        if ($reportId !== false) {
+            header('Location: viewReports.php?id=' . $reportId . '&generated=1');
+            die();
+        }
+        $reportSaveFailed = true;
+    }
 
     //may use later
     // $submit_success = false; 
@@ -299,20 +317,25 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        margin-left: 15%;
+        margin-left: auto;
+        margin-right: auto;
         margin-bottom: 2%;
         max-width: 75%;
     }
     .report-message {
         display: flex;
         max-width: fit-content;
-        margin-left: 15%;
+        margin-left: auto;
+        margin-right: auto;
         margin-bottom: 0.75%;
         border-radius: 0.5rem;
         background-color: #D4E7F6;
         padding: 0.5rem;
         color: green;
         text-align: center;
+    }
+    .report-error {
+        color: red;
     }
     .report-container {
         width: fit-content;
@@ -350,31 +373,19 @@
 <body>
     <?php require_once('header.php') ?>
     <div class="report-container">
-        <div class="report-message" id="report-message" style="display:none;">Your report has been generated.</div>
+        <?php if ($reportSaveFailed): ?>
+            <div class="report-message report-error">Your report couldn't be generated.</div>
+        <?php endif; ?>
         <div class="report-type-options">
-            <button type="button" class="report-btn">Generate End of Year Report</button>
-            <button type="button" class="report-btn">Generate Quarterly Report</button>
-            <button type="button" class="report-btn">Generate Container Date Entered Report</button>
-            <button type="button" class="report-btn">Generate Total Available Inventory Report</button>
+            <!-- The clicked button's value tells the page which report to generate -->
+            <form method="post" action="createReports.php">
+                <button type="submit" name="report-type" value="End of Year Report" class="report-btn">Generate End of Year Report</button>
+                <button type="submit" name="report-type" value="Quarterly Report" class="report-btn">Generate Quarterly Report</button>
+                <button type="submit" name="report-type" value="Container Date Entered Report" class="report-btn">Generate Container Date Entered Report</button>
+                <button type="submit" name="report-type" value="Total Available Inventory Report" class="report-btn">Generate Total Available Inventory Report</button>
+            </form>
         </div>
 </div>
 
-    <script>
-        let hideTimer;
-        document.querySelectorAll('.report-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                const msg = document.getElementById('report-message');
-                clearTimeout(hideTimer);
-                msg.style.transition = 'none';
-                msg.style.opacity = '1';
-                msg.style.display = 'flex';
-                hideTimer = setTimeout(function () {
-                    msg.style.transition = 'opacity 0.5s';
-                    msg.style.opacity = '0';
-                    setTimeout(function () { msg.style.display = 'none'; }, 500);
-                }, 1500);
-        });
-});
-</script>
 </body>
 </html>

@@ -171,7 +171,7 @@ function notificationBellHtml($recipientId) {
     return '<div class="nav-links">
                 <div class="nav-item" id="notificationBell">
                     <div class="icon">
-                        <img src="images/bell.svg" alt="Notifications" title="Notifications" class="icon-img in-nav-img">
+                        <span class="header-icon" role="img" aria-label="Notifications" title="Notifications" style="--icon: url(images/bell.svg)"></span>
                         ' . $badge . '
                         <div class="dropdown notification-dropdown">
                             ' . $notificationList . '
