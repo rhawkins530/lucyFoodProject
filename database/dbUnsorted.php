@@ -20,7 +20,7 @@ function addUnsortedInventory($weight, $crate_type, $item_categories) {
         $stmt->close();
 
         foreach ($item_categories as $item_category_id) {
-            $stmt = $con->prepare("INSERT INTO dbunsortedcategory (unsorted_id, item_category_id) VALUES (?, ?)");
+            $stmt = $con->prepare("INSERT INTO dbunsortedcategories (unsorted_id, item_category_id) VALUES (?, ?)");
             $stmt->bind_param("ii", $unsorted_id, $item_category_id);
             $stmt->execute();
             $stmt->close();
@@ -68,7 +68,7 @@ function getUnsortedInventoryById($id) {
 
 function getItemCategoriesByUnsortedId($unsorted_id) {
     $con = connect();
-    $stmt = $con->prepare("SELECT * FROM dbunsortedcategory WHERE unsorted_id = ?");
+    $stmt = $con->prepare("SELECT * FROM dbunsortedcategories WHERE unsorted_id = ?");
     $stmt->bind_param("i", $unsorted_id);
     $stmt->execute();
     $result = $stmt->get_result();
