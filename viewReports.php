@@ -12,52 +12,7 @@ if (isset($_SESSION['_id'])){
 }
 
 require_once('database/dbinfo.php');
-require_once('database/dbInventory.php');
-require_once('database/dbReports.php');
 //add more databases when needed for connection.
-
-// Show one report when its id is given (Create Reports redirects here after generating one).
-// For now the report is only printed on this page. $reportDate is the date it was generated.
-$report = null;
-$reportDate = null;
-$inventoryReportRows = null;
-$containerReportRows = null;
-// Report types that also show the Total Inventory Weight line under the date
-$reportTypesWithTotalWeight = ['End of Year Report', 'Quarterly Report'];
-if (isset($_GET['id'])) {
-    $report = getReportById($_GET['id']);
-}
-if ($report !== null) {
-    $reportDate = date('m/d/Y', strtotime($report['date_created']));
-
-    // End of Year, Quarterly, and Total Available Inventory Reports list the inventory items.
-    // Category comes from dbinventory; the other fields aren't tracked yet, so they show "--".
-    if (in_array($report['report_type'], ['End of Year Report', 'Quarterly Report', 'Total Available Inventory Report'], true)) {
-        $inventoryReportRows = [];
-        foreach (getAllInventoryItems() as $inventoryItem) {
-            $inventoryReportRows[] = [
-                'category' => $inventoryItem->getCategoryName(),
-                'location' => '--',
-                'container' => '--',
-                'status' => '--',
-                'weight' => '--'
-            ];
-        }
-    }
-
-    // Container Date Entered Report: every container's date entered and type, oldest date first.
-    // Containers aren't stored in the database yet, so the list is empty for now. Each container
-    // should be added as ['date_entered' => 'YYYY-MM-DD', 'type' => '...'].
-    if ($report['report_type'] === 'Container Date Entered Report') {
-        $containerReportRows = [];
-        // Oldest date first; containers without a date entered go at the bottom
-        usort($containerReportRows, function ($a, $b) {
-            $aTime = empty($a['date_entered']) ? PHP_INT_MAX : strtotime($a['date_entered']);
-            $bTime = empty($b['date_entered']) ? PHP_INT_MAX : strtotime($b['date_entered']);
-            return $aTime <=> $bTime;
-        });
-    }
-}
 ?>
 <!DOCTYPE html>
 <html>
@@ -168,22 +123,6 @@ if ($report !== null) {
             display: inline-block;
             width: 1em;
         }
-        .report-message {
-            display: flex;
-            max-width: fit-content;
-            margin: 0 auto 1rem auto;
-            border-radius: 0.5rem;
-            background-color: #D4E7F6;
-            padding: 0.5rem;
-            color: green;
-            text-align: center;
-        }
-        .report-info {
-            margin-bottom: 1rem;
-        }
-        .report-info p {
-            margin: 0 0 0.25rem 0;
-        }
         @media only screen and (max-width: 768px) {
             pageheader {
                 top: 100px;
@@ -216,88 +155,6 @@ if ($report !== null) {
     <?php require_once('header.php'); ?>
     <main>
         <div class="report-container">
-            <?php if ($report !== null && isset($_GET['generated'])): ?>
-                <div class="report-message">Your report has been generated.</div>
-            <?php endif; ?>
-            <?php if (isset($_GET['id']) && $report === null): ?>
-                <div class="report-message" style="color: red;">That report couldn't be found.</div>
-            <?php endif; ?>
-
-            <?php if ($inventoryReportRows !== null): ?>
-            <div class="report-section">
-                <h2><?= htmlspecialchars($report['report_type']) ?></h2>
-                <div class="report-info">
-                    <p><strong>Date:</strong> <?= htmlspecialchars($reportDate) ?></p>
-                    <?php if (in_array($report['report_type'], $reportTypesWithTotalWeight, true)): ?>
-                        <!-- Weights aren't tracked yet, so the total can't be calculated -->
-                        <p><strong>Total Inventory Weight:</strong> --</p>
-                    <?php endif; ?>
-                </div>
-                <?php if (empty($inventoryReportRows)): ?>
-                    <p class="empty-state">There are no inventory items.</p>
-                <?php else: ?>
-                <div class="table-wrapper">
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Location</th>
-                                <th>Container</th>
-                                <th>Status</th>
-                                <th>Weight</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($inventoryReportRows as $row): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($row['category']) ?></td>
-                                <td><?= htmlspecialchars($row['location']) ?></td>
-                                <td><?= htmlspecialchars($row['container']) ?></td>
-                                <td><?= htmlspecialchars($row['status']) ?></td>
-                                <td><?= htmlspecialchars($row['weight']) ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
-
-            <?php if ($containerReportRows !== null): ?>
-            <div class="report-section">
-                <h2><?= htmlspecialchars($report['report_type']) ?></h2>
-                <div class="report-info">
-                    <p><strong>Date:</strong> <?= htmlspecialchars($reportDate) ?></p>
-                </div>
-                <div class="table-wrapper">
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>Container Date Entered</th>
-                                <th>Container Type</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($containerReportRows)): ?>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <?php endif; ?>
-                            <?php foreach ($containerReportRows as $row): ?>
-                            <tr>
-                                <!-- Missing info shows as "--" -->
-                                <td><?= empty($row['date_entered']) ? '--' : htmlspecialchars(date('m/d/Y', strtotime($row['date_entered']))) ?></td>
-                                <td><?= empty($row['type']) ? '--' : htmlspecialchars($row['type']) ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <?php endif; ?>
-
             <div class="report-section">
                 <h2>Reports</h2>
                 <div class="week-and-filter-section">
