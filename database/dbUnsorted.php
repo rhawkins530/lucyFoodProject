@@ -50,6 +50,28 @@ function getAllUnsortedInventories() {
     return $unsorted_inventories;
 }
 
+function getUnsortedInventoriesSorted($sortCol, $sortDir) {
+    $con = connect();
+    $columnNumsUnsorted = [
+        1 => "id",
+        2 => "weight",
+        3 => "crate_type",
+        4 => "state"
+    ];
+    $columnName = isset($columnNumsUnsorted[$sortCol]) ? $columnNumsUnsorted[$sortCol] : 'id';
+    $direction = ($sortDir === 'desc') ? 'DESC' : 'ASC';
+    $stmt = $con->prepare("SELECT * FROM dbunsorted ORDER BY $columnName $direction");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $unsorted_inventories = [];
+    while ($row = $result->fetch_assoc()) {
+        $unsorted_inventories[] = new UnsortedInventory($row['id'], $row['weight'], $row['crate_type'], $row['state']);
+    }
+    $stmt->close();
+    $con->close();
+    return $unsorted_inventories;
+}
+
 function getUnsortedInventoryById($id) {
     $con = connect();
     $stmt = $con->prepare("SELECT * FROM dbunsorted WHERE id = ?");
