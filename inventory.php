@@ -17,6 +17,7 @@ require_once(__DIR__ . '/database/dbInventoryEvent.php');
 require_once(__DIR__ . '/database/dbItemCategory.php');
 require_once(__DIR__ . '/database/dbItemCounts.php');
 require_once(__DIR__ . '/database/dbInventory.php');
+require_once(__DIR__ . '/database/dbUnsorted.php');
 
 
 
@@ -41,6 +42,21 @@ if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
     $items = getAllInventoryItemsSorted($columnNums[$sortCol], $sortDir);
 } else {
     $items = getAllInventoryItems();
+}
+
+//Build the unsorted items array for the selected inventory
+$columnNumsUnsorted = [
+    1 => "id",
+    2 => "weight",
+    3 => "crate_type",
+    4 => "state"
+];
+
+$unsorted_inventories = [];
+if ($sortCol >= 0 && $sortCol <= count($columnNumsUnsorted)) {
+    $unsorted_inventories = getUnsortedInventoriesSorted($columnNumsUnsorted[$sortCol], $sortDir);
+} else {
+    $unsorted_inventories = getAllUnsortedInventories();
 }
 
 ?>
@@ -382,152 +398,210 @@ if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
 <div class="report-container">
             <div class="report-section">
                 <h2>Food Items</h2>
+                <select id="food-status" name=food-status">
+                    <option value="Sorted">Sorted</option>
+                    <option value="Unsorted">Unsorted</option>
+                </select>
                 <hr>
                 <br>
-                <div class="table-wrapper">
-                    <table class="report-table" id="inventoryTable">
-                        <thead>
-                                <tr>
-                                    <th>
-                                        <?php if ($sortCol === 1 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↑</span></a>
-                                            <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↑</span></a>
-                                        <?php elseif ($sortCol === 1 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="desktop-text">Item Name ⇅</span></a>
-                                            <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="mobile-text">Item Name ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 2 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=2&sortDir=desc' style="font-weight: bold;color: white;"><span class="desktop-text">Total Boxes ↑</span></a>
-                                            <a href='?sortCol=2&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↑</span></a>
-                                        <?php elseif ($sortCol === 2 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Total Boxes ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="desktop-text">Total Boxes ⇅</span></a>
-                                            <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="mobile-text">Total Boxes ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 3 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↑</span></a>
-                                            <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↑</span></a>
-                                        <?php elseif ($sortCol === 3 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="desktop-text">Allocated Items ⇅</span></a>
-                                            <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="mobile-text">Allocated Items ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 4 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↑</span></a>
-                                            <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↑</span></a>
-                                        <?php elseif ($sortCol === 4 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="desktop-text">Over Allocated ⇅</span></a>
-                                            <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="mobile-text">Over Allocated ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 5 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↑</span></a>
-                                            <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↑</span></a>
-                                        <?php elseif ($sortCol === 5 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="desktop-text">Minimum Quantity ⇅</span></a>
-                                            <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="mobile-text">Minimum Quantity ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                </tr>
-                            </thead>
-                        <tbody>
-                            <?php if (count($items) > 0): ?>
-                                <?php foreach ($items as $item): ?>
+                <div id="sorted-table">
+                    <div class="table-wrapper">
+                        <table class="report-table" id="inventoryTable">
+                            <thead>
                                     <tr>
-                                        <td><?= htmlspecialchars($item->getCategoryName()) ?></td>
-                                        <td><?= htmlspecialchars($item->getCurrentQuantity()) ?></td>
-                                        <td><?= htmlspecialchars($item->getAllocatedQuantity()) ?></td>
-                                        <td><?= $item->getAllocatedQuantity() > $item->getCurrentQuantity() ? '✓' : '' ?></td>
-                                        <td><?= htmlspecialchars($item->getMinimumQuantity()) ?></td>
+                                        <th>
+                                            <?php if ($sortCol === 1 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↑</span></a>
+                                                <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↑</span></a>
+                                            <?php elseif ($sortCol === 1 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="desktop-text">Item Name ⇅</span></a>
+                                                <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="mobile-text">Item Name ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                        <th>
+                                            <?php if ($sortCol === 2 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=2&sortDir=desc' style="font-weight: bold;color: white;"><span class="desktop-text">Total Boxes ↑</span></a>
+                                                <a href='?sortCol=2&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↑</span></a>
+                                            <?php elseif ($sortCol === 2 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Total Boxes ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="desktop-text">Total Boxes ⇅</span></a>
+                                                <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="mobile-text">Total Boxes ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                        <th>
+                                            <?php if ($sortCol === 3 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↑</span></a>
+                                                <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↑</span></a>
+                                            <?php elseif ($sortCol === 3 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="desktop-text">Allocated Items ⇅</span></a>
+                                                <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="mobile-text">Allocated Items ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                        <th>
+                                            <?php if ($sortCol === 4 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↑</span></a>
+                                                <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↑</span></a>
+                                            <?php elseif ($sortCol === 4 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="desktop-text">Over Allocated ⇅</span></a>
+                                                <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="mobile-text">Over Allocated ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                        <th>
+                                            <?php if ($sortCol === 5 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↑</span></a>
+                                                <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↑</span></a>
+                                            <?php elseif ($sortCol === 5 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="desktop-text">Minimum Quantity ⇅</span></a>
+                                                <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="mobile-text">Minimum Quantity ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
                                     </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="8" class="empty-state">No items found.</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                                </thead>
+                            <tbody>
+                                <?php if (count($items) > 0): ?>
+                                    <?php foreach ($items as $item): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($item->getCategoryName()) ?></td>
+                                            <td><?= htmlspecialchars($item->getCurrentQuantity()) ?></td>
+                                            <td><?= htmlspecialchars($item->getAllocatedQuantity()) ?></td>
+                                            <td><?= $item->getAllocatedQuantity() > $item->getCurrentQuantity() ? '✓' : '' ?></td>
+                                            <td><?= htmlspecialchars($item->getMinimumQuantity()) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="8" class="empty-state">No items found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="unsorted-table" style="display:none;">
+                    <div class="table-wrapper">
+                        <table class="report-table" id="inventoryTable">
+                            <thead>
+                                    <tr>
+                                        <th>
+                                            <?php if ($sortCol === 1 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">ID ↑</span></a>
+                                                <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">ID ↑</span></a>
+                                            <?php elseif ($sortCol === 1 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">ID ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">ID ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="desktop-text">ID ⇅</span></a>
+                                                <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="mobile-text">ID ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                        <th>
+                                            <?php if ($sortCol === 2 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=2&sortDir=desc' style="font-weight: bold;color: white;"><span class="desktop-text">Weight ↑</span></a>
+                                                <a href='?sortCol=2&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Weight ↑</span></a>
+                                            <?php elseif ($sortCol === 2 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Weight ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Weight ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="desktop-text">Weight ⇅</span></a>
+                                                <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="mobile-text">Weight ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                        <th>
+                                            <?php if ($sortCol === 3 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Crate Type ↑</span></a>
+                                                <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Crate Type ↑</span></a>
+                                            <?php elseif ($sortCol === 3 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Crate Type ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Crate Type ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="desktop-text">Crate Type ⇅</span></a>
+                                                <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="mobile-text">Crate Type ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                        <th>
+                                            <?php if ($sortCol === 4 && $sortDir === 'ASC'): ?>
+                                                <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">State ↑</span></a>
+                                                <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">State ↑</span></a>
+                                            <?php elseif ($sortCol === 4 && $sortDir === 'DESC'): ?>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">State ↓</span></a>
+                                                <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">State ↓</span></a>
+                                            <?php else: ?>
+                                                <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="desktop-text">State ⇅</span></a>
+                                                <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="mobile-text">State ⇅</span></a>
+                                            <?php endif; ?>
+                                        </th>
+                                    </tr>
+                                </thead>
+                            <tbody>
+                                <?php if (count($unsorted_inventories) > 0): ?>
+                                    <?php foreach ($unsorted_inventories as $unsorted): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($unsorted->getId()) ?></td>
+                                            <td><?= htmlspecialchars($unsorted->getWeight()) ?></td>
+                                            <td><?= htmlspecialchars($unsorted->getCrateType()) ?></td>
+                                            <td><?= htmlspecialchars($unsorted->getStatus())?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="8" class="empty-state">No items found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-			        </div>
+		</div>
     </main>
 
     <script>
-        $(function() {
-            // Sorting functionality
-            $('#sortSelect').change(function() {
-                var sortValue = $(this).val();
-                var $tbody = $('#inventoryTable tbody');
-                var $rows = $tbody.find('tr').get();
+        document.addEventListener('DOMContentLoaded', function () {
 
-                if (sortValue === 'name-asc') {
-                    // Sort by name A-Z
-                    $rows.sort(function(a, b) {
-                        var nameA = $(a).find('td').eq(0).text().toLowerCase();
-                        var nameB = $(b).find('td').eq(0).text().toLowerCase();
-                        return nameA.localeCompare(nameB);
-                    });
-                } else if (sortValue === 'name-desc') {
-                    // Sort by name Z-A
-                    $rows.sort(function(a, b) {
-                        var nameA = $(a).find('td').eq(0).text().toLowerCase();
-                        var nameB = $(b).find('td').eq(0).text().toLowerCase();
-                        return nameB.localeCompare(nameA);
-                    });
-                }
+        const status      = document.getElementById('food-status');
+        const firstFields = document.getElementById('sorted-table');
+        const secondFields = document.getElementById('unsorted-table');
 
-                // Re-append rows in new order
-                $.each($rows, function(index, row) {
-                    $tbody.append(row);
-                });
+        const secondOption = 'Unsorted';
+
+        function setDisabled(container, disabled) {
+            container.querySelectorAll('input, select').forEach(el => {
+                el.disabled = disabled;
             });
+        }
 
-            // Search functionality
-            $('#searchInput').on('input', function() {
-                var searchTerm = $(this).val().toLowerCase();
+        function updateFields() {
+            const showSecond = status.value === secondOption;
 
-                $('#inventoryTable tbody tr').each(function() {
-                    var itemName = $(this).find('td').eq(0).text().toLowerCase();
+            // Control visibility
+            firstFields.style.display  = showSecond ? 'none' : 'block';
+            secondFields.style.display = showSecond ? 'block' : 'none';
 
-                    if (itemName.indexOf(searchTerm) > -1) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            });
+            // Enable/disable inputs
+            setDisabled(firstFields, showSecond);
+            setDisabled(secondFields, !showSecond);
+        }
 
-            // Clear search button
-            $('#clearSearch').click(function() {
-                $('#searchInput').val('');
-                $('#inventoryTable tbody tr').show();
-            });
+        // Update whenever the dropdown selection changes
+        status.addEventListener('change', updateFields);
 
-            // Store original order for default sorting
-            $('#inventoryTable tbody tr').each(function(index) {
-                $(this).data('original-index', index);
-            });
+        // Set the correct visibility when the page initially loads
+        updateFields();
+
         });
     </script>
 
