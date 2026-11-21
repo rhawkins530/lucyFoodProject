@@ -303,7 +303,6 @@ function sortCell($type, $val) {
             .button {
                 width: 100%;
                 height: auto;
-                margin: 0 0 0.75rem 0;
                 box-sizing: border-box;
                 justify-content: center;
                 text-align: center;

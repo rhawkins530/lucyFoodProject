@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 18, 2026 at 09:32 PM
--- Server version: 10.11.16-MariaDB
--- PHP Version: 8.5.12
+-- Generation Time: Nov 21, 2026 at 04:07 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.4.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -4390,13 +4390,12 @@ INSERT INTO `dbpersons` (`personId`, `id`, `first_name`, `last_name`, `email`, `
 --
 
 CREATE TABLE `dbreports` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `report_type` varchar(100) NOT NULL,
   `date_created` datetime NOT NULL,
   `creator_id` varchar(256) NOT NULL,
-  `file_path` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `file_path` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -4827,6 +4826,20 @@ CREATE TABLE `dbunsortedcategories` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dbunsortedhistory`
+--
+
+CREATE TABLE `dbunsortedhistory` (
+  `id` int(11) NOT NULL,
+  `unsorted_id` int(11) NOT NULL,
+  `change_amount` decimal(10,0) NOT NULL,
+  `change_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `changer_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `discussion_replies`
 --
 
@@ -5082,6 +5095,12 @@ ALTER TABLE `dbpersons`
   ADD UNIQUE KEY `id` (`id`);
 
 --
+-- Indexes for table `dbreports`
+--
+ALTER TABLE `dbreports`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `dbscheduledemails`
 --
 ALTER TABLE `dbscheduledemails`
@@ -5133,6 +5152,12 @@ ALTER TABLE `dbunsortedcategories`
   ADD PRIMARY KEY (`id`),
   ADD KEY `unsorted_id_fk` (`unsorted_id`),
   ADD KEY `item_category_id_fk` (`item_category_id`);
+
+--
+-- Indexes for table `dbunsortedhistory`
+--
+ALTER TABLE `dbunsortedhistory`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `discussion_replies`
@@ -5287,6 +5312,12 @@ ALTER TABLE `dbpersons`
   MODIFY `personId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT for table `dbreports`
+--
+ALTER TABLE `dbreports`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `dbscheduledemails`
 --
 ALTER TABLE `dbscheduledemails`
@@ -5326,13 +5357,19 @@ ALTER TABLE `dbsuggestions`
 -- AUTO_INCREMENT for table `dbunsorted`
 --
 ALTER TABLE `dbunsorted`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `dbunsortedcategories`
 --
 ALTER TABLE `dbunsortedcategories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `dbunsortedhistory`
+--
+ALTER TABLE `dbunsortedhistory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `discussion_replies`
