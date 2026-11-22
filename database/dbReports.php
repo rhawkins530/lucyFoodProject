@@ -85,3 +85,30 @@ function getReportById($id) {
     mysqli_close($con);
     return $report ?: null;
 }
+
+/*
+    Get all reports from the database.
+    Returns:
+    - An array of reports, ordered newest first.
+    - An empty array if no reports exist.
+*/
+function getAllReports() {
+    $con = connect();
+
+    $query = "SELECT * FROM dbreports
+              ORDER BY date_created DESC, id DESC";
+
+    $result = mysqli_query($con, $query);
+
+    $reports = [];
+
+    if ($result) {
+        while ($report = mysqli_fetch_assoc($result)) {
+            $reports[] = $report;
+        }
+    }
+
+    mysqli_close($con);
+
+    return $reports;
+}
