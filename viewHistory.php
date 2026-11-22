@@ -16,8 +16,9 @@
     require_once('database/dbPersons.php');
     require_once('database/dbInventory.php');
     require_once('database/dbInventoryHistory.php');
+    require_once('database/dbUnsortedHistory.php');
 
-    if(isset($_GET['revertId'])){
+    if(!isset($_GET['unsorted']) && isset($_GET['revertId'])){
         $id = $_GET['revertId'];
         $item = getHistory($id);
         $itemId = $item->getInventoryId();
@@ -27,6 +28,11 @@
         revertHistory($id);
         header('Location: viewHistory.php');
     }
+    else if(isset($_GET['revertId'])) {
+        $id = $_GET['revertId'];
+        revertUnsortedHistory($id);
+        header('Location: viewHistory.php?unsorted=1');
+    }
 
 
 ?>
@@ -35,7 +41,7 @@
 <html>
 <head>
     <?php require_once('universal.inc') ?>
-    <title>Manage Item Categories | CCDA</title>
+    <title>History Log | CCDA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         pageheader {
@@ -246,6 +252,14 @@
                 padding: 0;
             }
         }
+        .button {
+                width: 20%;
+                height: auto;
+                margin: 0 0 0.75rem 0;
+                justify-content: center;
+                text-align: center;
+                white-space: normal;
+            }
     </style>
 </head>
 <pageheader>
@@ -264,10 +278,11 @@
             <?php endif; ?>
             <?php 
                 require_once('database/dbItemCategory.php');
-                require_once('database/dbInventory.php');
-                /* display table of Item Categories with a given status (Active/Inactive/Deleted) */
                 
+                if (!isset($_GET['unsorted'])) {
+                    require_once('database/dbInventory.php');
                     echo '
+                    <a class="button" href="viewHistory.php?unsorted=1">Unsorted Log</a>
                     <div class="report-section">
                         <div class="table-wrapper">
                             <table class="report-table">
@@ -302,7 +317,51 @@
                             </table>
                         </div>
                     </div>';
-                            ?>
+                }
+                else {
+                    require_once('database/dbUnsorted.php');
+                    echo '
+                    <a class="button" href="viewHistory.php">Sorted Log</a>
+                    <div class="report-section">
+                        <div class="table-wrapper">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Crate Type</th>
+                                        <th>Amount Changed</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ';
+                            
+                                $history = getAllUnsortedHistoryItems();
+                                if($history){
+                                foreach ($history as $item) {
+                                        $id = getUnsortedInventoryById($item->getUnsortedId())->getId();
+                                        $crate = getUnsortedInventoryById($item->getUnsortedId())->getCrateType();
+                                        $amount = $item->getChangeAmount();
+                                        $date = $item->getChangeDate();
+                                        echo '
+                                            <td>' . $id . '</td>
+                                            <td>' . $crate . '</td>
+                                            <td>' . $amount . '</td>
+                                            <td>' . $date . '</td>';
+                                        echo ' 
+                                            <td><a href="viewHistory.php?unsorted=1&revertId=' . $item->getId() . '" class="text-blue-700 underline"><button class="modify-btn">Revert</button></a>
+                                        </tr>';
+                                }}
+                                else echo "Nothing to log yet.";
+
+                    echo '
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>';
+                }
+            ?>
+                            
         </div>
 
     </main>
