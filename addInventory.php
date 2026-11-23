@@ -11,6 +11,7 @@ require_once('database/dbinfo.php');
 require_once('database/dbInventory.php');
 require_once('database/dbInventoryHistory.php');
 require_once('database/dbUnsorted.php');
+require_once('database/dbUnsortedHistory.php');
 require_once('database/dbItemCategory.php');
 
 $errors = [];
@@ -149,11 +150,12 @@ if (isset($_POST['food-status'])) {
             }
 
             // Unsorted inventory remains unchanged.
-            addUnsortedInventory(
+            $unsorted_id = addUnsortedInventory(
                 (float)$weight,
                 $crate,
                 $noneSelected ? [] : $selectedCategoryIds
             );
+            addUnsortedHistory($unsorted_id, $weight, $userID);
 
         } else {
             throw new InvalidArgumentException(

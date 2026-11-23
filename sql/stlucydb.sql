@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Nov 23, 2026 at 03:11 AM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Host: 127.0.0.1
+-- Generation Time: Nov 23, 2026 at 09:02 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.4.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -1800,12 +1800,13 @@ INSERT INTO `dbinventory` (`id`, `location`, `item_category_id`, `category_name`
 (34, 'Main', 31, 'Dark Beans', 5, 0, 0),
 (35, 'Main', 32, 'Snacks/Cookies', 0, 0, 0),
 (36, 'Main', 33, 'Canned Meat', 0, 0, 0),
-(37, 'Main', 34, 'Vegetable', 0, 0, 0),
+(37, 'Main', 34, 'Vegetable', -3, 0, 0),
 (38, 'Main', 35, 'Tomato Product', 0, 0, 0),
 (39, 'Main', 36, 'Tortilla', 0, 0, 0),
-(40, 'Main', 37, 'Bagged Dry Bean', 4, 0, 0),
+(40, 'Main', 37, 'Bagged Dry Bean', 7, 0, 0),
 (41, 'Annex', 28, 'Baking Goods', 3, 0, 0),
-(42, 'Annex', 1, 'Cereal/Oatmeal', 2, 0, 0);
+(42, 'Annex', 1, 'Cereal/Oatmeal', 2, 0, 0),
+(43, 'Annex', 37, 'Bagged Dry Bean', 12, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -1908,7 +1909,7 @@ CREATE TABLE `dbinventoryhistory` (
   `id` int(11) NOT NULL,
   `inventory_id` int(11) NOT NULL,
   `change_amount` int(11) NOT NULL,
-  `change_date` date NOT NULL,
+  `change_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `changer_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -1917,10 +1918,12 @@ CREATE TABLE `dbinventoryhistory` (
 --
 
 INSERT INTO `dbinventoryhistory` (`id`, `inventory_id`, `change_amount`, `change_date`, `changer_id`) VALUES
-(65, 1, 6, '2026-11-13', 1),
-(69, 37, 4, '2026-11-22', 1),
-(70, 28, 3, '2026-11-22', 1),
-(71, 1, 2, '2026-11-22', 1);
+(65, 1, 6, '2026-11-13 05:00:00', 1),
+(69, 37, 4, '2026-11-22 05:00:00', 1),
+(70, 28, 3, '2026-11-22 05:00:00', 1),
+(71, 1, 2, '2026-11-22 05:00:00', 1),
+(72, 37, 5, '2026-11-23 05:00:00', 1),
+(73, 37, 7, '2026-11-23 05:00:00', 1);
 
 -- --------------------------------------------------------
 
@@ -4221,7 +4224,13 @@ INSERT INTO `dbnotifications` (`id`, `recipient_id`, `message`, `created_at`, `i
 (57, 'vmsroot2', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
 (58, 'ccda_admin', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
 (59, 'aconsuegra', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
-(60, 'jazmyne.bartlett@ccda.net', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13);
+(60, 'jazmyne.bartlett@ccda.net', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
+(83, 'vmsroot', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(84, 'admin', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(85, 'vmsroot2', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(86, 'ccda_admin', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(87, 'aconsuegra', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(88, 'jazmyne.bartlett@ccda.net', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37);
 
 -- --------------------------------------------------------
 
@@ -5261,7 +5270,7 @@ ALTER TABLE `dbfoodorderitem`
 -- AUTO_INCREMENT for table `dbinventory`
 --
 ALTER TABLE `dbinventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `dbinventoryevent`
@@ -5273,7 +5282,7 @@ ALTER TABLE `dbinventoryevent`
 -- AUTO_INCREMENT for table `dbinventoryhistory`
 --
 ALTER TABLE `dbinventoryhistory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
 
 --
 -- AUTO_INCREMENT for table `dbitemcategory`
@@ -5297,7 +5306,7 @@ ALTER TABLE `dbmessages`
 -- AUTO_INCREMENT for table `dbnotifications`
 --
 ALTER TABLE `dbnotifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT for table `dbpalletcounts`
@@ -5363,19 +5372,19 @@ ALTER TABLE `dbsuggestions`
 -- AUTO_INCREMENT for table `dbunsorted`
 --
 ALTER TABLE `dbunsorted`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `dbunsortedcategories`
 --
 ALTER TABLE `dbunsortedcategories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `dbunsortedhistory`
 --
 ALTER TABLE `dbunsortedhistory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `discussion_replies`

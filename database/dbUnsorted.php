@@ -27,6 +27,7 @@ function addUnsortedInventory($weight, $crate_type, $item_categories) {
         }
 
         $con->commit();
+        return $unsorted_id;
     }
     catch (Exception $e) {
         throw new Exception("Failed to add unsorted inventory: " . $e->getMessage());
@@ -112,4 +113,16 @@ function updateUnsortedInventoryState($id, $new_state) {
     }
     $stmt->close();
     $con->close();
+}
+
+function deleteUnsorted($id){
+    $con = connect();
+    $id = (int)$id;
+    $query1 = "DELETE FROM dbunsortedcategories WHERE unsorted_id = $id";
+    $ok = mysqli_query($con, $query1);
+    $query2 = "DELETE FROM dbunsorted WHERE id = $id";
+    $ok = mysqli_query($con, $query2);
+    mysqli_close($con);
+
+    return $ok;
 }
