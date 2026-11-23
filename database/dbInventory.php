@@ -126,6 +126,73 @@ function getInventoryQuantity($id) {
     return $row['current_quantity'];
 }
 
+
+/*
+ * Add inventory to a specific location.
+ * Each category has a separate inventory record for Main and Annex.
+ */
+function changeInventoryQuantityByLocation($categoryId, $categoryName, $quantity, $location) {
+    $con = connect();
+
+    $categoryId = (int)$categoryId;
+    $quantity = (int)$quantity;
+    $categoryName = trim($categoryName);
+
+    if (!in_array($location, ['Main', 'Annex'], true)) {
+        mysqli_close($con);
+        throw new InvalidArgumentException('Invalid inventory location.');
+    }
+
+    // Find the inventory record for this category and location.
+    $stmt = mysqli_prepare(
+        $con,
+        "SELECT id FROM dbinventory
+         WHERE item_category_id = ? AND location = ?
+         LIMIT 1"
+    );
+
+    mysqli_stmt_bind_param($stmt, "is", $categoryId, $location);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    if ($row) {
+        $inventoryId = (int)$row['id'];
+        mysqli_close($con);
+
+        // Update only this location's inventory record.
+        return changeInventoryQuantity($inventoryId, $quantity);
+    }
+
+    // Create a new inventory record if this category
+    // does not already exist at the selected location.
+    $stmt = mysqli_prepare(
+        $con,
+        "INSERT INTO dbinventory
+         (item_category_id, category_name, current_quantity,
+          minimum_quantity, allocated_quantity, location)
+         VALUES (?, ?, ?, 0, 0, ?)"
+    );
+
+    mysqli_stmt_bind_param(
+        $stmt,
+        "isis",
+        $categoryId,
+        $categoryName,
+        $quantity,
+        $location
+    );
+
+    $success = mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
+    mysqli_close($con);
+
+    return $success;
+}
+
+
 /*
  * add or subtract quantity from the inventory item with the given id
  */
