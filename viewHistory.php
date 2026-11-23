@@ -179,9 +179,9 @@
         }
         .modify-btn {
             padding: 0.5rem 1.5rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 0.95rem;
@@ -189,7 +189,8 @@
             width: auto;
         }
         .modify-btn:hover {
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         .section-header {
             display: flex;
@@ -253,13 +254,19 @@
             }
         }
         .button {
-                width: 20%;
-                height: auto;
-                margin: 0 0 0.75rem 0;
-                justify-content: center;
-                text-align: center;
-                white-space: normal;
-            }
+            background-color: var(--main-color);
+            width: 20%;
+            height: auto;
+            margin: 0 0 0.75rem 0;
+            border: solid 3px transparent;
+            justify-content: center;
+            text-align: center;
+            white-space: normal;
+        }
+        .button:hover{
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
+        }
     </style>
 </head>
 <pageheader>

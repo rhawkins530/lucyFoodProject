@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Nov 21, 2026 at 04:07 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.4.27
+-- Host: localhost
+-- Generation Time: Nov 23, 2026 at 03:11 AM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -1753,6 +1753,7 @@ INSERT INTO `dbgroups` (`group_name`, `color_level`) VALUES
 
 CREATE TABLE `dbinventory` (
   `id` int(11) NOT NULL,
+  `location` varchar(50) NOT NULL DEFAULT 'Main',
   `item_category_id` int(11) NOT NULL,
   `category_name` varchar(100) NOT NULL,
   `current_quantity` int(11) NOT NULL,
@@ -1764,45 +1765,47 @@ CREATE TABLE `dbinventory` (
 -- Dumping data for table `dbinventory`
 --
 
-INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_quantity`, `minimum_quantity`, `allocated_quantity`) VALUES
-(1, 1, 'Cereal/Oatmeal', 16, 6, 20),
-(2, 2, 'Cooking Oil', 2, 9, 4),
-(3, 3, 'Peanut Butter', 3, 1, 23),
-(4, 4, 'Jelly', 25, 4, 24),
-(5, 5, 'Dried Pasta', 35, 4, 35),
-(6, 6, 'Pasta Sauce', 39, 10, 10),
-(7, 7, 'Canned Chicken', 3, 10, 30),
-(8, 8, 'Canned Tuna', 4, 9, 16),
-(9, 9, 'Condiments', 9, 10, 32),
-(10, 10, 'Green Beans', 28, 2, 38),
-(11, 11, 'Corn', 6, 10, 39),
-(12, 12, 'Mixed Vegetables', 27, 1, 32),
-(13, 13, 'Baked Beans', 2, 10, 27),
-(14, 14, 'Canned/Dried Beans', 17, 10, 38),
-(15, 15, 'Canned Fruit Mixed', 18, 7, 15),
-(16, 16, 'Canned Peaches', 27, 6, 2),
-(17, 17, 'Canned Pasta', 34, 3, 1),
-(18, 18, 'Carrots', 36, 6, 15),
-(19, 19, 'Peas', 34, 1, 24),
-(20, 20, 'Ramen', 29, 6, 22),
-(21, 21, 'Milk (Shelf-Stable)', 28, 10, 22),
-(22, 22, 'Diced Tomatoes', 17, 2, 35),
-(23, 23, 'Rice (Bags)', 18, 5, 37),
-(24, 24, 'Masa Flour', 32, 10, 28),
-(25, 25, 'White Flour', 37, 6, 23),
-(26, 26, 'Soup', 23, 2, 0),
-(27, 27, 'Juice', 37, 9, 26),
-(28, 28, 'Baking Goods', 32, 8, 9),
-(29, 29, 'Macaroni and Cheese', 28, 8, 26),
-(32, 0, 'test', 0, 0, 0),
-(33, 30, 'Meal Helpers', 6, 0, 0),
-(34, 31, 'Dark Beans', 5, 0, 0),
-(35, 32, 'Snacks/Cookies', 0, 0, 0),
-(36, 33, 'Canned Meat', 0, 0, 0),
-(37, 34, 'Vegetable', 0, 0, 0),
-(38, 35, 'Tomato Product', 0, 0, 0),
-(39, 36, 'Tortilla', 0, 0, 0),
-(40, 37, 'Bagged Dry Bean', 0, 0, 0);
+INSERT INTO `dbinventory` (`id`, `location`, `item_category_id`, `category_name`, `current_quantity`, `minimum_quantity`, `allocated_quantity`) VALUES
+(1, 'Main', 1, 'Cereal/Oatmeal', 16, 6, 20),
+(2, 'Main', 2, 'Cooking Oil', 2, 9, 4),
+(3, 'Main', 3, 'Peanut Butter', 3, 1, 23),
+(4, 'Main', 4, 'Jelly', 25, 4, 24),
+(5, 'Main', 5, 'Dried Pasta', 35, 4, 35),
+(6, 'Main', 6, 'Pasta Sauce', 39, 10, 10),
+(7, 'Main', 7, 'Canned Chicken', 3, 10, 30),
+(8, 'Main', 8, 'Canned Tuna', 4, 9, 16),
+(9, 'Main', 9, 'Condiments', 9, 10, 32),
+(10, 'Main', 10, 'Green Beans', 28, 2, 38),
+(11, 'Main', 11, 'Corn', 6, 10, 39),
+(12, 'Main', 12, 'Mixed Vegetables', 27, 1, 32),
+(13, 'Main', 13, 'Baked Beans', 2, 10, 27),
+(14, 'Main', 14, 'Canned/Dried Beans', 17, 10, 38),
+(15, 'Main', 15, 'Canned Fruit Mixed', 18, 7, 15),
+(16, 'Main', 16, 'Canned Peaches', 27, 6, 2),
+(17, 'Main', 17, 'Canned Pasta', 34, 3, 1),
+(18, 'Main', 18, 'Carrots', 36, 6, 15),
+(19, 'Main', 19, 'Peas', 34, 1, 24),
+(20, 'Main', 20, 'Ramen', 29, 6, 22),
+(21, 'Main', 21, 'Milk (Shelf-Stable)', 28, 10, 22),
+(22, 'Main', 22, 'Diced Tomatoes', 17, 2, 35),
+(23, 'Main', 23, 'Rice (Bags)', 18, 5, 37),
+(24, 'Main', 24, 'Masa Flour', 32, 10, 28),
+(25, 'Main', 25, 'White Flour', 37, 6, 23),
+(26, 'Main', 26, 'Soup', 23, 2, 0),
+(27, 'Main', 27, 'Juice', 37, 9, 26),
+(28, 'Main', 28, 'Baking Goods', 32, 8, 9),
+(29, 'Main', 29, 'Macaroni and Cheese', 28, 8, 26),
+(32, 'Main', 0, 'test', 0, 0, 0),
+(33, 'Main', 30, 'Meal Helpers', 6, 0, 0),
+(34, 'Main', 31, 'Dark Beans', 5, 0, 0),
+(35, 'Main', 32, 'Snacks/Cookies', 0, 0, 0),
+(36, 'Main', 33, 'Canned Meat', 0, 0, 0),
+(37, 'Main', 34, 'Vegetable', 0, 0, 0),
+(38, 'Main', 35, 'Tomato Product', 0, 0, 0),
+(39, 'Main', 36, 'Tortilla', 0, 0, 0),
+(40, 'Main', 37, 'Bagged Dry Bean', 4, 0, 0),
+(41, 'Annex', 28, 'Baking Goods', 3, 0, 0),
+(42, 'Annex', 1, 'Cereal/Oatmeal', 2, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -1914,7 +1917,10 @@ CREATE TABLE `dbinventoryhistory` (
 --
 
 INSERT INTO `dbinventoryhistory` (`id`, `inventory_id`, `change_amount`, `change_date`, `changer_id`) VALUES
-(65, 1, 6, '2026-11-13', 1);
+(65, 1, 6, '2026-11-13', 1),
+(69, 37, 4, '2026-11-22', 1),
+(70, 28, 3, '2026-11-22', 1),
+(71, 1, 2, '2026-11-22', 1);
 
 -- --------------------------------------------------------
 
@@ -4806,7 +4812,7 @@ INSERT INTO `dbsuggestions` (`id`, `user_id`, `title`, `body`, `created_at`) VAL
 
 CREATE TABLE `dbunsorted` (
   `id` int(11) NOT NULL,
-  `weight` decimal(10,0) NOT NULL,
+  `weight` decimal(10,2) NOT NULL,
   `crate_type` varchar(30) NOT NULL,
   `state` varchar(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -5255,7 +5261,7 @@ ALTER TABLE `dbfoodorderitem`
 -- AUTO_INCREMENT for table `dbinventory`
 --
 ALTER TABLE `dbinventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `dbinventoryevent`
@@ -5267,7 +5273,7 @@ ALTER TABLE `dbinventoryevent`
 -- AUTO_INCREMENT for table `dbinventoryhistory`
 --
 ALTER TABLE `dbinventoryhistory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT for table `dbitemcategory`
@@ -5357,7 +5363,7 @@ ALTER TABLE `dbsuggestions`
 -- AUTO_INCREMENT for table `dbunsorted`
 --
 ALTER TABLE `dbunsorted`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `dbunsortedcategories`

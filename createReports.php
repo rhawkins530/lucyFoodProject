@@ -386,6 +386,7 @@
         }
 
     .report-type-options button {
+        background-color: var(--main-color);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -394,6 +395,10 @@
         margin-right: auto;
         margin-bottom: 2%;
         max-width: 75%;
+    }
+    .report-type-options button:hover{
+        background-color: var(--secondary-accent-color);
+        border: solid 3px var(--accent-color);
     }
     .report-message {
         display: flex;

@@ -286,9 +286,9 @@ if(!empty($_GET)) {
         }
         .modify-button {
             padding: 0.5rem 1rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 0.95rem;
@@ -296,7 +296,8 @@ if(!empty($_GET)) {
             max-width: 500px;
         }
         .modify-button:hover {
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         @media only screen and (max-width: 768px) {
             pageheader {

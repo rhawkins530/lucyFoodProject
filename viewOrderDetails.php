@@ -227,9 +227,9 @@ if (isset($_GET['generate_pdf'])) {
         .fulfill-button {
             margin-left: auto;
             padding: 0.5rem 1.5rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 0.95rem;
@@ -240,7 +240,8 @@ if (isset($_GET['generate_pdf'])) {
         }
 
         .fulfill-button:hover {
-            opacity: 0.75;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
 
         @media only screen and (max-width: 768px) {

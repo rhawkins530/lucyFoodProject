@@ -409,9 +409,9 @@
         .modify-activate-btn,
         .modify-deactivate-btn {
             padding: 0.5rem 1.5rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 0.95rem;
@@ -435,7 +435,8 @@
         .modify-save-btn:hover,
         .modify-cancel-btn:hover,
         .modify-activate-btn:hover {
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         .modifyUsers-formBtns{
             display: flex;

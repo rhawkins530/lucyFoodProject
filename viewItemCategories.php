@@ -166,9 +166,9 @@
         }
         .modify-btn {
             padding: 0.5rem 1.5rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 0.95rem;
@@ -176,7 +176,8 @@
             width: auto;
         }
         .modify-btn:hover {
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         .section-header {
             display: flex;
@@ -200,9 +201,9 @@
             align-items: center;
             justify-content: center;
             padding: 0.5rem 1.5rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 1rem;
@@ -211,7 +212,8 @@
             text-align: center;
         }
         .add-category-lnk button:hover {
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         @media only screen and (max-width: 768px) {
             pageheader {
