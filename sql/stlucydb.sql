@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 13, 2026 at 11:31 PM
+-- Generation Time: Nov 23, 2026 at 09:02 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.4.27
 
@@ -1753,6 +1753,7 @@ INSERT INTO `dbgroups` (`group_name`, `color_level`) VALUES
 
 CREATE TABLE `dbinventory` (
   `id` int(11) NOT NULL,
+  `location` varchar(50) NOT NULL DEFAULT 'Main',
   `item_category_id` int(11) NOT NULL,
   `category_name` varchar(100) NOT NULL,
   `current_quantity` int(11) NOT NULL,
@@ -1764,45 +1765,48 @@ CREATE TABLE `dbinventory` (
 -- Dumping data for table `dbinventory`
 --
 
-INSERT INTO `dbinventory` (`id`, `item_category_id`, `category_name`, `current_quantity`, `minimum_quantity`, `allocated_quantity`) VALUES
-(1, 1, 'Cereal/Oatmeal', 16, 6, 20),
-(2, 2, 'Cooking Oil', 2, 9, 4),
-(3, 3, 'Peanut Butter', 3, 1, 23),
-(4, 4, 'Jelly', 25, 4, 24),
-(5, 5, 'Dried Pasta', 35, 4, 35),
-(6, 6, 'Pasta Sauce', 39, 10, 10),
-(7, 7, 'Canned Chicken', 3, 10, 30),
-(8, 8, 'Canned Tuna', 4, 9, 16),
-(9, 9, 'Condiments', 9, 10, 32),
-(10, 10, 'Green Beans', 28, 2, 38),
-(11, 11, 'Corn', 6, 10, 39),
-(12, 12, 'Mixed Vegetables', 27, 1, 32),
-(13, 13, 'Baked Beans', 2, 10, 27),
-(14, 14, 'Canned/Dried Beans', 17, 10, 38),
-(15, 15, 'Canned Fruit Mixed', 18, 7, 15),
-(16, 16, 'Canned Peaches', 27, 6, 2),
-(17, 17, 'Canned Pasta', 34, 3, 1),
-(18, 18, 'Carrots', 36, 6, 15),
-(19, 19, 'Peas', 34, 1, 24),
-(20, 20, 'Ramen', 29, 6, 22),
-(21, 21, 'Milk (Shelf-Stable)', 28, 10, 22),
-(22, 22, 'Diced Tomatoes', 17, 2, 35),
-(23, 23, 'Rice (Bags)', 18, 5, 37),
-(24, 24, 'Masa Flour', 32, 10, 28),
-(25, 25, 'White Flour', 37, 6, 23),
-(26, 26, 'Soup', 23, 2, 0),
-(27, 27, 'Juice', 37, 9, 26),
-(28, 28, 'Baking Goods', 32, 8, 9),
-(29, 29, 'Macaroni and Cheese', 28, 8, 26),
-(32, 0, 'test', 0, 0, 0),
-(33, 30, 'Meal Helpers', 6, 0, 0),
-(34, 31, 'Dark Beans', 5, 0, 0),
-(35, 32, 'Snacks/Cookies', 0, 0, 0),
-(36, 33, 'Canned Meat', 0, 0, 0),
-(37, 34, 'Vegetable', 0, 0, 0),
-(38, 35, 'Tomato Product', 0, 0, 0),
-(39, 36, 'Tortilla', 0, 0, 0),
-(40, 37, 'Bagged Dry Bean', 0, 0, 0);
+INSERT INTO `dbinventory` (`id`, `location`, `item_category_id`, `category_name`, `current_quantity`, `minimum_quantity`, `allocated_quantity`) VALUES
+(1, 'Main', 1, 'Cereal/Oatmeal', 16, 6, 20),
+(2, 'Main', 2, 'Cooking Oil', 2, 9, 4),
+(3, 'Main', 3, 'Peanut Butter', 3, 1, 23),
+(4, 'Main', 4, 'Jelly', 25, 4, 24),
+(5, 'Main', 5, 'Dried Pasta', 35, 4, 35),
+(6, 'Main', 6, 'Pasta Sauce', 39, 10, 10),
+(7, 'Main', 7, 'Canned Chicken', 3, 10, 30),
+(8, 'Main', 8, 'Canned Tuna', 4, 9, 16),
+(9, 'Main', 9, 'Condiments', 9, 10, 32),
+(10, 'Main', 10, 'Green Beans', 28, 2, 38),
+(11, 'Main', 11, 'Corn', 6, 10, 39),
+(12, 'Main', 12, 'Mixed Vegetables', 27, 1, 32),
+(13, 'Main', 13, 'Baked Beans', 2, 10, 27),
+(14, 'Main', 14, 'Canned/Dried Beans', 17, 10, 38),
+(15, 'Main', 15, 'Canned Fruit Mixed', 18, 7, 15),
+(16, 'Main', 16, 'Canned Peaches', 27, 6, 2),
+(17, 'Main', 17, 'Canned Pasta', 34, 3, 1),
+(18, 'Main', 18, 'Carrots', 36, 6, 15),
+(19, 'Main', 19, 'Peas', 34, 1, 24),
+(20, 'Main', 20, 'Ramen', 29, 6, 22),
+(21, 'Main', 21, 'Milk (Shelf-Stable)', 28, 10, 22),
+(22, 'Main', 22, 'Diced Tomatoes', 17, 2, 35),
+(23, 'Main', 23, 'Rice (Bags)', 18, 5, 37),
+(24, 'Main', 24, 'Masa Flour', 32, 10, 28),
+(25, 'Main', 25, 'White Flour', 37, 6, 23),
+(26, 'Main', 26, 'Soup', 23, 2, 0),
+(27, 'Main', 27, 'Juice', 37, 9, 26),
+(28, 'Main', 28, 'Baking Goods', 32, 8, 9),
+(29, 'Main', 29, 'Macaroni and Cheese', 28, 8, 26),
+(32, 'Main', 0, 'test', 0, 0, 0),
+(33, 'Main', 30, 'Meal Helpers', 6, 0, 0),
+(34, 'Main', 31, 'Dark Beans', 5, 0, 0),
+(35, 'Main', 32, 'Snacks/Cookies', 0, 0, 0),
+(36, 'Main', 33, 'Canned Meat', 0, 0, 0),
+(37, 'Main', 34, 'Vegetable', -3, 0, 0),
+(38, 'Main', 35, 'Tomato Product', 0, 0, 0),
+(39, 'Main', 36, 'Tortilla', 0, 0, 0),
+(40, 'Main', 37, 'Bagged Dry Bean', 7, 0, 0),
+(41, 'Annex', 28, 'Baking Goods', 3, 0, 0),
+(42, 'Annex', 1, 'Cereal/Oatmeal', 2, 0, 0),
+(43, 'Annex', 37, 'Bagged Dry Bean', 12, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -1905,7 +1909,7 @@ CREATE TABLE `dbinventoryhistory` (
   `id` int(11) NOT NULL,
   `inventory_id` int(11) NOT NULL,
   `change_amount` int(11) NOT NULL,
-  `change_date` date NOT NULL,
+  `change_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `changer_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -1914,7 +1918,12 @@ CREATE TABLE `dbinventoryhistory` (
 --
 
 INSERT INTO `dbinventoryhistory` (`id`, `inventory_id`, `change_amount`, `change_date`, `changer_id`) VALUES
-(65, 1, 6, '2026-11-13', 1);
+(65, 1, 6, '2026-11-13 05:00:00', 1),
+(69, 37, 4, '2026-11-22 05:00:00', 1),
+(70, 28, 3, '2026-11-22 05:00:00', 1),
+(71, 1, 2, '2026-11-22 05:00:00', 1),
+(72, 37, 5, '2026-11-23 05:00:00', 1),
+(73, 37, 7, '2026-11-23 05:00:00', 1);
 
 -- --------------------------------------------------------
 
@@ -4215,7 +4224,13 @@ INSERT INTO `dbnotifications` (`id`, `recipient_id`, `message`, `created_at`, `i
 (57, 'vmsroot2', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
 (58, 'ccda_admin', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
 (59, 'aconsuegra', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
-(60, 'jazmyne.bartlett@ccda.net', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13);
+(60, 'jazmyne.bartlett@ccda.net', 'Low stock: Baked Beans has 2 boxes left (minimum 10)', '2026-11-13 21:05:19', 0, 'low_stock', 13),
+(83, 'vmsroot', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(84, 'admin', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(85, 'vmsroot2', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(86, 'ccda_admin', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(87, 'aconsuegra', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37),
+(88, 'jazmyne.bartlett@ccda.net', 'Low stock: Vegetable has -3 boxes left (minimum 0)', '2026-11-23 08:02:05', 0, 'low_stock', 37);
 
 -- --------------------------------------------------------
 
@@ -4382,6 +4397,21 @@ INSERT INTO `dbpersons` (`personId`, `id`, `first_name`, `last_name`, `email`, `
 (11, 'aconsuegra', 'Allison', 'Consuegra', 'allisonconsuegra0@gmail.com', 'Superadmin', 'Active', '$2y$10$3tWO/ffX7TlUX.qnzAW8vO4rq0ALGXOdsDnbNVq54bByQ.pS1ZIQm', 0),
 (12, 'dev', 'eron', 'hardin', 'eronhardin2002@gmail.com', 'admin', 'Deleted', '$2y$10$Jkl5e1MIk3bnfBEFXfxEC.w0.qBYH7AKzYlyLghvsnLmv9moMSMeq', 0),
 (13, 'jazmyne.bartlett@ccda.net', 'Jazmyne', 'Bartlett', 'Jazmyne.bartlett@ccda.net', 'Admin', 'Active', '$2y$10$udcW6zeb/C1MRGNGRXiy/.Ia4noOL0ZvHL33TiuJ2ociuaSVPrLzC', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dbreports`
+--
+
+CREATE TABLE `dbreports` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `report_type` varchar(100) NOT NULL,
+  `date_created` datetime NOT NULL,
+  `creator_id` varchar(256) NOT NULL,
+  `file_path` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -4786,6 +4816,45 @@ INSERT INTO `dbsuggestions` (`id`, `user_id`, `title`, `body`, `created_at`) VAL
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dbunsorted`
+--
+
+CREATE TABLE `dbunsorted` (
+  `id` int(11) NOT NULL,
+  `weight` decimal(10,2) NOT NULL,
+  `crate_type` varchar(30) NOT NULL,
+  `state` varchar(30) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dbunsortedcategories`
+--
+
+CREATE TABLE `dbunsortedcategories` (
+  `id` int(11) NOT NULL,
+  `unsorted_id` int(11) NOT NULL,
+  `item_category_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dbunsortedhistory`
+--
+
+CREATE TABLE `dbunsortedhistory` (
+  `id` int(11) NOT NULL,
+  `unsorted_id` int(11) NOT NULL,
+  `change_amount` decimal(10,0) NOT NULL,
+  `change_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `changer_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `discussion_replies`
 --
 
@@ -5041,6 +5110,12 @@ ALTER TABLE `dbpersons`
   ADD UNIQUE KEY `id` (`id`);
 
 --
+-- Indexes for table `dbreports`
+--
+ALTER TABLE `dbreports`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `dbscheduledemails`
 --
 ALTER TABLE `dbscheduledemails`
@@ -5077,6 +5152,26 @@ ALTER TABLE `dbshoppingevent`
 -- Indexes for table `dbsuggestions`
 --
 ALTER TABLE `dbsuggestions`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `dbunsorted`
+--
+ALTER TABLE `dbunsorted`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `dbunsortedcategories`
+--
+ALTER TABLE `dbunsortedcategories`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `unsorted_id_fk` (`unsorted_id`),
+  ADD KEY `item_category_id_fk` (`item_category_id`);
+
+--
+-- Indexes for table `dbunsortedhistory`
+--
+ALTER TABLE `dbunsortedhistory`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -5175,7 +5270,7 @@ ALTER TABLE `dbfoodorderitem`
 -- AUTO_INCREMENT for table `dbinventory`
 --
 ALTER TABLE `dbinventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `dbinventoryevent`
@@ -5187,7 +5282,7 @@ ALTER TABLE `dbinventoryevent`
 -- AUTO_INCREMENT for table `dbinventoryhistory`
 --
 ALTER TABLE `dbinventoryhistory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
 
 --
 -- AUTO_INCREMENT for table `dbitemcategory`
@@ -5211,7 +5306,7 @@ ALTER TABLE `dbmessages`
 -- AUTO_INCREMENT for table `dbnotifications`
 --
 ALTER TABLE `dbnotifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT for table `dbpalletcounts`
@@ -5230,6 +5325,12 @@ ALTER TABLE `dbpalletevent`
 --
 ALTER TABLE `dbpersons`
   MODIFY `personId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `dbreports`
+--
+ALTER TABLE `dbreports`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `dbscheduledemails`
@@ -5268,6 +5369,24 @@ ALTER TABLE `dbsuggestions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `dbunsorted`
+--
+ALTER TABLE `dbunsorted`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `dbunsortedcategories`
+--
+ALTER TABLE `dbunsortedcategories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
+
+--
+-- AUTO_INCREMENT for table `dbunsortedhistory`
+--
+ALTER TABLE `dbunsortedhistory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT for table `discussion_replies`
 --
 ALTER TABLE `discussion_replies`
@@ -5294,6 +5413,13 @@ ALTER TABLE `user_verified_ids`
 --
 ALTER TABLE `dbfoodorderitem`
   ADD CONSTRAINT `fk_food_order` FOREIGN KEY (`order_id`) REFERENCES `dbfoodorder` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `dbunsortedcategories`
+--
+ALTER TABLE `dbunsortedcategories`
+  ADD CONSTRAINT `item_category_id_fk` FOREIGN KEY (`item_category_id`) REFERENCES `dbitemcategory` (`id`),
+  ADD CONSTRAINT `unsorted_id_fk` FOREIGN KEY (`unsorted_id`) REFERENCES `dbunsorted` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

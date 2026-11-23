@@ -346,8 +346,13 @@
     text-align: center;
 }
 .order-type-options button {
+    background-color: var(--main-color);
     padding: 70px 0;
     margin: 50px;
+}
+.order-type-options button:hover{
+    background-color: var(--secondary-accent-color);
+    border: solid 3px var(--accent-color);
 }
 .order-message {
     max-width: 1100px;

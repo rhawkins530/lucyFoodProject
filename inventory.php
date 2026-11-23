@@ -17,31 +17,13 @@ require_once(__DIR__ . '/database/dbInventoryEvent.php');
 require_once(__DIR__ . '/database/dbItemCategory.php');
 require_once(__DIR__ . '/database/dbItemCounts.php');
 require_once(__DIR__ . '/database/dbInventory.php');
+require_once(__DIR__ . '/database/dbUnsorted.php');
 
 
 
-//Get sort parameters
-$sortCol = isset($_GET['sortCol']) ? (int)$_GET['sortCol'] : -1; // Default to -1 (no sorting)
-$sortDir = isset($_GET['sortDir']) && $_GET['sortDir'] === 'desc' ? 'DESC' : 'ASC';
-
-//Build the items array for the selected inventory
-//Currently this will not include snapshots of previous inventories
-
-$items = [];
-$columnNums = [
-    1 => "category_name",
-    2 => "current_quantity",
-    3 => "allocated_quantity",
-    4 => "current_quantity - allocated_quantity",
-    5 => "minimum_quantity"
-];
-
-//Build the items array for the selected inventory
-if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
-    $items = getAllInventoryItemsSorted($columnNums[$sortCol], $sortDir);
-} else {
-    $items = getAllInventoryItems();
-}
+// Load each list once; column sorting is handled in the browser.
+$items = getAllInventoryItems();
+$unsorted_inventories = getAllUnsortedInventories();
 
 ?>
 
@@ -110,6 +92,18 @@ if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
             font-weight: 500;
             position: sticky;
             top: 100px; /* height of page header */
+        }
+        .sort-button {
+            padding: 0;
+            border: 0;
+            background: none;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+        }
+        .sort-button:hover,
+        .sort-button:focus-visible {
+            text-decoration: underline;
         }
         .report-table tr:hover {
             background-color: rgba(255,255,255,0.05);
@@ -291,9 +285,9 @@ if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
         }
         .modify-button {
             padding: 0.5rem 1rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 0.95rem;
@@ -301,7 +295,8 @@ if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
             max-width: 500px;
         }
         .modify-button:hover {
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         @media only screen and (max-width: 768px) {
             pageheader {
@@ -382,152 +377,168 @@ if ($sortCol >= 0 && $sortCol <= count($columnNums)) {
 <div class="report-container">
             <div class="report-section">
                 <h2>Food Items</h2>
+                <select id="food-status" name=food-status">
+                    <option value="Sorted">Sorted</option>
+                    <option value="Unsorted">Unsorted</option>
+                </select>
                 <hr>
                 <br>
-                <div class="table-wrapper">
-                    <table class="report-table" id="inventoryTable">
-                        <thead>
+                <div id="sorted-table">
+                    <div class="table-wrapper">
+                        <table class="report-table" id="sortedInventoryTable">
+                            <thead>
                                 <tr>
-                                    <th>
-                                        <?php if ($sortCol === 1 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↑</span></a>
-                                            <a href='?sortCol=1&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↑</span></a>
-                                        <?php elseif ($sortCol === 1 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Item Name ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Item Name ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="desktop-text">Item Name ⇅</span></a>
-                                            <a href='?sortCol=1&sortDir=asc' style="color: white;"><span class="mobile-text">Item Name ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 2 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=2&sortDir=desc' style="font-weight: bold;color: white;"><span class="desktop-text">Total Boxes ↑</span></a>
-                                            <a href='?sortCol=2&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↑</span></a>
-                                        <?php elseif ($sortCol === 2 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Total Boxes ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Total Boxes ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="desktop-text">Total Boxes ⇅</span></a>
-                                            <a href='?sortCol=2&sortDir=asc' style="color: white;"><span class="mobile-text">Total Boxes ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 3 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↑</span></a>
-                                            <a href='?sortCol=3&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↑</span></a>
-                                        <?php elseif ($sortCol === 3 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Allocated Items ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Allocated Items ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="desktop-text">Allocated Items ⇅</span></a>
-                                            <a href='?sortCol=3&sortDir=asc' style="color: white;"><span class="mobile-text">Allocated Items ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 4 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↑</span></a>
-                                            <a href='?sortCol=4&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↑</span></a>
-                                        <?php elseif ($sortCol === 4 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Over Allocated ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Over Allocated ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="desktop-text">Over Allocated ⇅</span></a>
-                                            <a href='?sortCol=4&sortDir=asc' style="color: white;"><span class="mobile-text">Over Allocated ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
-                                    <th>
-                                        <?php if ($sortCol === 5 && $sortDir === 'ASC'): ?>
-                                            <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↑</span></a>
-                                            <a href='?sortCol=5&sortDir=desc' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↑</span></a>
-                                        <?php elseif ($sortCol === 5 && $sortDir === 'DESC'): ?>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="desktop-text">Minimum Quantity ↓</span></a>
-                                            <a href='?' style="font-weight: bold; color: white;"><span class="mobile-text">Minimum Quantity ↓</span></a>
-                                        <?php else: ?>
-                                            <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="desktop-text">Minimum Quantity ⇅</span></a>
-                                            <a href='?sortCol=5&sortDir=asc' style="color: white;"><span class="mobile-text">Minimum Quantity ⇅</span></a>
-                                        <?php endif; ?>
-                                    </th>
+                                    <th data-sort-type="text" aria-sort="none"><button class="sort-button" type="button">Item Name <span aria-hidden="true">⇅</span></button></th>
+                                    <th data-sort-type="number" aria-sort="none"><button class="sort-button" type="button">Total Boxes <span aria-hidden="true">⇅</span></button></th>
+                                    <th data-sort-type="number" aria-sort="none"><button class="sort-button" type="button">Allocated Items <span aria-hidden="true">⇅</span></button></th>
+                                    <th data-sort-type="number" aria-sort="none"><button class="sort-button" type="button">Over Allocated <span aria-hidden="true">⇅</span></button></th>
+                                    <th data-sort-type="number" aria-sort="none"><button class="sort-button" type="button">Minimum Quantity <span aria-hidden="true">⇅</span></button></th>
                                 </tr>
                             </thead>
-                        <tbody>
-                            <?php if (count($items) > 0): ?>
-                                <?php foreach ($items as $item): ?>
+                            <tbody>
+                                <?php if (count($items) > 0): ?>
+                                    <?php foreach ($items as $item): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($item->getCategoryName()) ?></td>
+                                            <td><?= htmlspecialchars($item->getCurrentQuantity()) ?></td>
+                                            <td><?= htmlspecialchars($item->getAllocatedQuantity()) ?></td>
+                                            <td data-sort-value="<?= $item->getAllocatedQuantity() > $item->getCurrentQuantity() ? '1' : '0' ?>"><?= $item->getAllocatedQuantity() > $item->getCurrentQuantity() ? '✓' : '' ?></td>
+                                            <td><?= htmlspecialchars($item->getMinimumQuantity()) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($item->getCategoryName()) ?></td>
-                                        <td><?= htmlspecialchars($item->getCurrentQuantity()) ?></td>
-                                        <td><?= htmlspecialchars($item->getAllocatedQuantity()) ?></td>
-                                        <td><?= $item->getAllocatedQuantity() > $item->getCurrentQuantity() ? '✓' : '' ?></td>
-                                        <td><?= htmlspecialchars($item->getMinimumQuantity()) ?></td>
+                                        <td colspan="8" class="empty-state">No items found.</td>
                                     </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="unsorted-table" style="display:none;">
+                    <div class="table-wrapper">
+                        <table class="report-table" id="unsortedInventoryTable">
+                            <thead>
                                 <tr>
-                                    <td colspan="8" class="empty-state">No items found.</td>
+                                    <th data-sort-type="number" aria-sort="none"><button class="sort-button" type="button">ID <span aria-hidden="true">⇅</span></button></th>
+                                    <th data-sort-type="number" aria-sort="none"><button class="sort-button" type="button">Weight <span aria-hidden="true">⇅</span></button></th>
+                                    <th data-sort-type="text" aria-sort="none"><button class="sort-button" type="button">Crate Type <span aria-hidden="true">⇅</span></button></th>
+                                    <th data-sort-type="text" aria-sort="none"><button class="sort-button" type="button">State <span aria-hidden="true">⇅</span></button></th>
                                 </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php if (count($unsorted_inventories) > 0): ?>
+                                    <?php foreach ($unsorted_inventories as $unsorted): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($unsorted->getId()) ?></td>
+                                            <td><?= htmlspecialchars($unsorted->getWeight()) ?></td>
+                                            <td><?= htmlspecialchars($unsorted->getCrateType()) ?></td>
+                                            <td><?= htmlspecialchars($unsorted->getStatus())?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="8" class="empty-state">No items found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-			        </div>
+		</div>
     </main>
 
     <script>
-        $(function() {
-            // Sorting functionality
-            $('#sortSelect').change(function() {
-                var sortValue = $(this).val();
-                var $tbody = $('#inventoryTable tbody');
-                var $rows = $tbody.find('tr').get();
+        document.addEventListener('DOMContentLoaded', function () {
 
-                if (sortValue === 'name-asc') {
-                    // Sort by name A-Z
-                    $rows.sort(function(a, b) {
-                        var nameA = $(a).find('td').eq(0).text().toLowerCase();
-                        var nameB = $(b).find('td').eq(0).text().toLowerCase();
-                        return nameA.localeCompare(nameB);
-                    });
-                } else if (sortValue === 'name-desc') {
-                    // Sort by name Z-A
-                    $rows.sort(function(a, b) {
-                        var nameA = $(a).find('td').eq(0).text().toLowerCase();
-                        var nameB = $(b).find('td').eq(0).text().toLowerCase();
-                        return nameB.localeCompare(nameA);
-                    });
-                }
+        const status      = document.getElementById('food-status');
+        const firstFields = document.getElementById('sorted-table');
+        const secondFields = document.getElementById('unsorted-table');
 
-                // Re-append rows in new order
-                $.each($rows, function(index, row) {
-                    $tbody.append(row);
-                });
+        const secondOption = 'Unsorted';
+
+        function setDisabled(container, disabled) {
+            container.querySelectorAll('input, select').forEach(el => {
+                el.disabled = disabled;
             });
+        }
 
-            // Search functionality
-            $('#searchInput').on('input', function() {
-                var searchTerm = $(this).val().toLowerCase();
+        function updateFields() {
+            const showSecond = status.value === secondOption;
 
-                $('#inventoryTable tbody tr').each(function() {
-                    var itemName = $(this).find('td').eq(0).text().toLowerCase();
+            // Control visibility
+            firstFields.style.display  = showSecond ? 'none' : 'block';
+            secondFields.style.display = showSecond ? 'block' : 'none';
 
-                    if (itemName.indexOf(searchTerm) > -1) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
+            // Enable/disable inputs
+            setDisabled(firstFields, showSecond);
+            setDisabled(secondFields, !showSecond);
+        }
+
+        // Update whenever the dropdown selection changes
+        status.addEventListener('change', updateFields);
+
+        // Set the correct visibility when the page initially loads
+        updateFields();
+
+        document.querySelectorAll('.report-table').forEach(table => {
+            const originalRows = Array.from(table.tBodies[0].rows);
+
+            table.querySelectorAll('.sort-button').forEach((button, columnIndex) => {
+                button.addEventListener('click', function () {
+                    const header = button.closest('th');
+                    const currentColumn = Number(table.dataset.sortColumn);
+                    if (currentColumn === columnIndex && table.dataset.sortDirection === 'desc') {
+                        originalRows.forEach(row => table.tBodies[0].appendChild(row));
+                        delete table.dataset.sortColumn;
+                        delete table.dataset.sortDirection;
+
+                        table.querySelectorAll('thead th').forEach(th => {
+                            th.setAttribute('aria-sort', 'none');
+                            th.querySelector('.sort-button span').textContent = '⇅';
+                        });
+                        return;
                     }
+
+                    const direction = currentColumn === columnIndex && table.dataset.sortDirection === 'asc'
+                        ? 'desc'
+                        : 'asc';
+                    const sortType = header.dataset.sortType;
+                    const rows = Array.from(table.tBodies[0].rows)
+                        .filter(row => !row.querySelector('.empty-state'));
+
+                    rows.sort((rowA, rowB) => {
+                        const cellA = rowA.cells[columnIndex];
+                        const cellB = rowB.cells[columnIndex];
+                        const valueA = cellA.dataset.sortValue || cellA.textContent.trim();
+                        const valueB = cellB.dataset.sortValue || cellB.textContent.trim();
+                        let comparison;
+
+                        if (sortType === 'number') {
+                            comparison = Number(valueA) - Number(valueB);
+                        } else {
+                            comparison = valueA.localeCompare(valueB, undefined, { numeric: true, sensitivity: 'base' });
+                        }
+
+                        return direction === 'asc' ? comparison : -comparison;
+                    });
+
+                    rows.forEach(row => table.tBodies[0].appendChild(row));
+                    table.dataset.sortColumn = columnIndex;
+                    table.dataset.sortDirection = direction;
+
+                    table.querySelectorAll('thead th').forEach((th, index) => {
+                        const isSorted = index === columnIndex;
+                        th.setAttribute('aria-sort', isSorted ? (direction === 'asc' ? 'ascending' : 'descending') : 'none');
+                        th.querySelector('.sort-button span').textContent = isSorted
+                            ? (direction === 'asc' ? '↑' : '↓')
+                            : '⇅';
+                    });
                 });
             });
+        });
 
-            // Clear search button
-            $('#clearSearch').click(function() {
-                $('#searchInput').val('');
-                $('#inventoryTable tbody tr').show();
-            });
-
-            // Store original order for default sorting
-            $('#inventoryTable tbody tr').each(function(index) {
-                $(this).data('original-index', index);
-            });
         });
     </script>
 

@@ -11,8 +11,10 @@ if (isset($_SESSION['_id'])){
     $userID = $_SESSION['_id'];
 }
 
-require_once('database/dbinfo.php');
-//add more databases when needed for connection.
+require_once(__DIR__ . '/database/dbinfo.php');
+require_once(__DIR__ . '/database/dbReports.php');
+
+$reports = getAllReports();
 ?>
 <!DOCTYPE html>
 <html>
@@ -71,8 +73,11 @@ require_once('database/dbinfo.php');
             position: sticky;
             top: 100px; /* height of page header */
         }
-        .report-table tr:hover {
-            background-color: rgba(255,255,255,0.05);
+        .report-table tbody tr.report-row {
+            cursor: pointer;
+        }
+        .report-table tbody tr.report-row:hover {
+            background-color: rgba(255,255,255,0.6);
         }
         .empty-state {
             text-align: center;
@@ -171,21 +176,9 @@ require_once('database/dbinfo.php');
                 </div>
                 <hr>
                 <br>
-                <?php
-                    //placeholder data.
-                    //dates are YYYY-MM-DD so they sort correctly.
-                    $reports = [
-                        ['name' => '2024 End of Year Report',          'file' => '', 'type' => 'End of Year Report',               'date' => '2025-01-06'],
-                        ['name' => '2025 End of Year Report',          'file' => '', 'type' => 'End of Year Report',               'date' => '2026-01-05'],
-                        ['name' => '2025 Q4 Quarterly Report',         'file' => '', 'type' => 'Quarterly Report',                 'date' => '2026-01-07'],
-                        ['name' => '2026 Q1 Quarterly Report',         'file' => '', 'type' => 'Quarterly Report',                 'date' => '2026-04-03'],
-                        ['name' => '2026 Q2 Quarterly Report',         'file' => '', 'type' => 'Quarterly Report',                 'date' => '2026-07-02'],
-                        ['name' => 'Container Date Entered Report Mar 2026',    'file' => '', 'type' => 'Container Date Entered Report',    'date' => '2026-03-18'],
-                        ['name' => 'Container Date Entered Report Sep 2026',    'file' => '', 'type' => 'Container Date Entered Report',    'date' => '2026-09-14'],
-                        ['name' => 'Total Available Inventory Report Aug 2026', 'file' => '', 'type' => 'Total Available Inventory Report', 'date' => '2026-08-21'],
-                        ['name' => 'Total Available Inventory Report Oct 2026', 'file' => '', 'type' => 'Total Available Inventory Report', 'date' => '2026-10-30'],
-                    ];
-                ?>
+                <?php if (empty($reports)): ?>
+                    <p class="empty-state">No Reports Available.</p>
+                <?php else: ?>
                 <div class="order-list-section">
                     <table class="report-table" id="reportTable">
                         <thead>
@@ -196,16 +189,28 @@ require_once('database/dbinfo.php');
                             </tr>
                         </thead>
                         <tbody id="reportBody">
-                            <?php foreach ($reports as $r): ?>
-                                <tr data-type="<?= htmlspecialchars($r['type']) ?>"
-                                    data-date="<?= htmlspecialchars($r['date']) ?>">
+                            <?php foreach ($reports as $r):
+                                $reportType = $r['report_type'] ?? '';
+                                $reportDate = $r['date_created'] ?? '';
+                                $reportName = $r['name'] ?? 'Untitled Report';
+                                $reportID = (int)($r['id'] ?? 0);
+                            ?>
+                                <tr class="report-row"
+                                    data-type="<?= htmlspecialchars($reportType, ENT_QUOTES, 'UTF-8') ?>"
+                                    data-date="<?= htmlspecialchars($reportDate, ENT_QUOTES, 'UTF-8') ?>"
+                                    data-href="viewReportDetails.php?id=<?= $reportID ?>">
                                     <td>
-                                        <a href="<?= htmlspecialchars($r['file']) ?>" target="_blank" rel="noopener noreferrer">
-                                            <?= htmlspecialchars($r['name']) ?>
+                                        <a href="viewReportDetails.php?id=<?= $reportID ?>">
+                                            <?= htmlspecialchars($reportName, ENT_QUOTES, 'UTF-8') ?>
                                         </a>
                                     </td>
-                                    <td><?= htmlspecialchars($r['type']) ?></td>
-                                    <td><?= date('M j, Y', strtotime($r['date'])) ?></td>
+                                    <td><?= htmlspecialchars($reportType, ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td>
+                                        <?php
+                                        $timestamp = $reportDate ? strtotime($reportDate) : false;
+                                        echo $timestamp ? date('M j, Y', $timestamp) : '—';
+                                        ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                             <tr id="noReportsRow" style="display:none;">
@@ -214,6 +219,7 @@ require_once('database/dbinfo.php');
                         </tbody>
                     </table>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </main>
@@ -228,8 +234,13 @@ require_once('database/dbinfo.php');
             let sortDir = 'desc'; //newest first
 
             function dataRows() {
-                return Array.from(body.querySelectorAll('tr[data-type]'));
+                return Array.from(body.querySelectorAll('tr.report-row'));
             }
+
+            dataRows().forEach(row => row.addEventListener('click', e => {
+                if (e.target.closest('a')) return;
+                window.location.href = row.dataset.href;
+            }));
 
             function applyFilter() {
                 const selected = typeSelect.value;

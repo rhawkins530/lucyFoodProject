@@ -210,6 +210,8 @@ function sortCell($type, $val) {
         }
 
         .button {
+            background-color: var(--main-color);
+            border: solid 3px transparent;
             display: flex;
             margin-left: auto;
             width: 25%;
@@ -218,7 +220,8 @@ function sortCell($type, $val) {
         }
 
         .button:hover { 
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
 
         .status-badge {
@@ -303,7 +306,6 @@ function sortCell($type, $val) {
             .button {
                 width: 100%;
                 height: auto;
-                margin: 0 0 0.75rem 0;
                 box-sizing: border-box;
                 justify-content: center;
                 text-align: center;
