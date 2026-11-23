@@ -157,9 +157,9 @@
         .modify-cancel-btn,
         .modify-delete-btn {
             padding: 0.5rem 1.5rem;
-            background-color: var(--accent-color);
+            background-color: var(--main-color);
             color: var(--button-font-color);
-            border: none;
+            border: solid 3px transparent;
             border-radius: 0.25rem;
             cursor: pointer;
             font-size: 0.95rem;
@@ -176,19 +176,22 @@
         }
         .modify-save-btn:hover,
         .modify-cancel-btn:hover {
-            opacity: 0.85;
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         .back-btn {
             display: inline-block;
             margin-bottom: 1rem;
             padding: 0.5rem 1rem;
-            background-color: rgba(0,0,0,0.2);
+            background-color: var(--main-color);
+            border: solid 3px transparent;
             color: var(--page-font-color);
             text-decoration: none;
             border-radius: 0.25rem;
         }
         .back-btn:hover {
-            background-color: rgba(0,0,0,0.3);
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
         @media only screen and (max-width: 768px) {
             pageheader {

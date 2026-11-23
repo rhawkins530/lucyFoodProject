@@ -249,7 +249,13 @@ if (isset($_POST['food-status'])) {
         }
 
         button {
+            background-color: var(--main-color);
             cursor: pointer;
+        }
+
+        button:hover{
+            background-color: var(--secondary-accent-color);
+            border: solid 3px var(--accent-color);
         }
 
         #form-errors {
