@@ -10,6 +10,8 @@
         $loggedIn = true;
         $accessLevel = $_SESSION['access_level'];
         $userID = $_SESSION['_id'];
+    } else {
+        header('Location: login.php');
     }
 
     require_once('database/dbinfo.php');
@@ -17,6 +19,7 @@
     require_once('database/dbInventory.php');
     require_once('database/dbInventoryHistory.php');
     require_once('database/dbUnsortedHistory.php');
+    require_once('database/dbUnsorted.php');
 
     if(!isset($_GET['unsorted']) && isset($_GET['revertId'])){
         $id = $_GET['revertId'];
@@ -30,6 +33,8 @@
     }
     else if(isset($_GET['revertId'])) {
         $id = $_GET['revertId'];
+        $unsorted_id = getUnsortedHistory($id)->getUnsortedId();
+        deleteUnsorted($unsorted_id);
         revertUnsortedHistory($id);
         header('Location: viewHistory.php?unsorted=1');
     }
