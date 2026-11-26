@@ -104,14 +104,13 @@ function sqlValueOrNull($con, $value) {
     Read and check the pantry, contact and delivery details from an order form.
     Used by both createIndivOrder.php and createMultOrder.php.
     Parameters:
-    - $input: The submitted fields for one order ($_POST, or one entry of $_POST['orders']).
-    - $errorPrefix: Text put in front of each error message, e.g. "Order 2: ". (Optional, defaults to "")
+    - $input: The submitted fields for the order ($_POST).
     Returns:
     - ['details' => ..., 'errors' => [...]]
       details uses the parameter names of addFoodOrder() and addIndividualFoodOrder(),
       so it can be passed straight to them with ...$details
 */
-function readOrderDetails($input, $errorPrefix = '') {
+function readOrderDetails($input) {
     // Form field => parameter name, label for error messages,
     // whether the form marks it required, and the column size in dbfoodorder
     $fields = [
@@ -132,10 +131,10 @@ function readOrderDetails($input, $errorPrefix = '') {
     foreach ($fields as $field => $rules) {
         $value = trim($input[$field] ?? '');
         if ($rules['required'] && $value === '') {
-            $errors[] = $errorPrefix . $rules['label'] . " is required";
+            $errors[] = $rules['label'] . " is required";
         }
         else if ($rules['maxLength'] !== null && strlen($value) > $rules['maxLength']) {
-            $errors[] = $errorPrefix . $rules['label'] . " must be " . $rules['maxLength'] . " characters or fewer";
+            $errors[] = $rules['label'] . " must be " . $rules['maxLength'] . " characters or fewer";
         }
         $details[$rules['parameter']] = $value;
     }
@@ -158,7 +157,8 @@ function validatePDF($pdfPath) {
 }
 
 /*
-    Add a new food order
+    Add a new food order that waits for an admin to approve or reject it. Used for individual food orders.
+    The order is saved as pending and inventory isn't checked or changed.
     Parameters:
     - $requestorId: The ID of the person requesting the food order.
     - $foodOrderItems: An array of tuples, where each tuple contains (item_category_id, quantity_requested) for each item in the order.
@@ -247,7 +247,7 @@ function addFoodOrder($requestorId, $pdfSubmissionDate = null, $pantry_name = nu
         // Let every admin know there is a new order waiting for them to approve or reject
         if ($okCommit) {
             $from = $pantry_name ? ' from ' . $pantry_name : '';
-            notifyAllAdmins('New food order #' . $orderId . $from . ' is waiting for approval', 'pending_order', $orderId);
+            notifyAllAdmins('New individual food order #' . $orderId . $from . ' is waiting for approval', 'pending_order', $orderId);
         }
 
         return $okCommit; // Return true if the transaction was committed successfully, false otherwise
@@ -263,8 +263,9 @@ function addFoodOrder($requestorId, $pdfSubmissionDate = null, $pantry_name = nu
 }
 
 /*
-    Add a new individual food order. Individual orders don't need an admin to approve them,
-    so if there is enough inventory the order is saved as approved and its boxes are removed from inventory.
+    Add a new food order that doesn't need an admin to approve it. Used for multiple food orders
+    (createMultOrder.php) and for orders uploaded as a PDF on either order page.
+    If there is enough inventory the order is saved as approved and its boxes are removed from inventory.
     Parameters:
     - $requestorId: The ID of the person requesting the food order.
     - $foodOrderItems: An array of tuples, where each tuple contains (item_category_id, quantity_requested) for each item in the order.
@@ -303,7 +304,7 @@ $requested_delivery_time = null, $special_instructions = null) {
     try {
         $con = connect();
         $requestorId = (int)$requestorId;
-        $order_status = "approved"; // Individual orders are approved as soon as they're submitted
+        $order_status = "approved"; // These orders are approved as soon as they're submitted
 
         // Start a transaction
         $con->begin_transaction();
@@ -368,7 +369,18 @@ $requested_delivery_time = null, $special_instructions = null) {
     return [];
 }
 
-function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
+/*
+    Read the order details and items from an uploaded order form PDF.
+    Used by addIndividualFoodOrderFromPDF() and the PDF upload on createIndivOrder.php.
+    Parameters:
+    - $pdfpath: The path to the uploaded PDF.
+    Returns:
+    - ['details' => ..., 'items' => [...]]
+      details uses the parameter names of addFoodOrder() and addIndividualFoodOrder(),
+      so it can be passed straight to them with ...$details
+    Throws an Exception if the PDF isn't a valid order form or has no items.
+*/
+function readFoodOrderPDF($pdfpath) {
     // Validate the PDF to ensure all required fields are present
     if (!validatePDF($pdfpath)) {
         throw new Exception("Invalid PDF Form");
@@ -410,9 +422,28 @@ function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
         throw new Exception("No items in food order");
     }
 
-    $returnValues = addIndividualFoodOrder($requestorId, $foodOrderItems, $pdfSubmissionDate, $pantry_name, $pantry_address,
-        $point_of_contact, $poc_ph_number, $secondary_poc, $secondary_poc_ph_number, $requested_delivery_date,
-        $requested_delivery_time, $special_instructions);
+    return [
+        'details' => [
+            'pdfSubmissionDate' => $pdfSubmissionDate,
+            'pantry_name' => $pantry_name,
+            'pantry_address' => $pantry_address,
+            'point_of_contact' => $point_of_contact,
+            'poc_ph_number' => $poc_ph_number,
+            'secondary_poc' => $secondary_poc,
+            'secondary_poc_ph_num' => $secondary_poc_ph_number,
+            'requested_delivery_date' => $requested_delivery_date,
+            'requested_delivery_time' => $requested_delivery_time,
+            'special_instructions' => $special_instructions,
+        ],
+        'items' => $foodOrderItems,
+    ];
+}
+
+function addIndividualFoodOrderFromPDF($requestorId, $pdfpath) {
+    $order = readFoodOrderPDF($pdfpath);
+    $foodOrderItems = $order['items'];
+
+    $returnValues = addIndividualFoodOrder($requestorId, $foodOrderItems, ...$order['details']);
 
     if ($returnValues === false) {
         throw new Exception("Failed to save food order");

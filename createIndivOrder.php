@@ -71,7 +71,6 @@
     */
 
     $errors = [];
-    $shortItems = [];
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['form_type'])) {
             if ($_POST['form_type'] === 'order_submit') {
@@ -102,26 +101,13 @@
                     $errors[] = "Request at least one box";
                 }
                 if (empty($errors)) {
-                    $insufficient = addIndividualFoodOrder($_SESSION['_personId'], $foodOrderItems, ...$orderDetails['details']);
-                    if ($insufficient === false) {
-                        $errors[] = "Unable to create food order";
-                    }
-                    else if (empty($insufficient)) {
+                    // Individual food orders are saved as pending for an admin to approve or reject,
+                    // so inventory isn't checked here
+                    if (addFoodOrder($_SESSION['_personId'], ...$orderDetails['details'], foodOrderItems: $foodOrderItems)) {
                         header('Location: createOrder.php?created=success');
                         die();
                     }
-                    else {
-                        // Not enough inventory, so list each short item using the names on this form
-                        foreach ($ORDER_CATEGORIES as $category) {
-                            if (isset($insufficient[$category['categoryId']])) {
-                                $shortItems[] = [
-                                    'name' => $category['name'],
-                                    'requested' => (int)$boxes[$category['categoryId']],
-                                    'available' => $insufficient[$category['categoryId']],
-                                ];
-                            }
-                        }
-                    }
+                    $errors[] = "Unable to create food order";
                 }
             }
             elseif ($_POST['form_type'] === 'pdf_submit') {
@@ -129,25 +115,14 @@
                     
                     $tmpName = $_FILES['user_file']['tmp_name'];
                     try {
-                        $insufficient = addIndividualFoodOrderFromPDF($_SESSION['_personId'], $tmpName);
-
-                        if ($insufficient === false) {
-                        $errors[] = "Unable to create food order";
-                        }
-                        else if (empty($insufficient)) {
+                        // Individual food orders wait for an admin to approve or reject them,
+                        // so inventory isn't checked here
+                        $order = readFoodOrderPDF($tmpName);
+                        if (addFoodOrder($_SESSION['_personId'], ...$order['details'], foodOrderItems: $order['items'])) {
                             header('Location: createOrder.php?created=success');
                             die();
                         }
-                        else {
-                            // Not enough inventory, so list each short item using the names on this form
-                            foreach ($insufficient as [$name, $requested, $available]) {
-                                $shortItems[] = [
-                                    'name' => $name,
-                                    'requested' => (int)$requested,
-                                    'available' => $available,
-                                ];
-                            }
-                        }
+                        $errors[] = "Unable to create food order";
                     }
                     catch(Exception $e) {
                         $errors[] = $e->getMessage();
@@ -453,12 +428,6 @@
     background-color: #D4E7F6;
     color: red;
 }
-.report-container .error-toast ul {
-    margin: 0.5rem 0 0 1.5rem;
-}
-.report-container .error-toast li {
-    list-style-type: disc;
-}
 
     </style>
 </head>
@@ -471,16 +440,6 @@
         <?php foreach ($errors as $error): ?>
             <div class="error-toast"><?php echo htmlspecialchars($error); ?></div>
         <?php endforeach; ?>
-        <?php if (!empty($shortItems)): ?>
-            <div class="error-toast">
-                These requested quantities are more than what's in inventory:
-                <ul>
-                    <?php foreach ($shortItems as $shortItem): ?>
-                        <li><strong><?php echo htmlspecialchars($shortItem['name']); ?></strong>: <?php echo $shortItem['requested']; ?> requested, <?php echo $shortItem['available']; ?> in inventory</li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
         <form action="createIndivOrder.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="form_type" value="pdf_submit">
             <label for="file_upload">Upload PDF</label>
